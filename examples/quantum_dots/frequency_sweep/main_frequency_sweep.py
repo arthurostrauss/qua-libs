@@ -6,16 +6,22 @@ Created on 11/11/2021
 from qm.QuantumMachinesManager import QuantumMachinesManager
 from qm.simulate import SimulationConfig, LoopbackInterface
 
-from time_of_flight.construct_time_of_flight import construct_time_of_fight
-from configuration import config
+from construct_frequency_sweep import construct_frequency_sweep
+
+from examples.quantum_dots.configuration import config
 import matplotlib.pyplot as plt
 
 simulation_duration = 10000  # ns
 
-program = construct_time_of_fight(
-    measured_element='rf',
-    wait_time=500,
-    number_of_averages=5
+program = construct_frequency_sweep(
+    measured_element='rf', # the measured element to sweep the frequency over
+    start_frequency=100e6, # the starting frequency in Hz
+    stop_frequency=110e6, # the stop frequency in Hz
+    number_of_frequencies=100, # the number of frequencies to sweep over
+    perturbing_element='CSP', # the element to perturb the charge sensor with
+    perturbation_amplitude=0.01, # how much to perturb the charge sensor by
+    perturbation_wait_time=50, # how long to wait [ns]
+    number_of_averages=1, # the number of averages to take for each frequency
 )
 
 qmm = QuantumMachinesManager()
@@ -37,13 +43,4 @@ job = qmm.simulate(
 plt.figure('simulated output samples')
 output_samples = job.get_simulated_samples()
 output_samples.con1.plot()
-plt.show()
-
-# plotting the sampled reflection
-plt.figure('simulated input samples')
-results_handles = job.result_handles
-input_samples = results_handles.in1.fetch_all()
-plt.plot(input_samples)
-plt.xlabel('Time [ns]')
-plt.ylabel('Amplitude [V]')
 plt.show()
