@@ -5,7 +5,6 @@ Created on 06/10/2021
 
 from qm.qua import *
 
-
 def construct_frequency_sweep(
     measured_element: str,
     start_frequency: float,
@@ -63,6 +62,7 @@ def construct_frequency_sweep(
         Q_stream = declare_stream()  # the stream to take the Q component
         I_perturbed_stream = declare_stream()
         Q_perturbed_stream = declare_stream()
+        frequency_stream = declare_stream()
 
         # outer loop to average consecutive frequency sweeps together
         with for_(average, 0, average < number_of_averages, average + 1):
@@ -74,6 +74,8 @@ def construct_frequency_sweep(
                 frequency < stop_frequency,
                 frequency + delta_frequency,
             ):
+
+                save(frequency, frequency_stream)
                 # changing the frequency frequency, the phase is reset to avoid sitting in the rotating frame
                 update_frequency(measured_element, new_frequency=frequency, keep_phase=False)
                 # measuring by demodulating to obtain the I and Q components
@@ -98,7 +100,7 @@ def construct_frequency_sweep(
                     wait(perturbation_wait_time // 4, measured_element, perturbing_element)
 
                 # changing the frequency frequency, the phase is reset to avoid sitting in the rotating frame
-                reset_phase(measured_element)
+                update_frequency(measured_element, new_frequency=frequency, keep_phase=False)
                 measure(
                     "measure",
                     measured_element,
@@ -117,8 +119,8 @@ def construct_frequency_sweep(
         with stream_processing():
             # process very stream in stream_handler the same way
             for stream_name, stream in zip(
-                ["I", "Q", "I_perturbed", "Q_perturbed"],
-                [I_stream, Q_stream, I_perturbed_stream, Q_perturbed_stream],
+                ["I", "Q", "I_perturbed", "Q_perturbed", "frequency"],
+                [I_stream, Q_stream, I_perturbed_stream, Q_perturbed_stream, frequency_stream],
             ):
                 # averaging the subsequent averages together
                 stream.buffer(number_of_frequencies).average().save(stream_name)
