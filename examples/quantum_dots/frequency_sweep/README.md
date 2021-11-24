@@ -1,13 +1,14 @@
 # Frequency Sweep
 
-For RF charge sensing we drive the charge sensor ohmic with and RF tone and measure the reflection. Changes in the device perturb the state of the charge sensor leading the a change in the reflected signal. 
+For RF charge sensing we drive the charge sensor ohmic with an RF tone and measure the reflection. Changes in the device perturb the state of the charge sensor leading the a change in the reflected signal. 
 
-We aim to choose the RF frequency such that the reflected signal is maximally sensitive to the state of the charge sensor and thus the device. So we perform a frequency sweep of the RF tone and for each frequency we measure the $I(\omega)$ and $Q(\omega)$ components of the demodulated signal then perturb the charge sensor using the plunger gate above it and remeasure the $I_{pert}(\omega)$ and $Q_{pert}(\omega)$ components. 
+We aim to choose the RF frequency such that the reflected signal is maximally sensitive to the state of the charge sensor and thus the device. When charged particles such as electrons or holes, in this case, are loaded or unloaded on the device this perturbs the electrostatic potential of the charge sensor. If the charge sensor gate voltages are chosen such that the position ourselves on the side of the charge sensors Colomb peak this small electrostatic perturbation can lead to a significant change in the reflected RF tone, if the RF frequency is chosen correctly. 
 
-The optimal RF frequency is the frequency which maximises the distance between the demodulated signals in the I-Q plane, so
+It is possible to induce a similar electrostatic perturbation in the charge sensors potential by perturbing one of the device gate voltages. Therefore, by sweeping the RF frequency and comparing the difference between the RF tone of the unperturbed and perturbed charge sensor we can find the optimal RF frequency. Ie the frequency which: 
 $$
-\Delta(\omega) = \sqrt{(I - I_{pert}) ^ 2 + (Q - Q_{pert}) ^ 2}
+\max_\omega \sqrt{(I(\omega) - I_{pert}(\omega)) ^ 2 + (Q(\omega) - Q_{pert}(\omega)) ^ 2}
 $$
+where the $I(\omega)$ and $I_{pert}(\omega)$ are the demodulated in-phase components of the reflected RF tone at frequency $\omega$, for the unperturbed and perturbed charge sensor. Likewise,  $Q(\omega)$ and $Q_{pert}(\omega)$ are the out of phase components. 
 
 ### The Program 
 
