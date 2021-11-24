@@ -70,7 +70,7 @@ For the elements connected to gates we define the hold offset field to make the 
 
 Finally, for the `rf` element the RF frequency is set to be 100MHz in the intermediate field while the time of flight is conservatively set to 180ns; The true time of flight will most certainly be greater than this but we will calibrate this correctly later in (). The `rf` element has one associated operation `measure` this element drives the matching circuit with an RF tone then measures the samples the reflection. 
 
-Next the `pulse dictionary` where the truely define pulses associated with the operations discussed above.  
+Next the `pulse dictionary` where the truly define pulses associated with the operations discussed above.  
 
 ```python
 pulses = {
@@ -137,7 +137,7 @@ waveforms = {
 }
 ```
 
-Where we have defined the `ramp` and `jump` pulses to have the an amplitude of 0.5V, the OPXs maximum. These pulses are then rescaled is many of the programs which make use of them. Again we have defined a helper function to automatically lookup the length. The amplitude of the measure pulse was chosen with explict reference to the filters in the fridge so the right amplitude is incident on the sample. For safety in is never rescaled in any program. 
+Where we have defined the `ramp` and `jump` pulses to have the an amplitude of 0.5V, the OPXs maximum. These pulses are then rescaled is many of the programs which make use of them. Again we have defined a helper function to automatically lookup the length. The amplitude of the measure pulse was chosen with explicit reference to the filters in the fridge so the right amplitude is incident on the sample. For safety in is never rescaled in any program. 
 
  
 

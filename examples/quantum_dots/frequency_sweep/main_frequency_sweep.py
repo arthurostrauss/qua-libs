@@ -47,7 +47,7 @@ output_samples = job.get_simulated_samples()
 output_samples.con1.plot()
 plt.show()
 
-run = False # set to true to run the program
+run = True # set to true to run the program
 if run:
     qm = qmm.open_qm(config)
     job = qm.execute(program=program)
@@ -64,14 +64,15 @@ if run:
 
     delta = np.sqrt((I - I_pert) ** 2 + (Q - Q_pert) **2)
 
+    optimal_frequency = frequency[np.argmax(delta)]
     print('Optimal RF frequncy {} Hz'.format(
-        frequency[np.argmax(delta)]
+        optimal_frequency
     ))
-    
+
     plt.figure('frequency_sweep results')
-    plt.plot(frequency, delta)
-    plt.xlabel('rf frequency [Hz]')
-    plt.ylabel('Delta [V]')
+    plt.plot(frequency / 1e6, delta)
+    plt.xlabel('$\omega$ [MHz]')
+    plt.ylabel('$\delta(\omega)$ [V]')
     plt.show()
 
 
