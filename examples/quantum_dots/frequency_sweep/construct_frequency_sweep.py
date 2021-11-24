@@ -5,15 +5,16 @@ Created on 06/10/2021
 
 from qm.qua import *
 
+
 def construct_frequency_sweep(
-    measured_element: str,
-    start_frequency: float,
-    stop_frequency: float,
-    number_of_frequencies: int,
-    perturbing_element: str,
-    perturbation_amplitude: float,
-    perturbation_wait_time: int = 0,
-    number_of_averages: int = 1,
+        measured_element: str,
+        start_frequency: float,
+        stop_frequency: float,
+        number_of_frequencies: int,
+        perturbing_element: str,
+        perturbation_amplitude: float,
+        perturbation_wait_time: int = 0,
+        number_of_averages: int = 1,
 ):
     """
     A function to construct a program to perform a frequency sweep over 'element'.
@@ -40,11 +41,13 @@ def construct_frequency_sweep(
 
     # enforcing start_frequency < stop_frequency
     if start_frequency > stop_frequency:
+        print('start_frequency  ')
         start_frequency, stop_frequency = stop_frequency, start_frequency
 
-    # the frequency step
-    delta_frequency = (stop_frequency - start_frequency) / number_of_frequencies
-    delta_frequency = int(delta_frequency) # rounding frequency to an int
+    # calculating the frequency step.
+    assert (stop_frequency - start_frequency) % number_of_frequencies, ''
+
+    delta_frequency = (stop_frequency - start_frequency) // number_of_frequencies # integer division so ch
 
     # creating the context manager to be complied by qua
     with program() as frequency_sweep_program:
@@ -60,38 +63,26 @@ def construct_frequency_sweep(
 
         I_stream = declare_stream()  # the stream to take the I component
         Q_stream = declare_stream()  # the stream to take the Q component
-        I_perturbed_stream = declare_stream()
-        Q_perturbed_stream = declare_stream()
-        frequency_stream = declare_stream()
+        I_perturbed_stream = declare_stream()  # the stream to take the I perturbed component
+        Q_perturbed_stream = declare_stream()  # the stream to take the Q perturbed component
+        frequency_stream = declare_stream()  # the stream to take the I component
 
         # outer loop to average consecutive frequency sweeps together
         with for_(average, 0, average < number_of_averages, average + 1):
 
             # the inner loop to sweep across frequencies
             with for_(
-                frequency,
-                start_frequency,
-                frequency < stop_frequency,
-                frequency + delta_frequency,
+                    frequency,
+                    start_frequency,
+                    frequency < stop_frequency,
+                    frequency + delta_frequency,
             ):
-
                 save(frequency, frequency_stream)
                 # changing the frequency frequency, the phase is reset to avoid sitting in the rotating frame
                 update_frequency(measured_element, new_frequency=frequency, keep_phase=False)
-                # measuring by demodulating to obtain the I and Q components
-                measure(
-                    "measure",
-                    measured_element,
-                    None,
-                    demod.full("integW1", I),
-                    demod.full("integW2", Q),
-                )
+                measure("measure", measured_element,None,demod.full("integW1", I),demod.full("integW2", Q)) # measuring by demodulating to obtain the I and Q components
 
                 align(measured_element, perturbing_element)
-
-                # saving the variables
-                save(I, I_stream)
-                save(Q, Q_stream)
 
                 play("jump" * amp(2 * perturbation_amplitude), perturbing_element)
 
@@ -101,26 +92,23 @@ def construct_frequency_sweep(
 
                 # changing the frequency frequency, the phase is reset to avoid sitting in the rotating frame
                 update_frequency(measured_element, new_frequency=frequency, keep_phase=False)
-                measure(
-                    "measure",
-                    measured_element,
-                    None,
-                    demod.full("integW1", I_perturbed),
-                    demod.full("integW2", Q_perturbed),
-                )
+                measure("measure", measured_element, None, demod.full("integW1", I), demod.full("integW2", Q)) # measuring by demodulating to obtain the I and Q components
 
+                # saving the variables
+                save(I, I_stream)
+                save(Q, Q_stream)
                 save(I_perturbed, I_perturbed_stream)
                 save(Q_perturbed, Q_perturbed_stream)
 
                 align(measured_element, perturbing_element)
-                ramp_to_zero(perturbing_element, duration=perturbation_wait_time // 4)
+                ramp_to_zero(perturbing_element, duration=perturbation_wait_time // 4) # ramping to zero to avoid accumulating fixed point arithmetic errors over time.
 
         # declaring how the data should be processed
         with stream_processing():
             # process very stream in stream_handler the same way
             for stream_name, stream in zip(
-                ["I", "Q", "I_perturbed", "Q_perturbed", "frequency"],
-                [I_stream, Q_stream, I_perturbed_stream, Q_perturbed_stream, frequency_stream],
+                    ["I", "Q", "I_perturbed", "Q_perturbed", "frequency"],
+                    [I_stream, Q_stream, I_perturbed_stream, Q_perturbed_stream, frequency_stream],
             ):
                 # averaging the subsequent averages together
                 stream.buffer(number_of_frequencies).average().save(stream_name)
