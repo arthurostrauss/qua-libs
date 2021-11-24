@@ -10,7 +10,7 @@ $$
 $$
 where the $I(\omega)$ and $I_{pert}(\omega)$ are the demodulated in-phase components of the reflected RF tone at frequency $\omega$, for the unperturbed and perturbed charge sensor. Likewise,  $Q(\omega)$ and $Q_{pert}(\omega)$ are the out of phase components. The output of such a frequency sweep preformed on our device perturbing the charge sensor plunger, showing the optimal RF frequency to be about 101.8MHz. 
 
-<img src="/home/barnaby/Documents/qualibs/examples/quantum_dots/_images/frequency_sweep_results.png" alt="frequency_sweep_results" style="zoom:72%;" />
+<img src="./qualibs/examples/quantum_dots/_images/frequency_sweep_results.png" alt="frequency_sweep_results" style="zoom:72%;" />
 
 
 
