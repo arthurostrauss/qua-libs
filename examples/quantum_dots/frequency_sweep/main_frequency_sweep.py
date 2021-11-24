@@ -64,10 +64,16 @@ if run:
 
     delta = np.sqrt((I - I_pert) ** 2 + (Q - Q_pert) **2)
 
+    print('Optimal RF frequncy {} Hz'.format(
+        frequency[np.argmax(delta)]
+    ))
+    
     plt.figure('frequency_sweep results')
     plt.plot(frequency, delta)
     plt.xlabel('rf frequency [Hz]')
     plt.ylabel('Delta [V]')
     plt.show()
+
+
 
 
