@@ -6,7 +6,7 @@ This examples folder comprises documentation of the set of qua programs used to 
 
 <img src="./_images/OPX connections.svg" alt="OPX connections"  />
 
-The channels labelled LB and RB are connected to the left and right barriers by means of the capacitive node of a bias tee. Thus, allowing for the OPX to apply high frequency pulses to the gates while another instrument (A Deflt IVVI) supplies a DC voltage. The channel labelled RF provides an RF tone of approximately 100MHz to an LC matching network which includes the charge sensor ohmic. The RF tone reflected off this matching network is directed to the OPX input channel labelled RF for demodulation and acquisition. 
+The channels labelled LB and RB are connected to the left and right barriers by means of the capacitive node of a bias tee. Thus, allowing for the OPX to apply high frequency pulses to the gates while another instrument (A [Deflt IVVI)](http://qtwork.tudelft.nl/~schouten/ivvi/index-ivvi.htm) supplies a DC voltage. The channel labelled RF provides an RF tone of approximately 100MHz to an LC matching network which includes the charge sensor ohmic. The RF tone reflected off this matching network is directed to the OPX input channel labelled RF for demodulation and acquisition. 
 
 
 
@@ -16,10 +16,10 @@ The programs in this section are presented in the order in which they were used.
 
 
 
-| Program | Description |
-| ------- | ----------- |
-|         |             |
-|         |             |
-|         |             |
-|         |             |
+| Program                                                      | Description |
+| ------------------------------------------------------------ | ----------- |
+| [time_of_flig](https://github.com/qua-platform/qua-libs/tree/barnaby/examples/quantum_dots/SiGe%20Singlet%20-%20Triplet/1)%20time_of_flight) |             |
+|                                                              |             |
+|                                                              |             |
+|                                                              |             |
 
