@@ -21,7 +21,7 @@ program = construct_frequency_sweep(
     stop_frequency=130e6, # the stop frequency in Hz
     number_of_frequencies=1000, # the number of frequencies to sweep over
     perturbing_element='CSP', # the element to perturb the charge sensor with
-    perturbation_amplitude=0.01, # how much to perturb the charge sensor by
+    perturbation_amplitude=0.0, # how much to perturb the charge sensor by
     perturbation_wait_time=50, # how long to wait [ns] after perturbing the charge sensor before measuring
     number_of_averages=1000, # the number of averages to take for each frequency
 )

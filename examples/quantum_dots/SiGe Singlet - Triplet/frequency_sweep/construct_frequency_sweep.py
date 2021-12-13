@@ -45,7 +45,7 @@ def construct_frequency_sweep(
         start_frequency, stop_frequency = stop_frequency, start_frequency
 
     # calculating the frequency step.
-    assert (stop_frequency - start_frequency) % number_of_frequencies, ''
+    # assert (stop_frequency - start_frequency) % number_of_frequencies, ''
 
     delta_frequency = (stop_frequency - start_frequency) // number_of_frequencies # integer division so ch
 
