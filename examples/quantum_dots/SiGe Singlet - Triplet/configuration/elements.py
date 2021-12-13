@@ -20,16 +20,8 @@ elements = {
             "ramp": "ramp"
         },
     },
-    "CSP": {
-        "singleInput": {"port": ("con1", 3)},
-        "hold_offset": {"duration": int(1e6)},
-        "operations": {
-            "jump": "jump",
-            "ramp": "ramp"
-        },
-    },
     "rf": {
-        "singleInput": {"port": ("con1", 4)},
+        "singleInput": {"port": ("con1", 3)},
         "time_of_flight": 304,
         "smearing": 0,
         "intermediate_frequency": 100e6,
