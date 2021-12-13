@@ -13,7 +13,7 @@ Typically this message passing and setting voltages takes on the order of 10ms, 
 
 However, a small number of semiconductor groups around the world have demonstrated the ability to measure much faster by using an AWG to set the voltage. To my knowledge all attempts have relied on a pair of sawtooth waves, the period of one being a integer multiple of the other, to also perform a raster scan. 
 
-![Raster_Scan](/home/barnaby/Documents/qualibs/examples/quantum_dots/SiGe Singlet - Triplet/_images/Raster_Scan.png)
+![Raster_Scan](../_images/Raster_Scan.png)
 
 Though this method I personally routinely performed 100x100 pixel scans in 5ms, where each pixel was measured for a total of 500ns. However, in doing so I discovered a flaw in the methodology, which I later then circumvented using the OPX. 
 
@@ -27,7 +27,7 @@ However, for the fast scans it was quite prohibitive, as it place hard limits of
 
 The programability of the OPX made it possible to move away from Rasta scans, thus greatly avoiding this issue. Rather than Rasta scans we used a spiral pattern to navigate to every pixel in across the two dimensional window. For a scan of $N \times N$  pixels where time $\tau$ is spent at each pixel the slowest frequency needed for the spiral pattern is $f=2N/\tau$ whereas for a Rasta scan it was $f=N^2/\tau$ . Thus allowing much greater resolutions and/or time spent at each pixel before the high pass filtering effect becomes an issue. 
 
-![Spiral_Scan](/home/barnaby/Documents/qualibs/examples/quantum_dots/SiGe Singlet - Triplet/_images/Spiral_Scan.png)
+![Spiral_Scan](../_images/Spiral_Scan.png)
 
 The ability to spend much longer at each pixel made it possible to run pulse sequences prior to measuring. So rather than measuring the always ground state, it was possible to excite metastable states, something which was invaluable to searching for spin physics. 
 
