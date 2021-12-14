@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-N = 7
+N = 101
 font_postion_correction = 0.06
 
 plt.figure('Raster Scan')
@@ -29,10 +29,26 @@ for i, values in enumerate(X):
             np.zeros(200), np.sin(np.linspace(0, 50, 600)) / 2, np.zeros(200)
         ])
 
+def high_pass(X, tau):
+    waveform_fft = np.fft.fft(X, axis=-1)
+    fft_frequencies = np.fft.fftfreq(X.shape[-1], d=1)
+
+    fft_scaling = (2j * np.pi * tau * fft_frequencies) / (1 + 2j * np.pi * tau * fft_frequencies)
+    fft_scaling = np.power(fft_scaling, 1)
+    fft_scaling[np.logical_or(np.isnan(fft_scaling), np.isinf(fft_scaling))] = 0
+
+    waveform_fft = waveform_fft * fft_scaling
+    waveforms = np.fft.ifft(waveform_fft)
+    return np.real(waveforms)
+
+output_1 = high_pass(output_1.flatten(), 6.2e9)
+output_2 = high_pass(output_2.flatten(), 6.2e9)
+output_3 = high_pass(output_3.flatten(), 6.2e9)
+
 plt.figure('Raster Waveform')
-plt.plot(output_1.flatten() + 1.1, label = 'analogy output 1')
-plt.plot(output_2.flatten(), label = 'analogy output 2')
-plt.plot(output_3.flatten() - 1.1, label = 'analogy output 3')
+plt.plot(output_1.flatten()[::100] + 1.1, label = 'analogy output 1')
+plt.plot(output_2.flatten()[::100], label = 'analogy output 2')
+plt.plot(output_3.flatten()[::100] - 1.1, label = 'analogy output 3')
 plt.xlabel('time (ns)')
 plt.ylabel('output voltage (V)')
 plt.legend()
@@ -88,10 +104,14 @@ for i, values in enumerate(order):
             np.zeros(200), np.sin(np.linspace(0, 50, 600)) / 2, np.zeros(200)
         ])
 
+output_1 = high_pass(output_1.flatten(), 6.2e9)
+output_2 = high_pass(output_2.flatten(), 6.2e9)
+output_3 = high_pass(output_3.flatten(), 6.2e9)
+
 plt.figure('Spiral Waveform')
-plt.plot(output_1.flatten() + 1.1, label = 'analogy output 1')
-plt.plot(output_2.flatten(), label = 'analogy output 2')
-plt.plot(output_3.flatten() - 1.1, label = 'analogy output 3')
+plt.plot(output_1.flatten()[::100] + 1.1, label = 'analogy output 1')
+plt.plot(output_2.flatten()[::100], label = 'analogy output 2')
+plt.plot(output_3.flatten()[::100] - 1.1, label = 'analogy output 3')
 plt.xlabel('time (ns)')
 plt.ylabel('output voltage (V)')
 plt.legend()
