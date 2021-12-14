@@ -1,5 +1,22 @@
 # Fast Two Dimensional Scans
 
+This section contains a program to perform a fast two dimensional scan over a pair of gate voltages. Due to the flexibility of the OPX this scan is performed quite differently from how similar fast scans have been done in the past, with significant advantages. The most notable of which is the ability to interleave pulse sequences with the fast scan, a functionality which we found invaluable when searching for the $S-T_{-}$ avoided crossing, an indicative feature of spin physics. 
+
+The structure of this section is: 
+
+| File               | Description                                                  |
+| ------------------ | ------------------------------------------------------------ |
+| main_basic.py      | A minimal example of using the program to perform a fast two-dimensional scan. With the subsequent data reshaping. |
+| main_pulse.py      | A example of how to interleave a pulse sequence with the fast two-dimensional scan. |
+| main_video_mode.py | A example of using the program to continuously measure the state of the device, such that the device state is displayed as a video. |
+
+The text below gives some historical context how such two dimensional scans have been performed. 
+
+1. It outlines how they can be performed slowly using standard semiconducting device instruments such as an IVVI DAC. 
+2. Then outlines how an AWG can be used to greatly increase the speed at which such measurements can be taken, reducing measurement time by at least four orders of magnitude. 
+3. However, such a speed increase is not without its limitations, with in this case is due to the high pass filtering effect introduced by a bias tee. 
+4. The implications of this filtering are discussed, then demonstrate how with the OPX it is possible to avoid it. 
+
 ### Motivation and Historical Context
 
 Two dimensional scans over the voltage set to a pair gates has formed the backbone of quantum dot tuning for many years. In most cases such measurements are performed slowly by means rasta scan. Where a lab PC coordinates two instruments, a DAC to set voltages and an acquisition instrument to measure, by message passing. The message passing required for a single pixel is: 
@@ -11,7 +28,7 @@ Two dimensional scans over the voltage set to a pair gates has formed the backbo
 
 Typically this message passing and setting voltages takes on the order of 10ms, meaning that a 100x100 pixel scan would take over a minute. 
 
-![HoleDoubleDotStabilityDiagram](../_images/HoleDoubleDotStabilityDiagram.png)
+![HoleDoubleDotStabilityDiagram](/home/barnaby/Documents/qualibs/examples/quantum_dots/SiGe Singlet - Triplet/_images/HoleDoubleDotStabilityDiagram.png)
 
 Image taken from [Quantum Transport In Semiconductor Nanowires.](https://homepages.spa.umn.edu/~vpribiag/researchPages/Quantum-Transport-in-Semiconductor-Nanowires.php)
 
@@ -46,6 +63,12 @@ For a scan of $N \times N$  pixels where time $\tau$ is spent at each pixel the 
 | <img src="../_images/spiral_unfiltered.png" alt="spiral_unfiltered" style="zoom: 67%;" /> | <img src="../_images/spiral_filtered.png" alt="spiral_filtered" style="zoom: 67%;" /> |
 
 The ability to spend much longer at each pixel made it possible to run pulse sequences prior to measuring. So rather than measuring the always ground state, it was possible to excite metastable states, something which was invaluable to searching for spin physics. 
+
+
+
+
+
+
 
 
 
