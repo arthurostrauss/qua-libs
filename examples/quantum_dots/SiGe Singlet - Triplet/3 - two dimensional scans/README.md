@@ -11,7 +11,9 @@ Two dimensional scans over the voltage set to a pair gates has formed the backbo
 
 Typically this message passing and setting voltages takes on the order of 10ms, meaning that a 100x100 pixel scan would take over a minute. 
 
-![bias triangles](https://homepages.spa.umn.edu/~vpribiag/images/research/Quantum-Transport-in-Semiconductor-Nanowires/HoleDoubleDotStabilityDiagram.png)
+![HoleDoubleDotStabilityDiagram](../_images/HoleDoubleDotStabilityDiagram.png)
+
+Image taken from [Quantum Transport In Semiconductor Nanowires.](https://homepages.spa.umn.edu/~vpribiag/researchPages/Quantum-Transport-in-Semiconductor-Nanowires.php)
 
 However, a small number of semiconductor groups around the world have demonstrated the ability to measure much faster by using an AWG to set the voltage. To my knowledge all attempts have relied on a pair of sawtooth waves, the period of one being a integer multiple of the other, to also perform a raster scan. The raster pattern and the waveform necessary to navigate across it are shown below for a 7x7 image, with the measurement time per pixel being 1us. 
 
