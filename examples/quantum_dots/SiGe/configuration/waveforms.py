@@ -13,5 +13,5 @@ def get_length(pulse):
 waveforms = {
     "jump": {"type": "constant", "sample": 0.5},
     "ramp": {"type": "arbitrary", "samples": np.linspace(0, 0.5, get_length('ramp'))},
-    "measure": {"type": "constant", "sample": 0.01},
+    "measure": {"type": "constant", "sample": 0.001},
 }

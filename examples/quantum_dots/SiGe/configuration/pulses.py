@@ -25,8 +25,8 @@ pulses = {
         "waveforms": {"single": "measure"},
         "digital_marker": "ON",
         "integration_weights": {
-            "integW1": "measure_I",
-            "integW2": "measure_Q",
+            "measure_I": "measure_I",
+            "measure_Q": "measure_Q",
         },
     },
 }

@@ -3,11 +3,6 @@ Created on 14/12/2021
 @author barnaby
 """
 
-"""
-Created on 25/10/2021
-@author barnaby
-"""
-
 from qm.qua import *
 from typing import Union, Callable
 
@@ -71,7 +66,7 @@ def construct_do0d(x_element: str,
         average = declare(int)  # an index variable for the average
         moves_per_edge = declare(int)  # the number of moves per edge [1, resolution]
         completed_moves = declare(int)  # the number of completed move [0, resolution ** 2]
-        movement_direction = declare(fixed)  # which direction to move {-1, 1}
+        movement_direction = declare(fixed)  # which direction to move {-1., 1.}
 
         # declaring the measured variables and their streams
         I, Q = declare(fixed), declare(fixed)
@@ -93,16 +88,14 @@ def construct_do0d(x_element: str,
             )
 
             with while_(completed_moves < resolution * (resolution - 1)):
-
                 # for_ loop to move the required number of moves in the x direction
                 with for_(i, 0, i < moves_per_edge, i + 1):
-
-                    # playing the constant pulse to move to the next pixel
-                    play('constant' * amp(movement_direction * x_step_size), x_element)
                     assign(x, x + movement_direction * x_step_size / 2)  # updating the x location
+                    # playing the constant pulse to move to the next pixel
+                    play('jump' * amp(movement_direction * x_step_size), x_element)
 
                     # if the x coordinate should be x, ramp to zero to remove fixed point arithmetic errors accumulating
-                    with if_(x == 0):
+                    with if_(x == 0.):
                         ramp_to_zero(x_element)
 
                     align(x_element, y_element, measured_element)
@@ -115,8 +108,8 @@ def construct_do0d(x_element: str,
 
                 # for_ loop to move the required number of moves in the y direction
                 with for_(j, 0, j < moves_per_edge, j + 1):
-                    play('constant' * amp(movement_direction * y_step_size), y_element)
                     assign(y, y + movement_direction * y_step_size / 2)
+                    play('jump' * amp(movement_direction * y_step_size), y_element)
 
                     with if_(y == 0.):
                         ramp_to_zero(y_element)
@@ -134,22 +127,23 @@ def construct_do0d(x_element: str,
                 assign(movement_direction, movement_direction * -1)  # *-1 as subsequent steps in the opposite direction
                 assign(moves_per_edge, moves_per_edge + 1)  # moving one row/column out so need one more move_per_edge
 
-            # filling in the final x row, which was not covered by the previous for_ loop
-            with for_(i, 0, i < moves_per_edge - 1, i + 1):
-                play('constant' * amp(movement_direction * x_step_size), x_element)
+        # filling in the final x row, which was not covered by the previous for_ loop
+        with for_(i, 0, i < moves_per_edge - 1, i + 1):
+            play('jump' * amp(movement_direction * x_step_size), x_element)
 
-                align(x_element, y_element, measured_element)
-                if wait_time > 4:  # if logic to enable wait_time = 0 without error
-                    wait(wait_time // 4, measured_element)
-                measurement_macro.__call__(
-                    x_element=x_element, y_element=y_element, measured_element=measured_element,
-                    I=I, I_stream=I_stream, Q=Q, Q_stream=Q_stream
-                )
-
-            # aligning and ramping to zero to return to inital state
             align(x_element, y_element, measured_element)
-            ramp_to_zero(x_element)
-            ramp_to_zero(y_element)
+            if wait_time > 4:  # if logic to enable wait_time = 0 without error
+                wait(wait_time // 4, measured_element)
+
+            measurement_macro.__call__(
+                x_element=x_element, y_element=y_element, measured_element=measured_element,
+                I=I, I_stream=I_stream, Q=Q, Q_stream=Q_stream
+            )
+
+        # aligning and ramping to zero to return to inital state
+        align(x_element, y_element, measured_element)
+        ramp_to_zero(x_element)
+        ramp_to_zero(y_element)
 
         with stream_processing():
             for stream_name, stream in zip(['I', 'Q'], [I_stream, Q_stream]):
