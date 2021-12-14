@@ -36,7 +36,7 @@ Two dimensional scans over the voltage set to a pair gates has formed the backbo
 
 Typically this message passing and setting voltages takes on the order of 10ms, meaning that a 100x100 pixel scan would take over a minute. 
 
-![HoleDoubleDotStabilityDiagram](/home/barnaby/Documents/qualibs/examples/quantum_dots/SiGe Singlet - Triplet/_images/HoleDoubleDotStabilityDiagram.png)
+![HoleDoubleDotStabilityDiagram](../_images/HoleDoubleDotStabilityDiagram.png)
 
 Image taken from [Quantum Transport In Semiconductor Nanowires.](https://homepages.spa.umn.edu/~vpribiag/researchPages/Quantum-Transport-in-Semiconductor-Nanowires.php)
 
