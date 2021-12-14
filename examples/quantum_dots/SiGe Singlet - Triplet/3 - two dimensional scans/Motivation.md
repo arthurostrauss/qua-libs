@@ -11,10 +11,12 @@ Two dimensional scans over the voltage set to a pair gates has formed the backbo
 
 Typically this message passing and setting voltages takes on the order of 10ms, meaning that a 100x100 pixel scan would take over a minute. 
 
-However, a small number of semiconductor groups around the world have demonstrated the ability to measure much faster by using an AWG to set the voltage. To my knowledge all attempts have relied on a pair of sawtooth waves, the period of one being a integer multiple of the other, to also perform a raster scan. 
+However, a small number of semiconductor groups around the world have demonstrated the ability to measure much faster by using an AWG to set the voltage. To my knowledge all attempts have relied on a pair of sawtooth waves, the period of one being a integer multiple of the other, to also perform a raster scan. The raster pattern and the waveform necessary to navigate across it are shown below for a 7x7 image, with the measurement time per pixel being 1us. 
 
 | ![Raster_Scan](../_images/Raster_Scan.png) | ![Raster_Waveform](../_images/Raster_Waveform.png) |
 | ------------------------------------------ | -------------------------------------------------- |
+
+In the above images, the voltage from analogy output 1 controls the x coordinate in the image, and analogy output 2 controls the y. Analogy output 3 in responsible for creating the RF tone for measurement. 
 
 Though this method I personally routinely performed 100x100 pixel scans in 5ms, where each pixel was measured for a total of 500ns. However, in doing so I discovered a flaw in the methodology, which I later then circumvented using the OPX. 
 
