@@ -4,11 +4,11 @@ This section contains a program to perform a fast two dimensional scan over a pa
 
 The structure of this section is: 
 
-| File               | Description                                                  |
-| ------------------ | ------------------------------------------------------------ |
-| main_basic.py      | A minimal example of using the program to perform a fast two-dimensional scan. With the subsequent data reshaping. |
-| main_pulse.py      | A example of how to interleave a pulse sequence with the fast two-dimensional scan. |
-| main_video_mode.py | A example of using the program to continuously measure the state of the device, such that the device state is displayed as a video. |
+| File                 | Description                                                  |
+| -------------------- | ------------------------------------------------------------ |
+| `main_basic.py`      | A minimal example of using the program to perform a fast two-dimensional scan. With the subsequent data reshaping. |
+| `main_pulse.py`      | A example of how to interleave a pulse sequence with the fast two-dimensional scan. |
+| `main_video_mode.py` | A example of using the program to continuously measure the state of the device, such that the device state is displayed as a video. |
 
 The text below gives some historical context how such two dimensional scans have been performed. 
 
@@ -16,6 +16,14 @@ The text below gives some historical context how such two dimensional scans have
 2. Then outlines how an AWG can be used to greatly increase the speed at which such measurements can be taken, reducing measurement time by at least four orders of magnitude. 
 3. However, such a speed increase is not without its limitations, with in this case is due to the high pass filtering effect introduced by a bias tee. 
 4. The implications of this filtering are discussed, then demonstrate how with the OPX it is possible to avoid it. 
+
+
+
+
+
+
+
+
 
 ### Motivation and Historical Context
 
