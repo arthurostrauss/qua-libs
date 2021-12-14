@@ -39,9 +39,9 @@ For a scan of $N \times N$  pixels where time $\tau$ is spent at each pixel the 
 
 
 
-| <img src="/home/barnaby/Documents/qualibs/examples/quantum_dots/SiGe Singlet - Triplet/_images/raster_unfiltered.png" alt="raster_unfiltered" style="zoom: 67%;" /> | <img src="/home/barnaby/Documents/qualibs/examples/quantum_dots/SiGe Singlet - Triplet/_images/raster_filtered.png" alt="raster_filtered" style="zoom: 67%;" /> |
+| <img src="../_images/raster_unfiltered.png" alt="raster_unfiltered" style="zoom: 67%;" /> | <img src="../_images/raster_filtered.png" alt="raster_filtered" style="zoom: 67%;" /> |
 | :----------------------------------------------------------: | :----------------------------------------------------------: |
-| <img src="/home/barnaby/Documents/qualibs/examples/quantum_dots/SiGe Singlet - Triplet/_images/spiral_unfiltered.png" alt="spiral_unfiltered" style="zoom: 67%;" /> | <img src="/home/barnaby/Documents/qualibs/examples/quantum_dots/SiGe Singlet - Triplet/_images/spiral_filtered.png" alt="spiral_filtered" style="zoom: 67%;" /> |
+| <img src="../_images/spiral_unfiltered.png" alt="spiral_unfiltered" style="zoom: 67%;" /> | <img src="../_images/spiral_filtered.png" alt="spiral_filtered" style="zoom: 67%;" /> |
 
 The ability to spend much longer at each pixel made it possible to run pulse sequences prior to measuring. So rather than measuring the always ground state, it was possible to excite metastable states, something which was invaluable to searching for spin physics. 
 
