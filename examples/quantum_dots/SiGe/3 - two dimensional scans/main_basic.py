@@ -17,7 +17,7 @@ do0d = construct_do0d(
 
 import matplotlib.pyplot as plt
 
-simulation_duration = 100000 # ns
+simulation_duration = 200000  # ns
 
 qmm = QuantumMachinesManager()
 
@@ -28,8 +28,8 @@ job = qmm.simulate(
         duration=int(simulation_duration // 4),
         include_analog_waveforms=True,
         simulation_interface=LoopbackInterface(
-            latency = 280,
-            connections = [('con1', 4, 'con1', 1)]  # connecting output 4 to input 1
+            latency=280,
+            connections=[('con1', 4, 'con1', 1)]  # connecting output 4 to input 1
         )
     )
 )
@@ -38,6 +38,3 @@ plt.figure('simulated output samples')
 output_samples = job.get_simulated_samples()
 output_samples.con1.plot()
 plt.show()
-
-
-

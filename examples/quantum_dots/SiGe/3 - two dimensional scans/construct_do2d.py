@@ -34,7 +34,8 @@ def construct_do0d(x_element: str,
                    measured_element: str,
                    number_of_averages: int,
                    measurement_macro: Union[Callable, None] = None,
-                   wait_time: int =16):
+                   wait_time: int =16,
+                   ramp_to_zero_durtion = 100):
     """
     @param x_element: the qua element to sweep on the x axis
     @param x_amplitude: the amplitude of the x axis sweep
@@ -90,17 +91,18 @@ def construct_do0d(x_element: str,
             with while_(completed_moves < resolution * (resolution - 1)):
                 # for_ loop to move the required number of moves in the x direction
                 with for_(i, 0, i < moves_per_edge, i + 1):
-                    assign(x, x + movement_direction * x_step_size / 2)  # updating the x location
+                    assign(x, x + movement_direction * x_step_size / 2.)  # updating the x location
                     # playing the constant pulse to move to the next pixel
                     play('jump' * amp(movement_direction * x_step_size), x_element)
 
                     # if the x coordinate should be x, ramp to zero to remove fixed point arithmetic errors accumulating
                     with if_(x == 0.):
-                        ramp_to_zero(x_element)
+                        ramp_to_zero(x_element, duration=ramp_to_zero_durtion)
 
-                    align(x_element, y_element, measured_element)
                     if wait_time > 4:  # if logic to enable wait_time = 0 without error
                         wait(wait_time // 4, measured_element)  # // 4 so that the wait time can be passed in ns
+
+                    align(x_element, y_element, measured_element)
                     measurement_macro.__call__(
                         x_element=x_element, y_element=y_element, measured_element=measured_element,
                         I=I, I_stream=I_stream, Q=Q, Q_stream=Q_stream
@@ -108,15 +110,16 @@ def construct_do0d(x_element: str,
 
                 # for_ loop to move the required number of moves in the y direction
                 with for_(j, 0, j < moves_per_edge, j + 1):
-                    assign(y, y + movement_direction * y_step_size / 2)
+                    assign(y, y + movement_direction * y_step_size / 2.)
                     play('jump' * amp(movement_direction * y_step_size), y_element)
 
                     with if_(y == 0.):
-                        ramp_to_zero(y_element)
+                        ramp_to_zero(y_element, duration = ramp_to_zero_durtion)
 
-                    align(x_element, y_element, measured_element)
                     if wait_time > 4:  # if logic to enable wait_time = 0 without error
                         wait(wait_time // 4, measured_element)  # // 4 so that the wait time can be passed in ns
+
+                    align(x_element, y_element, measured_element)
                     measurement_macro.__call__(
                         x_element=x_element, y_element=y_element, measured_element=measured_element,
                         I=I, I_stream=I_stream, Q=Q, Q_stream=Q_stream
@@ -127,23 +130,30 @@ def construct_do0d(x_element: str,
                 assign(movement_direction, movement_direction * -1)  # *-1 as subsequent steps in the opposite direction
                 assign(moves_per_edge, moves_per_edge + 1)  # moving one row/column out so need one more move_per_edge
 
-        # filling in the final x row, which was not covered by the previous for_ loop
-        with for_(i, 0, i < moves_per_edge - 1, i + 1):
-            play('jump' * amp(movement_direction * x_step_size), x_element)
 
+            # filling in the final x row, which was not covered by the previous for_ loop
+            with for_(i, 0, i < moves_per_edge - 1, i + 1):
+                assign(x, x + movement_direction * x_step_size / 2.)  # updating the x location
+                # playing the constant pulse to move to the next pixel
+                play('jump' * amp(movement_direction * x_step_size), x_element)
+
+                # if the x coordinate should be x, ramp to zero to remove fixed point arithmetic errors accumulating
+                with if_(x == 0.):
+                    ramp_to_zero(x_element)
+
+                if wait_time > 4:  # if logic to enable wait_time = 0 without error
+                    wait(wait_time // 4, measured_element)  # // 4 so that the wait time can be passed in ns
+
+                align(x_element, y_element, measured_element)
+                measurement_macro.__call__(
+                    x_element=x_element, y_element=y_element, measured_element=measured_element,
+                    I=I, I_stream=I_stream, Q=Q, Q_stream=Q_stream
+                )
+
+            # aligning and ramping to zero to return to inital state
             align(x_element, y_element, measured_element)
-            if wait_time > 4:  # if logic to enable wait_time = 0 without error
-                wait(wait_time // 4, measured_element)
-
-            measurement_macro.__call__(
-                x_element=x_element, y_element=y_element, measured_element=measured_element,
-                I=I, I_stream=I_stream, Q=Q, Q_stream=Q_stream
-            )
-
-        # aligning and ramping to zero to return to inital state
-        align(x_element, y_element, measured_element)
-        ramp_to_zero(x_element)
-        ramp_to_zero(y_element)
+            ramp_to_zero(x_element, duration=ramp_to_zero_durtion)
+            ramp_to_zero(y_element, duration=ramp_to_zero_durtion)
 
         with stream_processing():
             for stream_name, stream in zip(['I', 'Q'], [I_stream, Q_stream]):

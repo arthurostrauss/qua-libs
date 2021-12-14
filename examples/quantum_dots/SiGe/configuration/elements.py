@@ -6,7 +6,7 @@ Created on 11/11/2021
 elements = {
     "LB": {
         "singleInput": {"port": ("con1", 1)},
-        "hold_offset": {"duration": int(1e6)},
+        "hold_offset": {"duration": int(1e2)},
         "operations": {
             "jump": "jump",
             "ramp": "ramp",
@@ -14,7 +14,7 @@ elements = {
     },
     "RB": {
         "singleInput": {"port": ("con1", 2)},
-        "hold_offset": {"duration": int(1e6)},
+        "hold_offset": {"duration": int(1e2)},
         "operations": {
             "jump": "jump",
             "ramp": "ramp"
