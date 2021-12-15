@@ -46,7 +46,7 @@ def construct_do0d(x_element: str,
     @param number_of_averages: the number of averages to perform
     @param measurement_macro: a callable function which performs a measurement after performing a user specified pulse sequence
     @param wait_time: the time in ns to wait between moving and calling the measurement macro.
-    @return: do0d program
+    @return: do2d program
     """
     assert resolution % 2 == 1, 'the resolution must be odd {}'.format(resolution)
 
