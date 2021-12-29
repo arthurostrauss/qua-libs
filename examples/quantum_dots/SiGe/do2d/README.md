@@ -19,12 +19,6 @@ The text below gives some historical context how such two dimensional scans have
 
 
 
-
-
-
-
-
-
 ### Motivation and Historical Context
 
 Two dimensional scans over the voltage set to a pair gates has formed the backbone of quantum dot tuning for many years. In most cases such measurements are performed slowly by means rasta scan. Where a lab PC coordinates two instruments, a DAC to set voltages and an acquisition instrument to measure, by message passing. The message passing required for a single pixel is: 
