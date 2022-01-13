@@ -61,8 +61,8 @@ def construct_do0d(x_element: str,
         i = declare(int)  # an index variable for the x index
         j = declare(int)  # an index variable for the y index
 
-        x = declare(float)  # a variable to keep track of the x coordinate
-        y = declare(float)  # a variable to keep track of the x coordinate
+        x = declare(fixed)  # a variable to keep track of the x coordinate
+        y = declare(fixed)  # a variable to keep track of the x coordinate
 
         average = declare(int)  # an index variable for the average
         moves_per_edge = declare(int)  # the number of moves per edge [1, resolution]
@@ -91,7 +91,7 @@ def construct_do0d(x_element: str,
             with while_(completed_moves < resolution * (resolution - 1)):
                 # for_ loop to move the required number of moves in the x direction
                 with for_(i, 0, i < moves_per_edge, i + 1):
-                    assign(x, x + movement_direction * x_step_size / 2.)  # updating the x location
+                    assign(x, x + movement_direction * x_step_size * 0.5)  # updating the x location
                     # playing the constant pulse to move to the next pixel
                     play('jump' * amp(movement_direction * x_step_size), x_element)
 
@@ -99,7 +99,7 @@ def construct_do0d(x_element: str,
                     with if_(x == 0.):
                         ramp_to_zero(x_element, duration=ramp_to_zero_durtion)
 
-                    if wait_time > 4:  # if logic to enable wait_time = 0 without error
+                    if wait_time >= 16:  # if logic to enable wait_time = 0 without error
                         wait(wait_time // 4, measured_element)  # // 4 so that the wait time can be passed in ns
 
                     align(x_element, y_element, measured_element)
@@ -110,13 +110,13 @@ def construct_do0d(x_element: str,
 
                 # for_ loop to move the required number of moves in the y direction
                 with for_(j, 0, j < moves_per_edge, j + 1):
-                    assign(y, y + movement_direction * y_step_size / 2.)
+                    assign(y, y + movement_direction * y_step_size * 0.5)
                     play('jump' * amp(movement_direction * y_step_size), y_element)
 
                     with if_(y == 0.):
                         ramp_to_zero(y_element, duration = ramp_to_zero_durtion)
 
-                    if wait_time > 4:  # if logic to enable wait_time = 0 without error
+                    if wait_time >= 16:  # if logic to enable wait_time = 0 without error
                         wait(wait_time // 4, measured_element)  # // 4 so that the wait time can be passed in ns
 
                     align(x_element, y_element, measured_element)
@@ -133,7 +133,7 @@ def construct_do0d(x_element: str,
 
             # filling in the final x row, which was not covered by the previous for_ loop
             with for_(i, 0, i < moves_per_edge - 1, i + 1):
-                assign(x, x + movement_direction * x_step_size / 2.)  # updating the x location
+                assign(x, x + movement_direction * x_step_size * 0.5)  # updating the x location
                 # playing the constant pulse to move to the next pixel
                 play('jump' * amp(movement_direction * x_step_size), x_element)
 
@@ -141,7 +141,7 @@ def construct_do0d(x_element: str,
                 with if_(x == 0.):
                     ramp_to_zero(x_element)
 
-                if wait_time > 4:  # if logic to enable wait_time = 0 without error
+                if wait_time >= 16:  # if logic to enable wait_time = 0 without error
                     wait(wait_time // 4, measured_element)  # // 4 so that the wait time can be passed in ns
 
                 align(x_element, y_element, measured_element)
@@ -150,7 +150,7 @@ def construct_do0d(x_element: str,
                     I=I, I_stream=I_stream, Q=Q, Q_stream=Q_stream
                 )
 
-            # aligning and ramping to zero to return to inital state
+            # aligning and ramping to zero to return to initial state
             align(x_element, y_element, measured_element)
             ramp_to_zero(x_element, duration=ramp_to_zero_durtion)
             ramp_to_zero(y_element, duration=ramp_to_zero_durtion)
