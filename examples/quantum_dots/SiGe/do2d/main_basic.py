@@ -32,7 +32,7 @@ job = qmm.simulate(
         include_analog_waveforms=True,
         simulation_interface=LoopbackInterface(
             latency=280,
-            connections=[('con1', 4, 'con1', 1)]  # connecting output 4 to input 1
+            connections=[('con1', 3, 'con1', 1)]  # connecting output 4 to input 1
         )
     )
 )
