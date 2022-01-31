@@ -1,28 +1,10 @@
-import matplotlib.pyplot as plt
-import numpy as np
 import qcodes as qc
 from qcodes import (
     Measurement,
-    experiments,
-    initialise_database,
-    initialise_or_create_database_at,
-    load_by_guid,
-    load_by_run_spec,
-    load_experiment,
-    load_last_experiment,
     load_or_create_experiment,
-    new_experiment,
-    ParameterWithSetpoints,
 )
 from qcodes.dataset.plotting import plot_dataset
-from qcodes.instrument_drivers.tektronix.keithley_7510 import GeneratedSetPoints
-from qcodes.loops import Loop
-
-from qcodes.logger.logger import start_all_logging
-
-# from qcodes.tests.instrument_mocks import DummyInstrument, DummyInstrumentWithMeasurement
-
-from OPX_driver import *
+from spectrum_simulate_scan import *
 
 pulse_len = 1000
 config = {
@@ -85,7 +67,7 @@ f_pts = 100
 voltage_range = np.linspace(0, 10, 10)
 f_range = np.linspace(0, 100, f_pts)
 # opx = OPX(config)
-opx = OPX_SpectrumScan(config)
+opx = OPXSpectrumScan(config, host="127.0.0.1", port="9510")
 opx.f_start(0)
 opx.f_stop(100)
 opx.sim_time(100000)
