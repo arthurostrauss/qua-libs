@@ -10,8 +10,8 @@ from construct_time_of_flight import construct_time_of_fight
 from examples.quantum_dots.SiGe.configuration import config
 import matplotlib.pyplot as plt
 
-simulate = False
-simulation_duration = 10000 # ns
+simulate = True
+simulation_duration = 10000  # ns
 
 program = construct_time_of_fight(
     measured_element='rf',
@@ -31,8 +31,8 @@ else:
             duration=int(simulation_duration // 4),
             include_analog_waveforms=True,
             simulation_interface=LoopbackInterface(
-                latency = 280,
-                connections = [('con1', 3, 'con1', 1)]  # connecting output 3 to input 1
+                latency=280,
+                connections=[('con1', 3, 'con1', 1)]  # connecting output 3 to input 1
             )
         )
     )

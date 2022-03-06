@@ -7,9 +7,9 @@ controllers = {
     "con1": {
         "type": "opx1",
         "analog_outputs": {
-            1: {"offset": 0.0, 'filter': {'feedback': [], 'feedforward': [1]}},
-            2: {"offset": 0.0, 'filter': {'feedback': [], 'feedforward': [1]}},
-            3: {"offset": 0.0, 'filter': {'feedback': [], 'feedforward': [1]}}
+            1: {"offset": 0.0},
+            2: {"offset": 0.0},
+            3: {"offset": 0.0}
         },
         "digital_outputs": {},
         "analog_inputs": {

@@ -5,6 +5,7 @@ Created on 11/11/2021
 
 from qm.qua import *
 
+
 def construct_time_of_fight(
         measured_element: str,
         number_of_averages: int = 1000,
@@ -23,7 +24,7 @@ def construct_time_of_fight(
         with for_(n, 0, n < number_of_averages, n + 1):
             reset_phase(measured_element)
             measure('measure', measured_element, adc_st)
-            if wait_time > 4:
+            if wait_time > 16:
                 wait(wait_time // 4, measured_element)
 
         with stream_processing():
