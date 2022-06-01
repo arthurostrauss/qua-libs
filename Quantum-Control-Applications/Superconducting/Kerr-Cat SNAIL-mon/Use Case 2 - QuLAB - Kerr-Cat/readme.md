@@ -30,6 +30,7 @@ The caption in Fig. 1 was reproduced from Ref. [1].
 
 
 ![Grimm_Frattini_Fig1_1](Grimm_Frattini_Fig1_1.png)
+
 **Figure 1**. **a**, Bloch sphere of the protected "Kerr-cat qubit" in the large-$\alpha$ limit [2]. The
 states on all six cardinal points are labelled, indicated by markers and their Wigner function [3] phase-space
 representations are sketched. Here, |$\pm Z$> = |$C^{\pm}_{\alpha}$> = (|+$\alpha$> $\pm$ |-$\alpha$>)/$\sqrt{2}$
