@@ -101,7 +101,7 @@ $\tau_{\alpha} = 163 \mu s$ and $\tau_{-\alpha} = 164 \mu s$.
 **Figure 4**, the blue and orange lines show the decoherence of |$\pm \alpha$ $>$ into the mixed state
 of equal population of the coherent states.
 
-![Free_evol_pulse](Fig5_free_evol_pulse_seq.png)
+<img alt="Free_evol_pulse" height="164" src="Fig5_free_evol_pulse_seq.png" width="399"/>
 
 **Figure 5**, cartoon of the pulse sequence for measuring the lifetime during free evolution.
 
@@ -162,7 +162,7 @@ the measurement.
 
 **Figure 6**, lifetime of the coherence states while continuously performing cqr measurements.
 
-![lifetime_pulse_seq_meas](Figure7_decay_measuring.png)
+<img alt="lifetime_pulse_seq_meas" height="175" src="Figure7_decay_measuring.png" width="364"/>
 
 **Figure 7**, cartoon of the pulse sequence to generate Fig. 6.
 
@@ -194,6 +194,8 @@ The main lines of QUA code that produce Fig. 4 are shown below. The QUA code tha
 
 ## References
 
-[1] A. Grimm
-[2]
-[3]
+[1] A. Grimm, N. E. Frattini, S. Puri, S. O. Mundhada, S. Touzard, M. Mirrahimi, S. M. Girvin, S. Shankar, & M. H. Devoret, *Nature* **584**, 205-209 (2020).
+
+[2] Supplemental material of Ref. [1].
+
+[3] S. Haroche and J.-M. Raimond, *Exploring the Quantum: Atoms, Cavities and Photons* (Oxford University Press, 2006).
