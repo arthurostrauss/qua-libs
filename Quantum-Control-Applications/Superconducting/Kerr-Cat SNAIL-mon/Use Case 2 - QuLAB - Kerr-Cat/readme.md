@@ -32,8 +32,7 @@ sphere and simulated energy potential of the undriven Hamiltonian can be seen in
 1 appearing in this use-case is the identical Figure 1 appearing in Grimm and Frattini *et al.*, Nature **584**, 205 (2020) [1].
 The caption in Fig. 1 was reproduced from Ref. [1].
 
-
-![Grimm_Frattini_Fig1_1](Grimm_Frattini_Fig1_1.png)
+<img alt="Grimm_Frattini_Fig1_1" src="Grimm_Frattini_Fig1_1.png" width="300" height="300"/>
 
 **Figure 1**. **a**, Bloch sphere of the protected "Kerr-cat qubit" in the large-$\alpha$ limit [2]. The
 states on all six cardinal points are labelled, indicated by markers and their Wigner function [3] phase-space
@@ -53,3 +52,12 @@ Thanks to the parametric process of the SNAIL a cqr pulse sent at $\omega_{reson
 displacement in the readout resonator that we can measure. Figure 2a and 2b show the pulse sequence and the IQ-blobs
 of the coherent states |$\alpha$> and |-$\alpha$>, respectively.
 
+## Coherence times
+
+## Coherence times while continuous measuring
+
+## References
+
+[1] A. Grimm
+[2]
+[3]
