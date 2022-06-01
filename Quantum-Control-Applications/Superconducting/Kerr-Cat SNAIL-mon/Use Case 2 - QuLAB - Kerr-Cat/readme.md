@@ -24,8 +24,8 @@ $\hat{H}_{cat}/\hbar = -K\hat{a}^{\dagger2}\hat{a}^{2} + \epsilon\_{2}(\hat{a}^{
 
 where $K$ is the Kerr-nonlinearity and $\epsilon\_{2}$ is the amplitude of the squeezing drive.
 The simulated energy landscape can be seen in Fig. 1c (left figure). There are two local minima
-separated by an energy barrier. The two coherent states existing in these minima are |$\alpha$> and
-|$-\alpha$>, and the superposition of these coherent states form cat states. The Bloch sphere of this 
+separated by an energy barrier. The two coherent states existing in these minima are |$\alpha$ $>$ and
+|$-\alpha$ $>$, and the superposition of these coherent states form cat states. The Bloch sphere of this 
 driven Hamiltonian can be seen in Fig. 1b. When there is no squeezing drive applied to the SNAIL, the
 Hamiltonian is the one of a simple transmon that can encode the first two Fock states. The Bloch
 sphere and simulated energy potential of the undriven Hamiltonian can be seen in Fig. 1a and 1c. Figure
@@ -49,12 +49,16 @@ indicated by their respective markers.
 
 Cat quadrature readout (cqr) is a Quantum non-Demolition (QND) technique to readout the Kerr-Cat qubit.
 Thanks to the parametric process of the SNAIL a cqr pulse sent at $\omega_{resonator}$ - $\omega_{s}/2$ creates a
-displacement in the readout resonator that we can measure. Figure 2a and 2b show the pulse sequence and the IQ-blobs
+displacement in the readout resonator that we can measure. Figure 2 and 3 show the pulse sequence and the IQ-blobs
 of the coherent states |$\alpha$> and |-$\alpha$>, respectively. The principal lines of QUA code are shown below Fig. 2.
 
-![Figure_2a](Figure_2a_IQblobs.png)
+![Figure_2a_IQblobs](Figure_2a_IQblobs.png)
 
-**Figure 2**, IQ blobs of the coherent states |$\alpha$> and |$-\alpha$> measured with cat quadrature readout (cqr).
+**Figure 2**, IQ blobs of the coherent states |$\alpha$ $>$ and |$-\alpha$ $>$ measured with cat quadrature readout (cqr).
+
+<img alt="Fig2_pulse_sequence" height="153" src="Fig2_Pulse_sequence.png" width="350"/>
+
+**Figure 3**, pulse sequence to readout the coherent states with cqr.
 
 ## Coherence times
 
