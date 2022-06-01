@@ -25,6 +25,6 @@ separated by an energy barrier. The two coherent states existing in these minima
 driven Hamiltonian can be seen in Fig. 1b. When there is no squeezing drive applied to the SNAIL, the
 Hamiltonian is the one of a simple transmon that can encode the first two Fock states. The Bloch
 sphere and simulated energy potential of the undriven Hamiltonian can be seen in Fig. 1a and 1c. Figure
-1 appearing in this use-case is the identical Figure 1 appearing in Grimm and Frattini \textit{et al.}, Nature \bf{584}, 205 (2020) [1].
+1 appearing in this use-case is the identical Figure 1 appearing in Grimm and Frattini *et al.*, Nature **584**, 205 (2020) [1].
 
-![Grimm_Frattini_Fig1](Grimm_Frattini_Fig1.png)
+![Grimm_Frattini_Fig1_1](Grimm_Frattini_Fig1_1.png)
