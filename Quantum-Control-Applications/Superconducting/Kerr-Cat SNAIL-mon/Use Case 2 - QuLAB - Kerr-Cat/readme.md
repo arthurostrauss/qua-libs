@@ -3,8 +3,10 @@
 
 _Demonstrated in QuLab, the laboratory of Prof. Michel Devoret, at Yale University. https://qulab.eng.yale.edu/_
 
-_Demonstrated in the experiment of Rodrigo G. Cortiñas (https://www.linkedin.com/in/rodrigo-g-corti%C3%B1as-133a78164/)_
+_Demonstrated in the experiment of Rodrigo G. Cortiñas and Vidul Joshi (https://www.linkedin.com/in/rodrigo-g-corti%C3%B1as-133a78164/)_
 
+Note: the results shown in this use-case are shown with arbitrary parameters and do not represent
+carefully optimized parameters to show the optimal characteristic of the Kerr-Cat qubit.
 
 ## The goal
 
@@ -79,13 +81,116 @@ The main lines of QUA code that produce Fig. 2 are shown below. The QUA code tha
             measure('passive_readout', 'resonator', None, demod.full('rotated_cos', I, 'out1'), demod.full('rotated_sin', Q, 'out1'))
             save(I, I_st)
             save(Q, Q_st)
-
-        wait(cooldown_time)
 ```
 
 ## Coherence times
 
+The Kerr-Cat Hamiltonian is resilient to phase-flips because the coherent states |$\alpha$ $>$ and
+|$-\alpha$ $>$ are separated by an energy barrier. We can use cqr to infer the lifetimes of the
+|$\alpha$ $>$ and |$-\alpha$ $>$ states.
+
+The pulse sequence to measure the lifetime, see Fig. 5, is the following: (i) turn-on the squeeze-drive,
+(ii) wait for a cooldown-time, (iii) apply a cqr pulse and do state discrimination, (iv) wait for a variable
+delay, and (v) apply a second cqr pulse. This pulse sequence is repeated N times to get good SNR.
+
+The experimental data can be seen in Fig. 4, and by fitting it to single exponential decay we find
+$\tau_{\alpha} = 163 \mu s$ and $\tau_{-\alpha} = 164 \mu s$.
+
+![Free_evol](Figure_4_free_evolution.png)
+
+**Figure 4**, the blue and orange lines show the decoherence of |$\pm \alpha$ $>$ into the mixed state
+of equal population of the coherent states.
+
+![Free_evol_pulse](Fig5_free_evol_pulse_seq.png)
+
+**Figure 5**, cartoon of the pulse sequence for measuring the lifetime during free evolution.
+
+The main lines of QUA code that produce Fig. 4 are shown below. The QUA code that reproduces the data is `T_coh_free_decay.py`.
+
+```Python
+        with for_(tau, tau_min, tau <= tau_max, tau+dt):
+            
+            assign(flat_time,cooldown_time+8e3//4+tau) 
+            
+            play('on', 'squeeze_switch', duration=flat_time+1e3//4)
+            
+            play('ftc_rise', 'squeeze_rise')
+            align('squeeze_rise', 'squeeze_drive')
+            
+            play('cw', 'squeeze_drive', duration=flat_time)
+            
+            align('squeeze_drive', 'squeeze_fall')
+            play('ftc_fall', 'squeeze_fall')
+            
+            wait(cooldown_time, 'cqr_drive', 'resonator', 'cqr_switch','SPC_pump')
+            
+            play('on', 'cqr_switch', duration=(cqr_len//4))
+            play('cqr', 'cqr_drive')
+            play('on', 'SPC_pump', duration=(passive_len//4))                      
+            measure('passive_readout', 'resonator', None, demod.full('rotated_cos', I1, 'out1'), demod.full('rotated_sin', Q1, 'out1'))
+            
+            assign(res1,I1>I_th)
+            save(res1, res_st1)
+            save(I1, I_st1)
+            save(Q1, Q_st1)
+            
+            
+            wait(tau, 'cqr_drive', 'cqr_switch', 'resonator', 'SPC_pump')
+            
+            play('on', 'cqr_switch', duration=(cqr_len//4))
+            play('cqr', 'cqr_drive')
+            play('on', 'SPC_pump', duration=(passive_len//4))                      
+            measure('passive_readout', 'resonator', None, demod.full('rotated_cos', I2, 'out1'), demod.full('rotated_sin', Q2, 'out1'))
+            
+            assign(res2,I2>I_th)
+            
+            save(res2, res_st2)
+        
+            save(I2, I_st2)
+            save(Q2, Q_st2)
+            
+            wait(cooldown_time)
+```
+
 ## Coherence times while continuous measuring
+
+Figure 6 and 7 we show the lifetimes and pulse sequence of the |$\alpha$ $>$ and |$-\alpha$ $>$ states while
+continoulsy performing measurements to the qubit. The lifetimes are smaller due to the non-perfect QNDs of
+the measurement.
+
+![lifetime_while_measuring](Figure_6_decay_while%20measuring.png)
+
+**Figure 6**, lifetime of the coherence states while continuously performing cqr measurements.
+
+![lifetime_pulse_seq_meas](Figure7_decay_measuring.png)
+
+**Figure 7**, cartoon of the pulse sequence to generate Fig. 6.
+
+The main lines of QUA code that produce Fig. 4 are shown below. The QUA code that reproduces the data is `cqr_blobs_yale_conditional.py`.
+
+```python
+        play('on', 'squeeze_switch', duration=int((4e6+1e3)//4))
+        play('ftc_rise', 'squeeze_rise')
+        align('squeeze_rise', 'squeeze_drive')
+        play('cw', 'squeeze_drive', duration=int(4e6//4))
+        align('squeeze_drive', 'squeeze_fall')
+        play('ftc_fall', 'squeeze_fall')
+        
+        wait(cooldown_time, 'cqr_drive', 'resonator')
+        
+        with for_(j, 0, j < n_cqr, j+1):
+            play('on', 'cqr_switch', duration=(cqr_len//4))
+            play('cqr', 'cqr_drive')
+            play('on', 'SPC_pump', duration=(passive_len//4))
+            measure('passive_readout', 'resonator', None, demod.full('rotated_cos', I, 'out1'), demod.full('rotated_sin', Q, 'out1'))
+            
+            assign(res,I>I_th)
+            
+            save(res, res_st)
+            
+            save(I, I_st)
+            save(Q, Q_st)
+```
 
 ## References
 
