@@ -33,8 +33,8 @@ The caption in Fig. 1 was reproduced from Ref. [1].
 
 **Figure 1**. **a**, Bloch sphere of the protected "Kerr-cat qubit" in the large-$\alpha$ limit [2]. The
 states on all six cardinal points are labelled, indicated by markers and their Wigner function [3] phase-space
-representations are sketched. Here, |$\pm$ $Z$> = |$C^{\pm}\_{\alpha}$> = (|+$\alpha$> $\pm$ |-$\alpha$>)/$\sqrt{2}$
-and |$\pm Y$ = |$C^{\mp i}_{\alpha}$ = (|$+\alpha$ $\mp$ $i$|$-\alpha$)/$\sqrt{2}$. The continuous $X(\theta)$ gate
+representations are sketched. Here, |$\pm$ $Z$ = |$C^{\pm}\_{\alpha}$ = (|+$\alpha$ $\pm$ |-$\alpha$)/$\sqrt{2}$
+and |$\pm Y$$>$ = |$C^{\mp i}_{\alpha}$ = (|$+\alpha$ $\mp$ $i$|$-\alpha$)/$\sqrt{2}$. The continuous $X(\theta)$ gate
 and the discrete $Z(\pi/2)$ gate are shown by a purple circle and a blue arrow, respectively. **b**, Bloch sphere
 of the single-photon "Fock qubit" shown for comparison with **a**. **c**, Energy dependence of equation (1) on classical
 phase-space coordinates Re(a) and Im(a) for squeezing drive amplitudes $\epsilon\_{2}/2\pi$ = 17.75 MHz (left)
