@@ -17,7 +17,11 @@ both of these inside of a 3D cavity.
 
 ## Kerr-cat qubit
 
-The Kerr-cat Hamiltonian, in the SNAIL rotating frame, is the following, $\hat{H}_{cat}/\hbar = -K\hat{a}^{\dagger2}\hat{a}^{2} + \epsilon\_{2}(\hat{a}^{\dagger2}+\hat{a}^{2})$,
+The Kerr-cat Hamiltonian, in the SNAIL rotating frame, is the following, 
+
+$\hat{H}_{cat}/\hbar = -K\hat{a}^{\dagger2}\hat{a}^{2} + \epsilon\_{2}(\hat{a}^{\dagger2}+\hat{a}^{2})$, (1) 
+
+
 where $K$ is the Kerr-nonlinearity and $\epsilon\_{2}$ is the amplitude of the squeezing drive.
 The simulated energy landscape can be seen in Fig. 1c (left figure). There are two local minima
 separated by an energy barrier. The two coherent states existing in these minima are |$\alpha$> and
@@ -41,4 +45,11 @@ phase-space coordinates Re(a) and Im(a) for squeezing drive amplitudes $\epsilon
 and $\epsilon\_{2}$ = 0 (right) with a sketch showing the adiabatic ramp of the drive over a time $\tau\_{ramp} >> 1/2K$. Black
 lies are constant energy contours. The quadrature expectation values of the |$\pm X$ $\>$-states from **a**, **b** are 
 indicated by their respective markers.
+
+## Cat quadrature readout
+
+Cat quadrature readout (cqr) is a Quantum non-Demolition (QND) technique to readout the Kerr-Cat qubit.
+Thanks to the parametric process of the SNAIL a cqr pulse sent at $\omega_{resonator}$ - $\omega_{s}/2$ creates a
+displacement in the readout resonator that we can measure. Figure 2a and 2b show the pulse sequence and the IQ-blobs
+of the coherent states |$\alpha$> and |-$\alpha$>, respectively.
 
