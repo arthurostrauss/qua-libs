@@ -17,7 +17,7 @@ both of these inside of a 3D cavity.
 
 ## Kerr-cat qubit
 
-The Kerr-cat Hamiltonian is the following in the frame rotating at the SNAIL frequency $\hat{H}$
+The Kerr-cat Hamiltonian is the following in the frame rotating at the SNAIL frequency $\hat{H}_{cat}$
 
 <img src="https://latex.codecogs.com/svg.image?\hat{H}_{cat}/\hbar=-K\hat{a}^{\dagger2}\hat{a}^{2} + \epsilon_{2}(\hat{a}^{\dagger2}+\hat{a}^2)" />
 
