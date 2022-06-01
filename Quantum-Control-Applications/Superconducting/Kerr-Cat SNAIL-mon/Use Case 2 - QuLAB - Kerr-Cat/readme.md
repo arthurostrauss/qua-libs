@@ -50,7 +50,7 @@ indicated by their respective markers.
 Cat quadrature readout (cqr) is a Quantum non-Demolition (QND) technique to readout the Kerr-Cat qubit.
 Thanks to the parametric process of the SNAIL a cqr pulse sent at $\omega_{resonator}$ - $\omega_{s}/2$ creates a
 displacement in the readout resonator that we can measure. Figure 2 and 3 show the pulse sequence and the IQ-blobs
-of the coherent states |$\alpha$> and |-$\alpha$>, respectively. The principal lines of QUA code are shown below Fig. 2.
+of the coherent states |$\alpha$> and |-$\alpha$>, respectively.
 
 ![Figure_2a_IQblobs](Figure_2a_IQblobs.png)
 
@@ -59,6 +59,29 @@ of the coherent states |$\alpha$> and |-$\alpha$>, respectively. The principal l
 <img alt="Fig2_pulse_sequence" height="153" src="Fig2_Pulse_sequence.png" width="350"/>
 
 **Figure 3**, pulse sequence to readout the coherent states with cqr.
+
+The main lines of QUA code that produce Fig. 2 are shown below. The QUA code that reproduces the data is `cqr_blobs_yale.py`.
+
+```python
+        play('on', 'squeeze_switch', duration=int((4e6+1e3)//4))
+        play('ftc_rise', 'squeeze_rise')
+        align('squeeze_rise', 'squeeze_drive')
+        play('cw', 'squeeze_drive', duration=int(4e6//4))
+        align('squeeze_drive', 'squeeze_fall')
+        play('ftc_fall', 'squeeze_fall')
+        
+        wait(cooldown_time, 'cqr_drive', 'resonator')
+                
+        with for_(i, 0, i < 1, i+1):
+            play('on', 'cqr_switch', duration=(cqr_len//4))
+            play('cqr', 'cqr_drive')
+            play('on', 'SPC_pump', duration=(passive_len//4))
+            measure('passive_readout', 'resonator', None, demod.full('rotated_cos', I, 'out1'), demod.full('rotated_sin', Q, 'out1'))
+            save(I, I_st)
+            save(Q, Q_st)
+
+        wait(cooldown_time)
+```
 
 ## Coherence times
 
