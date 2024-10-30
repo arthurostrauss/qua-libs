@@ -13,11 +13,12 @@ path = "./quam_state"
 
 # Define the available instrument setup
 instruments = Instruments()
-instruments.add_mw_fem(controller=1, slots=[1, 2])
-instruments.add_lf_fem(controller=1, slots=[3, 4])
+instruments.add_lf_fem(controller=1, slots=[1, 2, 3, 4, 5])
+instruments.add_mw_fem(controller=1, slots=[6, 7, 8])
 
 # Define which qubit indices are present in the system
-qubits = [1, 2, 3, 4, 5, 6]
+qubits = [1, 2, 3, 4, 5]
+qubit_pairs = [(1, 2), (2, 3), (3, 4), (4, 5)]
 # Allocate the wiring to the connectivity object based on the available instruments
 connectivity = Connectivity()
 
@@ -27,7 +28,7 @@ q1_res_ch = mw_fem_spec(con=1, slot=1, in_port=1, out_port=1)
 connectivity.add_resonator_line(qubits=qubits, constraints=q1_res_ch)
 connectivity.add_qubit_flux_lines(qubits=qubits)
 connectivity.add_qubit_drive_lines(qubits=qubits)
-# connectivity.add_qubit_pair_flux_lines(qubit_pairs=[(1,2)])  # Tunable coupler
+connectivity.add_qubit_pair_flux_lines(qubit_pairs=qubit_pairs)  # Tunable coupler
 allocate_wiring(connectivity, instruments)
 
 # Single feed-line for reading the resonators & driving the qubits + flux on specific fem slot
