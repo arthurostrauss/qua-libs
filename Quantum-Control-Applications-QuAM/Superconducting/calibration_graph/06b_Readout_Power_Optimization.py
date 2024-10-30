@@ -69,7 +69,6 @@ u = unit(coerce_to_integer=True)
 machine = QuAM.load()
 # Generate the OPX and Octave configurations
 config = machine.generate_config()
-octave_config = machine.get_octave_config()
 # Open Communication with the QOP
 qmm = machine.connect()
 
@@ -113,7 +112,7 @@ with program() as iq_blobs:
             save(n, n_st)
             with for_(*from_array(a, amps)):
                 if reset_type == "active":
-                    active_reset(machine, qubit.name)
+                    active_reset(qubit, "readout")
                 elif reset_type == "thermal":
                     wait(qubit.thermalization_time * u.ns)
                 else:
@@ -127,7 +126,7 @@ with program() as iq_blobs:
                 save(Q_g[i], Q_g_st[i])
                 
                 if reset_type == "active":
-                    active_reset(machine, qubit.name)
+                    active_reset(qubit, "readout")
                 elif reset_type == "thermal":
                     wait(qubit.thermalization_time * u.ns)
                 else:

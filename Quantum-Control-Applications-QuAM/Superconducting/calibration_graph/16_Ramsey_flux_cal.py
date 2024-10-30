@@ -30,7 +30,7 @@ class Parameters(NodeParameters):
     wait_time_step_in_ns: int = 20
     flux_span : float = 0.02
     flux_step : float = 0.002
-    flux_point_joint_or_independent: Literal['joint', 'independent'] = "joint"
+    flux_point_joint_or_independent: Literal['joint', 'independent'] = "independent"
     simulate: bool = False
     timeout: int = 100
     flux_mode_dc_or_pulsed: Literal['dc', 'pulsed'] = 'pulsed'
@@ -71,7 +71,6 @@ u = unit(coerce_to_integer=True)
 machine = QuAM.load()
 # Generate the OPX and Octave configurations
 config = machine.generate_config()
-octave_config = machine.get_octave_config()
 # Open Communication with the QOP
 qmm = machine.connect()
 
@@ -265,7 +264,7 @@ for q in qubits:
 
 
 # %%
-grid_names = [f'{q.name}_0' for q in qubits]
+grid_names = [q.grid_location for q in qubits]
 grid = QubitGrid(ds, grid_names)
 for ax, qubit in grid_iter(grid):
     ds.sel(qubit = qubit['qubit']).state.plot(ax = ax)

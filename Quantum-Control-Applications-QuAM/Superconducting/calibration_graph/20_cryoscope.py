@@ -38,7 +38,7 @@ class Parameters(NodeParameters):
     amplitude_factor: float = 0.5
     cryoscope_len: int = 240
     reset_type_active_or_thermal: Literal['active', 'thermal'] = 'active'
-    flux_point_joint_or_independent: Literal['joint', 'independent'] = "joint"
+    flux_point_joint_or_independent: Literal['joint', 'independent'] = "independent"
     simulate: bool = False
     timeout: int = 100
     reset_filters: bool = False
@@ -71,7 +71,6 @@ if node.parameters.reset_filters:
             
 # Generate the OPX and Octave configurations
 config = machine.generate_config()
-octave_config = machine.get_octave_config()
 # Open Communication with the QOP
 qmm = machine.connect()
 flux_point = node.parameters.flux_point_joint_or_independent
@@ -154,7 +153,7 @@ with program() as cryoscope:
             with for_each_(flag, [True, False]):
                 if reset_type == "active":
                     for qubit in qubits:
-                        active_reset(machine, qubit.name)
+                        active_reset(qubit, "readout")
                 else:
                     wait(qubit.thermalization_time * u.ns)
                 align()
@@ -205,7 +204,7 @@ with program() as cryoscope:
                     # Initialize the qubits
                     if reset_type == "active":
                         for qubit in qubits:
-                            active_reset(machine, qubit.name)
+                            active_reset(qubit, "readout")
                     else:
                         wait(qubit.thermalization_time * u.ns)
                     align()
