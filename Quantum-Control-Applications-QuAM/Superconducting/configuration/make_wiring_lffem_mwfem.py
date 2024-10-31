@@ -24,9 +24,9 @@ connectivity = Connectivity()
 
 # Single feed-line for reading the resonators & individual qubit drive lines
 # Define any custom/hardcoded channel addresses
-q1_res_ch = mw_fem_spec(con=1, slot=1, in_port=1, out_port=1)
-connectivity.add_resonator_line(qubits=qubits, constraints=q1_res_ch)
-connectivity.add_qubit_flux_lines(qubits=qubits)
+connectivity.add_resonator_line(qubits=qubits)
+connectivity.add_qubit_flux_lines(qubits=qubits[0], constraints=lf_fem_spec(out_slot=2))
+connectivity.add_qubit_flux_lines(qubits=qubits[1:])
 connectivity.add_qubit_drive_lines(qubits=qubits)
 connectivity.add_qubit_pair_flux_lines(qubit_pairs=qubit_pairs)  # Tunable coupler
 allocate_wiring(connectivity, instruments)
