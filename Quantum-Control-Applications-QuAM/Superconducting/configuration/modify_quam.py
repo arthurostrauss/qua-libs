@@ -30,13 +30,13 @@ for i in range(len(machine.qubits.items())):
     machine.qubits[f"q{i+1}"].grid_location = f"{i},0"
 
 # Update frequencies
-rr_freq = np.array([4.395, 4.412, 4.521, 4.728, 4.915, 5.147]) * u.GHz
+rr_freq = np.array([4.395, 4.412, 4.521, 4.728, 4.915]) * u.GHz
 rr_LO = 4.75 * u.GHz
 rr_if = rr_freq - rr_LO
 rr_max_power_dBm = 4
 
-xy_freq = np.array([6.012, 6.421, 6.785, 7.001, 7.254, 5.978]) * u.GHz
-xy_LO = np.array([6.0, 6.5, 6.5, 7.0, 7.04, 6.0]) * u.GHz
+xy_freq = np.array([6.012, 6.421, 6.785, 7.001, 7.254]) * u.GHz
+xy_LO = np.array([6.0, 6.5, 6.5, 7.0, 7.04]) * u.GHz
 xy_if = xy_freq - xy_LO
 xy_max_power_dBm = 1
 
@@ -61,7 +61,7 @@ for i, q in enumerate(machine.qubits):
     machine.qubits[q].z.opx_output.upsampling_mode = "pulse"
 
     ## Update pulses
-    # readout
+    # Readout
     machine.qubits[q].resonator.operations["readout"].length = 2.5 * u.us
     machine.qubits[q].resonator.operations["readout"].amplitude = 1e-3
     # Qubit saturation
@@ -79,6 +79,11 @@ for i, q in enumerate(machine.qubits):
     machine.qubits[q].xy.operations["x90_Square"].amplitude = (
         machine.qubits[q].xy.operations["x180_Square"].amplitude / 2
     )
+
+# %%
+for qp in machine.qubit_pairs.values():
+    qp.coupler.opx_output.output_mode = "amplified"
+    qp.coupler.opx_output.upsampling_mode = "pulse"
 
 # %%
 # save into state.json
