@@ -377,7 +377,7 @@ if not node.parameters.simulate:
 # %%
 if not node.parameters.simulate:
 
-    grid_names = [f'{q.name}_0' for q in qubits]
+    grid_names = [q.grid_location for q in qubits]
     grid = QubitGrid(ds, grid_names)
     for ax, qubit in grid_iter(grid):
         ds_q = best_data[qubit['qubit']]
