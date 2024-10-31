@@ -47,7 +47,7 @@ from quam_libs.trackable_object import tracked_updates
 
 
 class Parameters(NodeParameters):
-    qubits: Optional[str] = None
+    target_qubitsOptional[str] = None
     num_averages: int = 100
     frequency_span_in_mhz: float = 10
     frequency_step_in_mhz: float = 0.1
@@ -84,10 +84,10 @@ octave_config = machine.get_octave_config()
 qmm = machine.connect()
 
 # Get the relevant QuAM components
-if node.parameters.qubits is None or node.parameters.qubits == '':
+if node.parameters.target_qubits is None or node.parameters.target_qubits == '':
     qubits = machine.active_qubits
 else:
-    qubits = [machine.qubits[q] for q in node.parameters.qubits.replace(' ', '').split(',')]
+    qubits = [machine.qubits[q] for q in node.parameters.target_qubits.replace(' ', '').split(',')]
 resonators = [qubit.resonator for qubit in qubits]
 prev_amps = [rr.operations["readout"].amplitude for rr in resonators]
 num_qubits = len(qubits)

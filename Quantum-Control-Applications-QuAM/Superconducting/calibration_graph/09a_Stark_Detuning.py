@@ -42,7 +42,7 @@ import numpy as np
 
 # %% {Node_parameters}
 class Parameters(NodeParameters):
-    qubits: Optional[List[str]] = None
+    target_qubitsOptional[List[str]] = None
     num_averages: int = 20
     operation: str = "x180"
     frequency_span_in_mhz: float = 20
@@ -65,10 +65,10 @@ u = unit(coerce_to_integer=True)
 machine = QuAM.load()
 
 # Get the relevant QuAM components
-if node.parameters.qubits is None or node.parameters.qubits == "":
+if node.parameters.target_qubits is None or node.parameters.target_qubits == "":
     qubits = machine.active_qubits
 else:
-    qubits = [machine.qubits[q] for q in node.parameters.qubits]
+    qubits = [machine.qubits[q] for q in node.parameters.target_qubits]
 num_qubits = len(qubits)
 operation = node.parameters.operation  # The qubit operation to play
 

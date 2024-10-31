@@ -42,7 +42,7 @@ import warnings
 # %% {Node_parameters}
 class Parameters(NodeParameters):
 
-    qubits: Optional[List[str]] = None
+    target_qubitsOptional[List[str]] = None
     num_averages: int = 10
     min_flux_offset_in_v: float = -0.5
     max_flux_offset_in_v: float = 0.5
@@ -69,10 +69,10 @@ u = unit(coerce_to_integer=True)
 machine = QuAM.load()
 
 # Get the relevant QuAM components
-if node.parameters.qubits is None or node.parameters.qubits == "":
+if node.parameters.target_qubits is None or node.parameters.target_qubits == "":
     qubits = machine.active_qubits
 else:
-    qubits = [machine.qubits[q] for q in node.parameters.qubits]
+    qubits = [machine.qubits[q] for q in node.parameters.target_qubits]
 if any([q.z is None for q in qubits]):
     warnings.warn("Found qubits without a flux line. Skipping")
 

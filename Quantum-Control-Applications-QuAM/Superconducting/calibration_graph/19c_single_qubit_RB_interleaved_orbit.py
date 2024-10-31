@@ -42,7 +42,7 @@ from qm import logger
 
 # %% {Node_parameters}
 class Parameters(NodeParameters):
-    qubits: Optional[List[str]] = None
+    target_qubitsOptional[List[str]] = None
     use_state_discrimination: bool = True
     use_strict_timing: bool = False
     interleaved_gate_index: int = 2
@@ -94,10 +94,10 @@ machine = QuAM.load()
 # Open Communication with the QOP
 qmm = machine.connect()
 
-if node.parameters.qubits is None or node.parameters.qubits == '':
+if node.parameters.target_qubits is None or node.parameters.target_qubits == '':
     qubits = machine.active_qubits
 else:
-    qubits = [machine.qubits[q] for q in node.parameters.qubits.replace(' ', '').split(',')]
+    qubits = [machine.qubits[q] for q in node.parameters.target_qubits.replace(' ', '').split(',')]
 num_qubits = len(qubits)
 
 ##############################

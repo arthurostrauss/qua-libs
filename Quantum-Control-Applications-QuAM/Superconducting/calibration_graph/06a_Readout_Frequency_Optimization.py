@@ -38,7 +38,7 @@ import numpy as np
 # %% {Node_parameters}
 class Parameters(NodeParameters):
 
-    qubits: Optional[List[str]] = None
+    target_qubitsOptional[List[str]] = None
     num_averages: int = 100
     frequency_span_in_mhz: float = 10
     frequency_step_in_mhz: float = 0.1
@@ -63,10 +63,10 @@ config = machine.generate_config()
 qmm = machine.connect()
 
 # Get the relevant QuAM components
-if node.parameters.qubits is None or node.parameters.qubits == "":
+if node.parameters.target_qubits is None or node.parameters.target_qubits == "":
     qubits = machine.active_qubits
 else:
-    qubits = [machine.qubits[q] for q in node.parameters.qubits]
+    qubits = [machine.qubits[q] for q in node.parameters.target_qubits]
 num_qubits = len(qubits)
 
 
