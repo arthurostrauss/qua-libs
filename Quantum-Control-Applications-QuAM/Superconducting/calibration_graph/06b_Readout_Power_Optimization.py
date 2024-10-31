@@ -46,7 +46,7 @@ class Parameters(NodeParameters):
     target_qubits: Optional[List[str]] = None
     num_runs: int = 2000
     reset_type_thermal_or_active: Literal['thermal', 'active'] = "thermal"
-    flux_point_joint_or_independent: Literal['joint', 'independent'] = "joint"
+    flux_point_joint_or_independent: Literal['joint', 'independent'] = "independent"
     simulate: bool = False
     timeout: int = 100
     start_amp: float = 0.5
@@ -360,7 +360,7 @@ if not node.parameters.simulate:
 # %%
 if not node.parameters.simulate:
 
-    grid_names = [f'{q.name}_0' for q in qubits]
+    grid_names = [q.grid_location for q in qubits]
     grid = QubitGrid(ds, grid_names)
     for ax, qubit in grid_iter(grid):
         fit_res.loc[qubit].plot(ax = ax,x = 'readout_amp', hue='result', add_legend=False)
