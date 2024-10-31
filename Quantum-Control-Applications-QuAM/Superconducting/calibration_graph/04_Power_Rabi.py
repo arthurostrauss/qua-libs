@@ -40,7 +40,7 @@ import numpy as np
 # %% {Node_parameters}
 class Parameters(NodeParameters):
 
-    target_qubitsOptional[List[str]] = None
+    target_qubits: Optional[List[str]] = None
     num_averages: int = 200
     operation: str = "x180"
     min_amp_factor: float = 0.001

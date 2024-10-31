@@ -47,7 +47,7 @@ from quam_libs.trackable_object import tracked_updates
 
 
 class Parameters(NodeParameters):
-    target_qubitsOptional[str] = None
+    target_qubits: Optional[str] = None
     num_averages: int = 100
     frequency_span_in_mhz: float = 10
     frequency_step_in_mhz: float = 0.1

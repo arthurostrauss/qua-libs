@@ -12,7 +12,7 @@ from quam_libs.components import QuAM
 
 # %% {Node_parameters}
 class Parameters(NodeParameters):
-    target_qubitsOptional[str] = None
+    target_qubits: Optional[str] = None
     calibrate_resonator: bool = True
     calibrate_drive: bool = True
 

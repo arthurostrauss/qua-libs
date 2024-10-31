@@ -41,7 +41,7 @@ import xarray as xr
 # %% {Node_parameters}
 class Parameters(NodeParameters):
 
-    target_qubitsOptional[List[str]] = None
+    target_qubits: Optional[List[str]] = None
     num_runs: int = 2000
     reset_type_thermal_or_active: Literal["thermal", "active"] = "thermal"
     flux_point_joint_or_independent: Literal["joint", "independent"] = "independent"
