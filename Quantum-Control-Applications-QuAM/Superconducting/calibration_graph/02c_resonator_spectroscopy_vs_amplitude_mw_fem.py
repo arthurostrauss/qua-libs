@@ -84,8 +84,8 @@ octave_config = machine.get_octave_config()
 qmm = machine.connect()
 
 # Get the relevant QuAM components
-if node.parameters.max_amp < -20:
-    raise ValueError(f"The maximum amplitude needs to be >= -20 dBm, got {node.parameters.max_amp}")
+if node.parameters.max_power_dbm < -20:
+    raise ValueError(f"The maximum amplitude needs to be >= -20 dBm, got {node.parameters.max_power_dbm}")
 
 if node.parameters.target_qubits is None or node.parameters.target_qubits == '':
     qubits = machine.active_qubits
@@ -288,7 +288,7 @@ ds = ds.assign_coords(
     {'abs_amp' : (['qubit','amp'],np.array([abs_amp(q)(amps) for q in qubits]))}
 )
 ds = ds.assign_coords(
-    {'power_dbm': (['qubit', 'amp'], np.array([node.parameters.max_amp * abs_amp -node.parameters.ro_line_attenuation_dB for abs_amp in ds.abs_amp.values]))}
+    {'power_dbm': (['qubit', 'amp'], np.array([node.parameters.max_power_dbm * abs_amp -node.parameters.ro_line_attenuation_dB for abs_amp in ds.abs_amp.values]))}
 )
 
 ds.power_dbm.attrs['long_name'] = 'Power'
