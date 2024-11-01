@@ -52,7 +52,7 @@ matplotlib.use("TKAgg")
 # Class containing tools to help handling units and conversions.
 u = unit(coerce_to_integer=True)
 # Instantiate the QuAM class from the state file
-machine = QuAM.load()
+machine = QuAM.load("/Users/adamachuck/Documents/GitHub/ASQUM/qua-libs/Quantum-Control-Applications-QuAM/Superconducting/configuration/quam_state")
 # Generate the OPX and Octave configurations
 config = machine.generate_config()
 # Open Communication with the QOP
@@ -72,11 +72,11 @@ n_avg = 66000  # The number of averages
 # Adjust the pulse duration and amplitude to drive the qubit into a mixed state
 saturation_len = 20 * u.us  # In ns
 saturation_amp = (
-    0.058  # pre-factor to the value defined in the config - restricted to [-2; 2)
+    0.1  # pre-factor to the value defined in the config - restricted to [-2; 2)
     # 0.337 # for anharmonicity = gap * 2 
 )
 # Qubit detuning sweep with respect to their resonance frequencies
-dfs = np.arange(-140e6, +140e6, 0.1e6)
+dfs = np.arange(-340e6, +340e6, 0.1e6)
 # dfs = np.arange(-300e6, +300e6, 1e6) # wide-range to look for anharmonicity 
 
 with program() as multi_qubit_spec:
@@ -164,7 +164,7 @@ else:
             )
             plt.grid(True)
             plt.ylabel(r"R=$\sqrt{I^2 + Q^2}$ [V]")
-            plt.title(f"{q.name} (f_01: {q.xy.rf_frequency / u.MHz} MHz)")
+            plt.title(f"{q.name} (f_01: {q.xy.RF_frequency / u.MHz} MHz)")
             plt.axvline( (0) / u.MHz, color="r", linestyle="--")
             plt.axvline( (-q.anharmonicity/2) / u.MHz, color="g", linestyle="--")
             plt.subplot(2, num_qubits, num_qubits + i + 1)

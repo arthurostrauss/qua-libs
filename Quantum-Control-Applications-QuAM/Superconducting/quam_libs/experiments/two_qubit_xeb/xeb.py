@@ -100,14 +100,14 @@ class XEB:
         """
         if self.xeb_config.gate_set.run_through_amp_matrix_modulation and amp_matrix is not None:
             qubit.xy.play(self.xeb_config.baseline_gate_name, amplitude_scale=amp(*amp_matrix))
-            # qubit.xy.play('x90')
+            # qubit.xy.play('x90') # NOTE: for debugging purposes  
         else:
             with switch_(gate_idx, unsafe=True):
                 for i in range(len(self.xeb_config.gate_set)):
                     with case_(i):
                         self.xeb_config.gate_set[i].gate_macro(qubit)
 
-    def _xeb_prog(self, machine, simulate: bool = False):
+    def _xeb_prog(self, simulate: bool = False):
         """
         Generate the QUA program for the XEB experiment
         Args:
@@ -146,7 +146,9 @@ class XEB:
             ]  # Stream for gate indices (enabling circuit reconstruction in post-processing)
 
             # Bring the active qubits to the idle points: 
-            machine.apply_all_flux_to_min()
+            self.quam.apply_all_flux_to_min()
+            for q, qubit in enumerate(self.qubits):
+                qubit.z.to_independent_idle()
 
             # Setting seed for reproducibility
             r = Random()
@@ -326,8 +328,7 @@ class XEB:
         # Compile the QUA program
 
         config = self.quam.generate_config()
-        machine = self.quam.load()
-        xeb_prog = self._xeb_prog(machine, simulate)
+        xeb_prog = self._xeb_prog(simulate)
         qmm = self.quam.connect()
         if simulate:
             qm = qmm.open_qm(config)

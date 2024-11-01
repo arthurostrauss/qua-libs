@@ -2,7 +2,7 @@
 from quam_libs.components import QuAM
 from quam_libs.quam_builder.machine import build_quam
 
-path = "./quam_state"
+path = "/Users/adamachuck/Documents/GitHub/ASQUM/qua-libs/Quantum-Control-Applications-QuAM/Superconducting/configuration/quam_state"
 
 machine = QuAM.load(path)
 

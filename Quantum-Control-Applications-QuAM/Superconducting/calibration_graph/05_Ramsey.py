@@ -133,11 +133,11 @@ with program() as ramsey:
                         assign(phi, Cast.mul_fixed_by_int(-detuning * 1e-9, 4 * t))
                     align()
                     # # Strict_timing ensures that the sequence will be played without gaps
-                    with strict_timing_():
-                        qubit.xy.play("x90")
-                        qubit.xy.wait(t)
-                        qubit.xy.frame_rotation_2pi(phi)
-                        qubit.xy.play("x90")
+                    # with strict_timing_():
+                    qubit.xy.play("x90")
+                    qubit.xy.wait(t)
+                    qubit.xy.frame_rotation_2pi(phi)
+                    qubit.xy.play("x90")
 
                     # Align the elements to measure after playing the qubit pulse.
                     align()

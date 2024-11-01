@@ -147,6 +147,10 @@ with program() as multi_res_spec_vs_flux:
             I_st[i].buffer(len(dfs)).buffer(len(dcs)).average().save(f"I{i + 1}")
             Q_st[i].buffer(len(dfs)).buffer(len(dcs)).average().save(f"Q{i + 1}")
 
+from qm import generate_qua_script
+sourceFile = open('debug.py', 'w')
+print(generate_qua_script(multi_res_spec_vs_flux, config), file=sourceFile)
+sourceFile.close()
 
 # %% {Simulate_or_execute}
 if node.parameters.simulate:

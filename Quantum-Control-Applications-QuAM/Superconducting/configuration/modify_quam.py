@@ -17,7 +17,7 @@ def get_band(freq):
         raise ValueError(f"The specified frequency {freq} HZ is outside of the MW fem bandwidth [50 MHz, 10.5 GHz]")
 
 
-path = "./quam_state"
+path = "/Users/adamachuck/Documents/GitHub/ASQUM/qua-libs/Quantum-Control-Applications-QuAM/Superconducting/configuration/quam_state"
 
 machine = QuAM.load(path)
 
@@ -30,15 +30,16 @@ for i in range(len(machine.qubits.items())):
     machine.qubits[f"q{i+1}"].grid_location = f"{i},0"
 
 # Update frequencies
-rr_freq = np.array([4.395, 4.412, 4.521, 4.728, 4.915]) * u.GHz
-rr_LO = 4.75 * u.GHz
+rr_freq = np.array([5932987219.0, 6023928729.0, 5866936123.0, 6079048431.0, 5971697831.0]) #* u.GHz
+rr_LO = 5.95 * u.GHz
 rr_if = rr_freq - rr_LO
-rr_max_power_dBm = 4
+rr_max_power_dBm = -20
 
-xy_freq = np.array([6.012, 6.421, 6.785, 7.001, 7.254]) * u.GHz
-xy_LO = np.array([6.0, 6.5, 6.5, 7.0, 7.04]) * u.GHz
+xy_freq = np.array([5108604110.9, 4834229255.6, 5146263353.0, 4674709204.1, 4880175329.7]) #* u.GHz
+# xy_LO = np.array([6.0, 6.5, 6.5, 7.0, 7.04]) * u.GHz
+xy_LO = np.array([4.9]*5) * u.GHz
 xy_if = xy_freq - xy_LO
-xy_max_power_dBm = 1
+xy_max_power_dBm = -2
 
 # NOTE: be aware of coupled ports for bands
 for i, q in enumerate(machine.qubits):
@@ -62,14 +63,14 @@ for i, q in enumerate(machine.qubits):
 
     ## Update pulses
     # Readout
-    machine.qubits[q].resonator.operations["readout"].length = 2.5 * u.us
-    machine.qubits[q].resonator.operations["readout"].amplitude = 1e-3
+    machine.qubits[q].resonator.operations["readout"].length = 2 * u.us
+    machine.qubits[q].resonator.operations["readout"].amplitude = 0.25
     # Qubit saturation
     machine.qubits[q].xy.operations["saturation"].length = 20 * u.us
-    machine.qubits[q].xy.operations["saturation"].amplitude = 0.25
+    machine.qubits[q].xy.operations["saturation"].amplitude = 0.5
     # Single qubit gates - DragCosine
-    machine.qubits[q].xy.operations["x180_DragCosine"].length = 48
-    machine.qubits[q].xy.operations["x180_DragCosine"].amplitude = 0.2
+    machine.qubits[q].xy.operations["x180_DragCosine"].length = 16
+    machine.qubits[q].xy.operations["x180_DragCosine"].amplitude = 0.8
     machine.qubits[q].xy.operations["x90_DragCosine"].amplitude = (
         machine.qubits[q].xy.operations["x180_DragCosine"].amplitude / 2
     )
