@@ -108,6 +108,7 @@ class XEB:
         if self.xeb_config.gate_set.run_through_amp_matrix_modulation and amp_matrix is not None:
             # Play all gates through real-time amplitude matrix modulation
             qubit.xy.play(self.xeb_config.baseline_gate_name, amplitude_scale=amp(*amp_matrix))
+            # qubit.xy.play('x90') # NOTE: for debugging purposes  
         else:
             # Play all gates through switch case over the gate index
             with switch_(gate_idx, unsafe=True):
@@ -152,6 +153,11 @@ class XEB:
             gate_st = [
                 declare_stream() for _ in range(n_qubits)
             ]  # Stream for gate indices (enabling circuit reconstruction in post-processing)
+
+            # Bring the active qubits to the idle points: 
+            self.quam.apply_all_flux_to_min()
+            for q, qubit in enumerate(self.qubits):
+                qubit.z.to_independent_idle()
 
             # Setting seed for reproducibility
             r = Random()
