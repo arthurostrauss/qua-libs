@@ -566,15 +566,18 @@ class XEBJob:
                 "counts": counts,
                 "gate_indices": gate_indices,
             }
-            try:
-                amp_st = {
-                    f"amp_matrix_q{q + 1}": self._result_handles.get(f"amp_matrix_q{q + 1}").fetch_all()["value"]
-                    for q in range(self.xeb_config.n_qubits)
-                }
-                saved_data["amp_st"] = (amp_st,)
 
-            except KeyError:
-                pass
+            amp_res = self._result_handles.get("amp_matrix_q0")
+            if amp_res is not None:
+                try:
+                    amp_st = {
+                        f"amp_matrix_q{q + 1}": self._result_handles.get(f"amp_matrix_q{q + 1}").fetch_all()["value"]
+                        for q in range(self.xeb_config.n_qubits)
+                    }
+                    saved_data["amp_st"] = (amp_st,)
+
+                except KeyError:
+                    pass
 
         if self.xeb_config.should_save_data:
             xeb_config = asdict(self.xeb_config)
