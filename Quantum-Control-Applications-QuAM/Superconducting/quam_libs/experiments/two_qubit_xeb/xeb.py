@@ -1006,10 +1006,11 @@ class XEBResult:
                 ax.set_xticks(self.xeb_config.depths)
                 ax.set_yticks(np.arange(1, self.xeb_config.seqs + 1))
                 fig.colorbar(
-                    ax.pcolor(self.xeb_config.depths, range(self.xeb_config.seqs), np.abs(data[plot_idx])),
+                    ax.pcolor(self.xeb_config.depths, range(self.xeb_config.seqs), np.abs(data[plot_idx]),
+                              vmin=0,
+                              vmax=1,
+                              ),
                     ax=ax,
-                    vmin=0,
-                    vmax=1,
                 )
 
             plt.tight_layout()
