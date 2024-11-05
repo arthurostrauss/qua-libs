@@ -1,4 +1,11 @@
 {
+    "network": {
+        "host": "qum.phys.sinica.edu.tw",
+        "port": 9501,
+        "cluster_name": "QPX1000_1",
+        "octave_ips": [],
+        "octave_ports": []
+    },
     "wiring": {
         "qubits": {
             "q1": {
@@ -92,12 +99,5 @@
                 }
             }
         }
-    },
-    "network": {
-        "host": "qum.phys.sinica.edu.tw",
-        "port": 9501,
-        "cluster_name": "QPX1000_1",
-        "octave_ips": [],
-        "octave_ports": []
     }
 }
