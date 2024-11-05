@@ -10,7 +10,9 @@ from quam_libs.experiments.two_qubit_xeb import (
 machine = QuAM.load()
 qubits = machine.active_qubits
 # Get the relevant QuAM components
-target_qubit_indices = [0]  # Indices of the target qubits
+readout_qubit_indices = [1]  # Indices of the target qubits
+readout_qubits = [qubits[i] for i in readout_qubit_indices]
+target_qubit_indices = [1]  # Indices of the target qubits
 target_qubits = [qubits[i] for i in target_qubit_indices]
 target_qubit_pairs = [
     qubit_pair
@@ -34,11 +36,11 @@ def cz_gate(qubit_pair: TransmonPair):
 cz_qua = QUAGate("cz", cz_gate)
 
 xeb_config = XEBConfig(
-    seqs=18, #81,
-    # depths=np.arange(1, 2000, 150),
+    seqs=3, #81,
+    # depths=np.arange(1, 1200, 24),
     depths=np.arange(1, 5, 1),
-    n_shots=100, #1000,
-    readout_qubits=qubits, 
+    n_shots=1, #1000,
+    readout_qubits=readout_qubits, 
     qubits=target_qubits,
     qubit_pairs=target_qubit_pairs,
     baseline_gate_name="x90",
@@ -51,8 +53,7 @@ xeb_config = XEBConfig(
     # reset_method="active",
     # reset_kwargs={"max_tries": 3, "pi_pulse": "x180"},
     reset_method="cooldown", #"active",
-    reset_kwargs={"cooldown_time": 60000, "max_tries": 3, "pi_pulse": "x180"},
-    # reset_kwargs={"cooldown_time": 10, "max_tries": 3, "pi_pulse": "x180"},
+    reset_kwargs={"cooldown_time": 10, "max_tries": 3, "pi_pulse": "x180"},
 )
 
 simulate = False  # Set to True to simulate the experiment with Qiskit Aer instead of running it on the QPU
@@ -60,9 +61,11 @@ xeb = XEB(xeb_config, quam=machine)
 if simulate:
     job = xeb.simulate(backend=fake_backend)
 else:
-    job = xeb.run(simulate=False)  # If simulate is False, job is run on the QPU, else pulse output is simulated
+    job = xeb.run(simulate=True)  # If simulate is False, job is run on the QPU, else pulse output is simulated
 
-# job.circuits[0][0].draw("mpl")
+# 87 * 500/12 * 1000 = 13m 26.8s 
+# 87 * 1200/24 * 700 = 22m 42.3s
+
 
 result = job.result()
 
