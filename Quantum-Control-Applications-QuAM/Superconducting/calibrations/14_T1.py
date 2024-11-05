@@ -40,7 +40,7 @@ matplotlib.use("TKAgg")
 # Class containing tools to help handle units and conversions.
 u = unit(coerce_to_integer=True)
 # Instantiate the QuAM class from the state file
-machine = QuAM.load("/Users/adamachuck/Documents/GitHub/ASQUM/qua-libs/Quantum-Control-Applications-QuAM/Superconducting/configuration/quam_state")
+machine = QuAM.load()
 # Generate the OPX and Octave configurations
 config = machine.generate_config()
 # Open Communication with the QOP
