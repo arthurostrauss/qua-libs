@@ -54,6 +54,8 @@ class XEB:
 
         # Create CouplingMap from QuAM qubit pairs
         coupling_map = CouplingMap()
+        for q in range(len(self.qubits)):
+            coupling_map.add_physical_qubit(q)
         for qubit_pair in self.qubit_pairs:
             if qubit_pair.qubit_control not in self.qubits or qubit_pair.qubit_target not in self.qubits:
                 raise ValueError("Qubit pairs must be formed by qubits present in the qubits list")
@@ -169,8 +171,8 @@ class XEB:
             # If simulating, update the frequency to 0 to visualize sequence
             if simulate:
                 amp_st = [declare_stream() for _ in range(n_qubits)]
-                for qubit in self.qubit_drive_channels:
-                    update_frequency(qubit.name, 0)
+                # for qubit in self.qubit_drive_channels:
+                #     update_frequency(qubit.name, 0)
 
             # Generate the random sequences
             with for_(s, 0, s < self.xeb_config.seqs, s + 1):
@@ -251,8 +253,9 @@ class XEB:
                                     align_transmon_pair(qubit_pair)
 
                         # Measure the state
+                        align()
                         for q_idx, qubit in enumerate(self.qubits):
-                            align()
+                            
                             # Play the readout on the other resonator to measure in the same condition as when optimizing readout
                             for other_qubit in self.readout_qubits:
                                 if other_qubit.resonator != qubit.resonator:
@@ -325,7 +328,7 @@ class XEB:
         # Compile the QUA program
 
         config = self.quam.generate_config()
-        xeb_prog = self._xeb_prog(simulate)
+        xeb_prog = self._xeb_prog(simulate=True) # set simulate=True to get the amplitude matrix
         qmm = self.quam.connect()
         if simulate:
             job = qmm.simulate(config, xeb_prog, simulate=SimulationConfig(1000))
