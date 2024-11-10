@@ -156,15 +156,15 @@ class XEB:
 
             # Bring the active qubits to the idle points: 
             self.quam.apply_all_flux_to_min()
-            for q, qubit in enumerate(self.qubits):
-                qubit.z.to_independent_idle()
+            # for q, qubit in enumerate(self.qubits):
+            #     qubit.z.to_independent_idle()
 
             # Setting seed for reproducibility
             r = Random()
             r.set_seed(12321)
 
             # Bring active qubits to the idle points:
-            self.quam.apply_all_flux_to_min()
+            # self.quam.apply_all_flux_to_min()
 
             # If simulating, update the frequency to 0 to visualize sequence
             if simulate:
