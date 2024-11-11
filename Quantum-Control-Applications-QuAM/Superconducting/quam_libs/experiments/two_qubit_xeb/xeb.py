@@ -2,6 +2,7 @@ import warnings
 from dataclasses import asdict
 from typing import Union, List, Optional, Dict, Tuple
 import numpy as np
+from qiskit import QuantumRegister
 from qm.qua import *
 from .macros import (
     qua_declaration,
@@ -56,8 +57,8 @@ class XEB:
 
         # Create CouplingMap from QuAM qubit pairs
         coupling_map = CouplingMap()
-        for q in range(len(self.qubits)):
-            coupling_map.add_physical_qubit(q)
+        for qubit in range(len(self.qubits)):
+            coupling_map.add_physical_qubit(qubit)
         for qubit_pair in self.qubit_pairs:
             if qubit_pair.qubit_control not in self.qubits or qubit_pair.qubit_target not in self.qubits:
                 raise ValueError("Qubit pairs must be formed by qubits present in the qubits list")
@@ -157,7 +158,7 @@ class XEB:
             gate_st = [
                 declare_stream() for _ in range(n_qubits)
             ]  # Stream for gate indices (enabling circuit reconstruction in post-processing)
-
+            amp_st = [declare_stream() for _ in range(n_qubits)]  # Stream for amplitude matrices
             # Bring the active qubits to the idle points: 
             self.quam.apply_all_flux_to_min()
             self.quam.apply_all_couplers_to_min()
@@ -170,9 +171,8 @@ class XEB:
 
             # If simulating, update the frequency to 0 to visualize sequence
             if simulate:
-                amp_st = [declare_stream() for _ in range(n_qubits)]
-                # for qubit in self.qubit_drive_channels:
-                #     update_frequency(qubit.name, 0)
+                for qubit in self.qubit_drive_channels:
+                    update_frequency(qubit.name, 0)
 
             # Generate the random sequences
             with for_(s, 0, s < self.xeb_config.seqs, s + 1):
@@ -189,7 +189,7 @@ class XEB:
                         self._assign_amplitude_matrix(
                             gate[q][0],
                             [amp_matrix[q][i][0] for i in range(4)],
-                            amp_st[q] if simulate else None,
+                            amp_st[q],
                         )
 
                 with for_(depth_, 1, depth_ < self.xeb_config.depths[-1], depth_ + 1):
@@ -208,7 +208,7 @@ class XEB:
                             self._assign_amplitude_matrix(
                                 gate[q][depth_],
                                 [amp_matrix[q][i][depth_] for i in range(4)],
-                                amp_st[q] if simulate else None,
+                                amp_st[q],
                             )
 
                 # Run the XEB sequence
@@ -256,7 +256,6 @@ class XEB:
                         wait(150 * u.ns)
                         align()
                         for q_idx, qubit in enumerate(self.qubits):
-                            
                             # Play the readout on the other resonator to measure in the same condition as when optimizing readout
                             for other_qubit in self.readout_qubits:
                                 if other_qubit.resonator != qubit.resonator:
@@ -307,13 +306,11 @@ class XEB:
                     state_st[q].boolean_to_int().buffer(self.xeb_config.n_shots).map(FUNCTIONS.average()).buffer(
                         len(self.xeb_config.depths)
                     ).save_all(f"state{q}")
+                    amp_st[q].buffer(self.xeb_config.depths[-1], 2, 2).save_all(f"amp_matrix_q{q}")
                 for i in range(dim):
                     string = "s" + binary(i, n_qubits)
                     counts_st[i].buffer(len(self.xeb_config.depths)).save_all(string)
-
-                if simulate:
-                    for q in range(n_qubits):
-                        amp_st[q].buffer(self.xeb_config.depths[-1], 2, 2).save_all(f"amp_matrix_q{q + 1}")
+                        
 
         return xeb_prog
 
@@ -490,7 +487,8 @@ class XEBJob:
             for s in range(self.xeb_config.seqs):
                 circuits.append([])
                 for d_, depth in enumerate(self.xeb_config.depths):
-                    qc = QuantumCircuit(n_qubits)
+                    q_regs = [QuantumRegister(1, qubit.name) for qubit in self.xeb_config.qubits]
+                    qc = QuantumCircuit(*q_regs)
                     for d in range(depth):
                         for q in range(n_qubits):
                             sq_gate = self.xeb_config.gate_set[self._sq_indices[s][q, d]].gate
@@ -552,42 +550,27 @@ class XEBJob:
 
             saved_data = {"counts": counts, "states": states, "density_matrices": dms}
         else:
-            gate_indices = {
-                f"g{q}": self._result_handles.get(f"g{q}").fetch_all()["value"] for q in range(self.xeb_config.n_qubits)
-            }
-            quadratures = {
-                f"{i}_{q}": self._result_handles.get(f"{i}{q}").fetch_all()["value"]
-                for i in ["I", "Q"]
-                for q in range(self.xeb_config.n_qubits)
-            }
-            states = {
-                f"state{q}": self._result_handles.get(f"state{q}").fetch_all()["value"]
-                for q in range(self.xeb_config.n_qubits)
-            }
-            counts = {
-                binary(i, self.xeb_config.n_qubits): self._result_handles.get(
-                    f"s{binary(i, self.xeb_config.n_qubits)}"
-                ).fetch_all()["value"]
-                for i in range(self.xeb_config.dim)
-            }
+            
+            gate_indices = states = counts = quadratures = amp_st = {}
+            result = self._result_handles
+            for q, qubit in enumerate(self.xeb_config.qubits):
+                gate_indices[f"g{qubit.name}"] = result.get(f"g{q}").fetch_all()["value"]
+                quadratures[f"I_{qubit.name}"] = result.get(f"I{q}").fetch_all()["value"]
+                quadratures[f"Q_{qubit.name}"] = result.get(f"Q{q}").fetch_all()["value"]
+                states[f"state{qubit.name}"] = result.get(f"state{q}").fetch_all()["value"]
+                amp_st[f"amp_matrix_{qubit.name}"] = result.get(f"amp_matrix_q{q}").fetch_all()["value"]
+            
+            n_qubits = self.xeb_config.n_qubits
+            for i in range(self.xeb_config.dim):
+                counts[binary(i, n_qubits)] = result.get(f"s{binary(i, n_qubits)}").fetch_all()["value"]
+            
             saved_data = {
                 "quadratures": quadratures,
                 "states": states,
                 "counts": counts,
                 "gate_indices": gate_indices,
+                "amp_st": amp_st,
             }
-
-            amp_res = self._result_handles.get("amp_matrix_q0")
-            if amp_res is not None:
-                try:
-                    amp_st = {
-                        f"amp_matrix_q{q + 1}": self._result_handles.get(f"amp_matrix_q{q + 1}").fetch_all()["value"]
-                        for q in range(self.xeb_config.n_qubits)
-                    }
-                    saved_data["amp_st"] = (amp_st,)
-
-                except KeyError:
-                    pass
 
         if self.xeb_config.should_save_data:
             xeb_config = asdict(self.xeb_config)
