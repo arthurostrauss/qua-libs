@@ -4,7 +4,8 @@
         "port": 9501,
         "cluster_name": "QPX1000_1",
         "octave_ips": [],
-        "octave_ports": []
+        "octave_ports": [],
+        "data_folder": "./Quantum-Control-Applications-QuAM/Superconducting/data"
     },
     "wiring": {
         "qubits": {
