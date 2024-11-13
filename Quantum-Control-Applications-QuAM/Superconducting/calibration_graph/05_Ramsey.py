@@ -41,13 +41,13 @@ import numpy as np
 # %% {Node_parameters}
 class Parameters(NodeParameters):
 
-    target_qubits: Optional[List[str]] = None
-    num_averages: int = 100
+    qubits: Optional[List[str]] = None
+    num_averages: int = 200
     frequency_detuning_in_mhz: float = 1.0
     min_wait_time_in_ns: int = 16
-    max_wait_time_in_ns: int = 30000
+    max_wait_time_in_ns: int = 4000
     num_time_points: int = 500
-    log_or_linear_sweep: Literal["log", "linear"] = "log"
+    log_or_linear_sweep: Literal["log", "linear"] = "linear"
     flux_point_joint_or_independent: Literal["joint", "independent"] = "independent"
     use_state_discrimination: bool = False
     simulate: bool = False
@@ -67,10 +67,10 @@ config = machine.generate_config()
 qmm = machine.connect()
 
 # Get the relevant QuAM components
-if node.parameters.target_qubits is None or node.parameters.target_qubits == "":
+if node.parameters.qubits is None or node.parameters.qubits == "":
     qubits = machine.active_qubits
 else:
-    qubits = [machine.qubits[q] for q in node.parameters.target_qubits]
+    qubits = [machine.qubits[q] for q in node.parameters.qubits]
 num_qubits = len(qubits)
 
 

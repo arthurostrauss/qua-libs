@@ -42,7 +42,7 @@ import numpy as np
 
 # %% {Node_parameters}
 class Parameters(NodeParameters):
-    target_qubits: Optional[List[str]] = None
+    qubits: Optional[List[str]] = None
     use_state_discrimination: bool = True
     use_strict_timing: bool = True
     interleaved_gate_index: int = 2
@@ -72,11 +72,11 @@ config = machine.generate_config()
 # Open Communication with the QOP
 qmm = machine.connect()
 
-if node.parameters.target_qubits is None or node.parameters.target_qubits == "":
+if node.parameters.qubits is None or node.parameters.qubits == "":
     qubits = machine.active_qubits
 else:
     qubits = [
-        machine.qubits[q] for q in node.parameters.target_qubits.replace(" ", "").split(",")
+        machine.qubits[q] for q in node.parameters.qubits.replace(" ", "").split(",")
     ]
 num_qubits = len(qubits)
 

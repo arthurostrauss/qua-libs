@@ -39,7 +39,7 @@ import numpy as np
 
 # %% {Node_parameters}
 class Parameters(NodeParameters):
-    target_qubits: Optional[List[str]] = None
+    qubits: Optional[List[str]] = None
     num_averages: int = 10
     operation: str = "x180"
     min_amp_factor: float = 0.0001
@@ -64,10 +64,10 @@ u = unit(coerce_to_integer=True)
 machine = QuAM.load()
 operation = node.parameters.operation  # The qubit operation to play
 
-if node.parameters.target_qubits is None or node.parameters.target_qubits == "":
+if node.parameters.qubits is None or node.parameters.qubits == "":
     qubits = machine.active_qubits
 else:
-    qubits = [machine.qubits[q] for q in node.parameters.target_qubits]
+    qubits = [machine.qubits[q] for q in node.parameters.qubits]
 num_qubits = len(qubits)
 
 # Update the readout power to match the desired range, this change will be reverted at the end of the node.
@@ -82,10 +82,10 @@ config = machine.generate_config()
 # Open Communication with the QOP
 qmm = machine.connect()
 
-if node.parameters.target_qubits is None or node.parameters.target_qubits == "":
+if node.parameters.qubits is None or node.parameters.qubits == "":
     qubits = machine.active_qubits
 else:
-    qubits = [machine.qubits[q] for q in node.parameters.target_qubits]
+    qubits = [machine.qubits[q] for q in node.parameters.qubits]
 num_qubits = len(qubits)
 
 

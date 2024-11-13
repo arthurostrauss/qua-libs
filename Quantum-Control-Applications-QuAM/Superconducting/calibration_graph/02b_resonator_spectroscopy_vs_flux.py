@@ -42,17 +42,17 @@ import warnings
 # %% {Node_parameters}
 class Parameters(NodeParameters):
 
-    target_qubits: Optional[List[str]] = None
+    qubits: Optional[List[str]] = None
     num_averages: int = 10
     min_flux_offset_in_v: float = -0.5
     max_flux_offset_in_v: float = 0.5
     num_flux_points: int = 201
     frequency_span_in_mhz: float = 15
     frequency_step_in_mhz: float = 0.1
-    flux_point_joint_or_independent: Literal["joint", "independent"] = "independent"
+    flux_point_joint_or_independent: Literal["joint", "independent", ""] = "independent"
     input_line_impedance_in_ohm: float = 50
     line_attenuation_in_db: float = 0
-    update_flux_min: bool = False
+    update_flux_min: bool = True 
     simulate: bool = False
     timeout: int = 100
 
@@ -69,10 +69,10 @@ u = unit(coerce_to_integer=True)
 machine = QuAM.load()
 
 # Get the relevant QuAM components
-if node.parameters.target_qubits is None or node.parameters.target_qubits == "":
+if node.parameters.qubits is None or node.parameters.qubits == "":
     qubits = machine.active_qubits
 else:
-    qubits = [machine.qubits[q] for q in node.parameters.target_qubits]
+    qubits = [machine.qubits[q] for q in node.parameters.qubits]
 if any([q.z is None for q in qubits]):
     warnings.warn("Found qubits without a flux line. Skipping")
 

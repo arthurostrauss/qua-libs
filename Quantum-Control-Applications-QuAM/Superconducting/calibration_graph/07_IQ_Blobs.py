@@ -44,7 +44,7 @@ import xarray as xr
 # %% {Node_parameters}
 class Parameters(NodeParameters):
 
-    target_qubits: Optional[List[str]] = None
+    qubits: Optional[List[str]] = None
     num_runs: int = 2000
     reset_type_thermal_or_active: Literal["thermal", "active"] = "thermal"
     flux_point_joint_or_independent: Literal["joint", "independent"] = "independent"
@@ -67,10 +67,10 @@ config = machine.generate_config()
 qmm = machine.connect()
 
 # Get the relevant QuAM components
-if node.parameters.target_qubits is None or node.parameters.target_qubits == "":
+if node.parameters.qubits is None or node.parameters.qubits == "":
     qubits = machine.active_qubits
 else:
-    qubits = [machine.qubits[q] for q in node.parameters.target_qubits]
+    qubits = [machine.qubits[q] for q in node.parameters.qubits]
 num_qubits = len(qubits)
 
 
@@ -98,7 +98,7 @@ with program() as iq_blobs:
             # ground iq blobs for all qubits
             save(n, n_st)
             if reset_type == "active":
-                active_reset(qubit, "readout")
+                active_reset(qubit)
             elif reset_type == "thermal":
                 qubit.wait(qubit.thermalization_time * u.ns)
             else:

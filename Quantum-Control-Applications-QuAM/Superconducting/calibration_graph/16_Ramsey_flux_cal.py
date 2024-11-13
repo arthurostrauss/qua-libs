@@ -22,7 +22,7 @@ from typing import Optional, Literal, List
 
 # %% {Node_parameters}
 class Parameters(NodeParameters):
-    target_qubits: Optional[List[str]] = None
+    qubits: Optional[List[str]] = None
     num_averages: int = 100
     frequency_detuning_in_mhz: float = 4.0
     min_wait_time_in_ns: int = 16
@@ -75,10 +75,10 @@ config = machine.generate_config()
 qmm = machine.connect()
 
 # Get the relevant QuAM components
-if node.parameters.target_qubits is None or node.parameters.target_qubits == '':
+if node.parameters.qubits is None or node.parameters.qubits == '':
     qubits = machine.active_qubits
 else:
-    qubits = [machine.qubits[q] for q in node.parameters.target_qubits]
+    qubits = [machine.qubits[q] for q in node.parameters.qubits]
 num_qubits = len(qubits)
 
 # %%

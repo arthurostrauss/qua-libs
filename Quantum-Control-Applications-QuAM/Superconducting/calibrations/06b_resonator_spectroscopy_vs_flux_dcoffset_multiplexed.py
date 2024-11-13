@@ -56,7 +56,7 @@ num_resonators = len(resonators)
 
 q4 = machine.qubits["q4"]
 q5 = machine.qubits["q5"]
-coupler = (q4 @ q5).coupler
+# coupler = (q4 @ q5).coupler
 
 
 #####################
@@ -106,7 +106,7 @@ with program() as multi_res_spec_vs_flux:
 
     # Bring the active qubits to the minimum frequency point
     machine.apply_all_flux_to_min()
-    coupler.to_decouple_idle()
+    # coupler.to_decouple_idle()
     wait(25)
 
     with for_(n, 0, n < n_avg, n + 1):  # QUA for_ loop for averaging
@@ -182,9 +182,9 @@ else:
             # Plot
             plt.subplot(1, num_resonators, i + 1)
             plt.cla()
-            plt.title(
-                f"{rr.name} (LO: {rr.frequency_converter_up.LO_frequency / u.MHz} MHz)"
-            )
+            # plt.title(
+            #     f"{rr.name} (LO: {rr.frequency_converter_up.LO_frequency / u.MHz} MHz)"
+            # )
             plt.xlabel("flux [V]")
             plt.ylabel(f"{rr.name} IF [MHz]")
             plt.pcolor(

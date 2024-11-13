@@ -42,7 +42,7 @@ import xarray as xr
 # %% {Node_parameters}
 class Parameters(NodeParameters):
 
-    target_qubits: Optional[List[str]] = None
+    qubits: Optional[List[str]] = None
     use_state_discrimination: bool = True
     use_strict_timing: bool = False
     num_random_sequences: int = 100  # Number of random sequences
@@ -70,10 +70,10 @@ config = machine.generate_config()
 # Open Communication with the QOP
 qmm = machine.connect()
 
-if node.parameters.target_qubits is None or node.parameters.target_qubits == "":
+if node.parameters.qubits is None or node.parameters.qubits == "":
     qubits = machine.active_qubits
 else:
-    qubits = [machine.qubits[q] for q in node.parameters.target_qubits]
+    qubits = [machine.qubits[q] for q in node.parameters.qubits]
 num_qubits = len(qubits)
 
 

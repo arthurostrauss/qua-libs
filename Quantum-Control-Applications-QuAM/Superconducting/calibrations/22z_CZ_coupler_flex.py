@@ -69,7 +69,7 @@ try:
 except:
     coupler = (q2 @ q1).coupler 
 
-qb = q1  # The qubit whose flux will be swept
+qb = q2  # The qubit whose flux will be swept
 
 print("%s: %s" % (q1.name, q1.xy.RF_frequency))
 print("%s: %s" % (q2.name, q2.xy.RF_frequency))
@@ -104,22 +104,23 @@ config = machine.generate_config()
 
 simulate = False
 mode = "pulse" # dc or pulse
-sweep_flux = "qc" # qb or qc or others
+sweep_flux = "qb" # qb or qc or others
 
 n_avg = 137000
 # The flux pulse durations in clock cycles (4ns) - Must be larger than 4 clock cycles.
 ts = np.arange(4, 40, 1)
-# ts = np.arange(4, 160, 1)
+ts = np.arange(4, 160, 1)
 
 # The flux bias sweep in V
 if sweep_flux == "qb": 
     dcs = np.linspace(-0.3, 0.3, 501) 
     # dcs = np.linspace(-0.0184, 0, 501) # qb (4_5) (dc)
-    dcs = np.linspace(-0.095, -0.080, 501) # qb (4_5) (pulse) 
+    # dcs = np.linspace(-0.12, -0.11, 501) # qb (4_5) (pulse, under)
+    # dcs = np.linspace(-0.12, -0.11, 501) # qb (4_5) (pulse, under) 
     # dcs = np.linspace(-0.12, -0.08, 501) # qb (3_4) (pulse) 
 elif sweep_flux == "qc": 
     dcs = np.linspace(-0.4, 0.4, 501) 
-    dcs = np.linspace(-0.21, -0.195, 501) # qc (4_5) (pulse) 
+    # dcs = np.linspace(-0.21, -0.195, 501) # qc (4_5) (pulse) 
     # dcs = np.linspace(-0.147, -0.0915, 501) # qc (3_4) (pulse) 
 else: 
     ts = [30]
@@ -127,7 +128,7 @@ else:
 
 # Guess points: 
 cz_point = -0.08652 #q3_2:-0.09529 #q3_4:-0.10219 #q4_5:-0.08722
-coupler_point = -0.19874 #q3_4_off: -0.11173, -0.13210 (op) #q4_5_off: -0.17835, -0.19874 (op)
+coupler_point = 0 #q3_4_off: -0.11173, -0.13210 (op) #q4_5_off: -0.17835, -0.19874 (op)
 scale = 0.04958 # q4_5: 0.04958, q3_4: 0.0389, q3_2: -0.117 
 
 pulse_dc_factor = 1.0 #(0.00859 - q1.z.min_offset)/(0.00908 - q1.z.min_offset) * 1.08
@@ -267,11 +268,11 @@ else:
         plt.ylabel("Interaction time [ns]")
         
         # feedback from CZ-Pi: 
-        if sweep_flux=="qc":
-            plt.axvline( coupler.operations["cz"].amplitude, color="r", linestyle="--", linewidth=1.5)
-        else:
-            plt.axvline( q1.z.operations["cz"].amplitude + q1.z.min_offset - scale*coupler.operations["cz"].amplitude, color="r", linestyle="--", linewidth=1.5)
-        plt.axhline( q1.z.operations["cz"].length, color="r", linestyle="--", linewidth=1.5)
+        # if sweep_flux=="qc":
+        #     plt.axvline( coupler.operations["cz"].amplitude, color="r", linestyle="--", linewidth=1.5)
+        # else:
+        #     plt.axvline( q1.z.operations["cz"].amplitude + q1.z.min_offset - scale*coupler.operations["cz"].amplitude, color="r", linestyle="--", linewidth=1.5)
+        # plt.axhline( q1.z.operations["cz"].length, color="r", linestyle="--", linewidth=1.5)
         # plt.axhline( 60, color="g", linestyle="--", linewidth=0.57)
         # plt.axhline( 40, color="y", linestyle="--", linewidth=0.57)
         

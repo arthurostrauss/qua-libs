@@ -45,17 +45,17 @@ import numpy as np
 # %% {Node_parameters}
 class Parameters(NodeParameters):
 
-    target_qubits: Optional[List[str]] = None
+    qubits: Optional[List[str]] = None
     num_averages: int = 500
     operation: str = "saturation"
-    operation_amplitude_factor: Optional[float] = 0.1
+    operation_amplitude_factor: Optional[float] = 0.004
     operation_len_in_ns: Optional[int] = None
-    frequency_span_in_mhz: float = 50
+    frequency_span_in_mhz: float = 200
     frequency_step_in_mhz: float = 0.25
     flux_point_joint_or_independent_or_arbitrary: Literal[
         "joint", "independent", "arbitrary"
     ] = "independent"
-    target_peak_width: Optional[float] = 2e6
+    target_peak_width: Optional[float] = 1e6
     arbitrary_flux_bias: Optional[float] = None
     arbitrary_qubit_frequency_in_ghz: Optional[float] = None
     simulate: bool = False
@@ -76,10 +76,10 @@ config = machine.generate_config()
 qmm = machine.connect()
 
 # Get the relevant QuAM components
-if node.parameters.target_qubits is None or node.parameters.target_qubits == "":
+if node.parameters.qubits is None or node.parameters.qubits == "":
     qubits = machine.active_qubits
 else:
-    qubits = [machine.qubits[q] for q in node.parameters.target_qubits]
+    qubits = [machine.qubits[q] for q in node.parameters.qubits]
 num_qubits = len(qubits)
 
 

@@ -47,14 +47,14 @@ from quam_libs.trackable_object import tracked_updates
 
 
 class Parameters(NodeParameters):
-    target_qubits: Optional[str] = None
+    qubits: Optional[str] = None
     num_averages: int = 100
     frequency_span_in_mhz: float = 10
     frequency_step_in_mhz: float = 0.1
     simulate: bool = False
     forced_flux_bias_v: Optional[float] = None
-    max_power_dbm: int = 10
-    min_power_dbm: int = -20
+    max_power_dbm: int = -11 # this from -41dB has to be 3dB multiples 
+    min_power_dbm: int = -48 # doesn't matter how low
     flux_point_joint_or_independent: Literal['joint', 'independent'] = "independent"
     ro_line_attenuation_dB: float = 0
     multiplexed: bool = True
@@ -87,10 +87,10 @@ qmm = machine.connect()
 if node.parameters.max_power_dbm < -20:
     raise ValueError(f"The maximum amplitude needs to be >= -20 dBm, got {node.parameters.max_power_dbm}")
 
-if node.parameters.target_qubits is None or node.parameters.target_qubits == '':
+if node.parameters.qubits is None or node.parameters.qubits == '':
     qubits = machine.active_qubits
 else:
-    qubits = [machine.qubits[q] for q in node.parameters.target_qubits.replace(' ', '').split(',')]
+    qubits = [machine.qubits[q] for q in node.parameters.qubits.replace(' ', '').split(',')]
 resonators = [qubit.resonator for qubit in qubits]
 prev_amps = [rr.operations["readout"].amplitude for rr in resonators]
 num_qubits = len(qubits)

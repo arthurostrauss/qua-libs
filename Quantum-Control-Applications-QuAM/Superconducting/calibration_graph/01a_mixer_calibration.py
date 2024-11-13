@@ -12,7 +12,7 @@ from quam_libs.components import QuAM
 
 # %% {Node_parameters}
 class Parameters(NodeParameters):
-    target_qubits: Optional[str] = None
+    qubits: Optional[str] = None
     calibrate_resonator: bool = True
     calibrate_drive: bool = True
 
@@ -30,10 +30,10 @@ config = machine.generate_config()
 qmm = machine.connect()
 qm = qmm.open_qm(config)
 
-if node.parameters.target_qubits is None or node.parameters.target_qubits == '':
+if node.parameters.qubits is None or node.parameters.qubits == '':
     qubits = machine.active_qubits
 else:
-    qubits = [machine.qubits[q] for q in node.parameters.target_qubits.replace(' ', '').split(',')]
+    qubits = [machine.qubits[q] for q in node.parameters.qubits.replace(' ', '').split(',')]
 
 for qubit in qubits:
     qubit.calibrate_octave(qm,

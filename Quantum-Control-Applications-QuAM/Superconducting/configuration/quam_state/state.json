@@ -8,17 +8,17 @@
                         "length": 16,
                         "digital_marker": "ON",
                         "axis_angle": 0,
-                        "amplitude": 0.16342947701568272,
-                        "alpha": -1.3101266496425672,
+                        "amplitude": 0.15878825445103348,
+                        "alpha": -1.1054870718526626,
                         "anharmonicity": "#/qubits/q1/anharmonicity",
-                        "detuning": -4520000.0,
+                        "detuning": -3340000.0,
                         "__class__": "quam.components.pulses.DragCosinePulse"
                     },
                     "x90_DragCosine": {
                         "length": "#../x180_DragCosine/length",
                         "digital_marker": "ON",
                         "axis_angle": 0,
-                        "amplitude": 0.08171473850784136,
+                        "amplitude": 0.07939412722551674,
                         "alpha": -0.8001,
                         "anharmonicity": "#../x180_DragCosine/anharmonicity",
                         "__class__": "quam.components.pulses.DragCosinePulse"
@@ -114,7 +114,7 @@
                     "saturation": {
                         "length": 20000,
                         "digital_marker": "ON",
-                        "amplitude": 0.5,
+                        "amplitude": 0.17870140871536336,
                         "axis_angle": 0,
                         "__class__": "quam.components.pulses.SquarePulse"
                     },
@@ -122,13 +122,13 @@
                         "length": 16,
                         "digital_marker": "ON",
                         "axis_angle": 0,
-                        "amplitude": 0.11313255695036671,
+                        "amplitude": 0.10984702154715593,
                         "alpha": -1.0,
                         "anharmonicity": 206000000,
                         "__class__": "quam.components.pulses.DragCosinePulse"
                     }
                 },
-                "intermediate_frequency": 208082149.59318766,
+                "intermediate_frequency": 208922538.13607296,
                 "thread": "a",
                 "opx_output": "#/wiring/qubits/q1/xy/opx_output",
                 "__class__": "quam.components.channels.MWChannel"
@@ -139,31 +139,36 @@
                         "length": 100,
                         "amplitude": 0.1,
                         "__class__": "quam.components.pulses.SquarePulse"
+                    },
+                    "flux_pulse": {
+                        "length": 100,
+                        "amplitude": 0.2,
+                        "__class__": "quam.components.pulses.SquarePulse"
                     }
                 },
                 "opx_output": "#/wiring/qubits/q1/z/opx_output",
-                "independent_offset": 0.0963340645087207,
-                "min_offset": 0.45
+                "independent_offset": 0.032509948356959854,
+                "min_offset": "#./independent_offset"
             },
             "resonator": {
                 "depletion_time": 1000,
                 "confusion_matrix": [
                     [
-                        0.975,
-                        0.025
+                        0.9695,
+                        0.0305
                     ],
                     [
-                        0.0905,
-                        0.9095
+                        0.117,
+                        0.883
                     ]
                 ],
                 "operations": {
                     "readout": {
-                        "length": 2000,
-                        "amplitude": 0.10254241381679749,
-                        "threshold": -3.326815539983481e-05,
-                        "rus_exit_threshold": -0.00020092649227884318,
-                        "integration_weights_angle": -8.10650716998602,
+                        "length": 1200,
+                        "amplitude": 0.14108101034497508,
+                        "threshold": -3.142375521597183e-05,
+                        "rus_exit_threshold": -0.00012455131328832845,
+                        "integration_weights_angle": -1.7915518744819927,
                         "__class__": "quam.components.pulses.SquareReadoutPulse"
                     },
                     "const": {
@@ -180,13 +185,13 @@
                 "__class__": "quam_libs.components.readout_resonator.ReadoutResonatorMW"
             },
             "anharmonicity": 205600000,
-            "freq_vs_flux_01_quad_term": -16301668240.305855,
-            "T1": 27968,
-            "T2ramsey": 2.461718327013627e-05,
+            "freq_vs_flux_01_quad_term": -15754449050.139292,
+            "T1": 51280,
+            "T2ramsey": 2.0772106460898948e-05,
             "thermalization_time_factor": 10,
-            "phi0_current": 32.29567929529683,
-            "phi0_voltage": 0.6459135859059366,
-            "chi": -2610000.0,
+            "phi0_current": 31.702440419706683,
+            "phi0_voltage": 0.6340488083941337,
+            "chi": -2600000.0,
             "grid_location": "0,0"
         },
         "q2": {
@@ -197,16 +202,17 @@
                         "length": 16,
                         "digital_marker": "ON",
                         "axis_angle": 0,
-                        "amplitude": 0.2476971481141532,
-                        "alpha": -0.8027456502727682,
+                        "amplitude": 0.24722100980442055,
+                        "alpha": -1.116945460755294,
                         "anharmonicity": "#/qubits/q2/anharmonicity",
+                        "detuning": -2900000.0,
                         "__class__": "quam.components.pulses.DragCosinePulse"
                     },
                     "x90_DragCosine": {
                         "length": "#../x180_DragCosine/length",
                         "digital_marker": "ON",
                         "axis_angle": 0,
-                        "amplitude": 0.1238485740570766,
+                        "amplitude": 0.12361050490221027,
                         "alpha": -0.643762466117261,
                         "anharmonicity": "#../x180_DragCosine/anharmonicity",
                         "detuning": -160000.0,
@@ -303,7 +309,7 @@
                     "saturation": {
                         "length": 20000,
                         "digital_marker": "ON",
-                        "amplitude": 0.5,
+                        "amplitude": 0.2614297406525343,
                         "axis_angle": 0,
                         "__class__": "quam.components.pulses.SquarePulse"
                     },
@@ -311,13 +317,13 @@
                         "length": 16,
                         "digital_marker": "ON",
                         "axis_angle": 0,
-                        "amplitude": 0.1198980108261488,
+                        "amplitude": 0.1311282850776556,
                         "alpha": -1.0,
                         "anharmonicity": 211000000,
                         "__class__": "quam.components.pulses.DragCosinePulse"
                     }
                 },
-                "intermediate_frequency": -62905876.696792774,
+                "intermediate_frequency": -62603675.38821728,
                 "thread": "b",
                 "opx_output": "#/wiring/qubits/q2/xy/opx_output",
                 "__class__": "quam.components.channels.MWChannel"
@@ -328,31 +334,36 @@
                         "length": 100,
                         "amplitude": 0.1,
                         "__class__": "quam.components.pulses.SquarePulse"
+                    },
+                    "flux_pulse": {
+                        "length": 100,
+                        "amplitude": 0.2,
+                        "__class__": "quam.components.pulses.SquarePulse"
                     }
                 },
                 "opx_output": "#/wiring/qubits/q2/z/opx_output",
-                "independent_offset": 0.08462775458692756,
-                "min_offset": 0.4
+                "independent_offset": 0.01071885905509804,
+                "min_offset": "#./independent_offset"
             },
             "resonator": {
                 "depletion_time": 1000,
                 "confusion_matrix": [
                     [
-                        0.943,
-                        0.057
+                        0.9575,
+                        0.0425
                     ],
                     [
-                        0.0945,
-                        0.9055
+                        0.059,
+                        0.941
                     ]
                 ],
                 "operations": {
                     "readout": {
-                        "length": 2000,
-                        "amplitude": 0.09539932459063855,
-                        "threshold": 6.0161967339534926e-05,
-                        "rus_exit_threshold": -1.9782466290951985e-05,
-                        "integration_weights_angle": -0.4591216703454819,
+                        "length": 1200,
+                        "amplitude": 0.15520589953168523,
+                        "threshold": 5.773124131066883e-05,
+                        "rus_exit_threshold": -2.8040083582544924e-05,
+                        "integration_weights_angle": -6.777211208440043,
                         "__class__": "quam.components.pulses.SquareReadoutPulse"
                     },
                     "const": {
@@ -361,21 +372,21 @@
                         "__class__": "quam.components.pulses.SquarePulse"
                     }
                 },
-                "intermediate_frequency": 74074257.0,
+                "intermediate_frequency": 74122697.0,
                 "thread": "b",
                 "opx_input": "#/wiring/qubits/q2/rr/opx_input",
                 "time_of_flight": 28,
                 "opx_output": "#/wiring/qubits/q2/rr/opx_output",
                 "__class__": "quam_libs.components.readout_resonator.ReadoutResonatorMW"
             },
-            "anharmonicity": 209600000,
-            "freq_vs_flux_01_quad_term": -16932361425.748524,
-            "T1": 38232,
-            "T2ramsey": 2.461718327013627e-05,
+            "anharmonicity": 217600000,
+            "freq_vs_flux_01_quad_term": -16212047450.418798,
+            "T1": 51280,
+            "T2ramsey": 2.0772106460898948e-05,
             "thermalization_time_factor": 10,
-            "phi0_current": 27.86861559409129,
-            "phi0_voltage": 0.5573723118818258,
-            "chi": -1380000.0,
+            "phi0_current": 27.858424655091223,
+            "phi0_voltage": 0.5571684931018245,
+            "chi": -1600000.0,
             "grid_location": "1,0"
         },
         "q3": {
@@ -386,17 +397,17 @@
                         "length": 16,
                         "digital_marker": "ON",
                         "axis_angle": 0,
-                        "amplitude": 0.1894764066016367,
-                        "alpha": -0.9788104759175057,
+                        "amplitude": 0.1861343940674126,
+                        "alpha": -0.9654132336505455,
                         "anharmonicity": "#/qubits/q3/anharmonicity",
-                        "detuning": 320000.0,
+                        "detuning": 420000.0,
                         "__class__": "quam.components.pulses.DragCosinePulse"
                     },
                     "x90_DragCosine": {
                         "length": "#../x180_DragCosine/length",
                         "digital_marker": "ON",
                         "axis_angle": 0,
-                        "amplitude": 0.09473820330081835,
+                        "amplitude": 0.0930671970337063,
                         "alpha": -1.0008880545292445,
                         "anharmonicity": "#../x180_DragCosine/anharmonicity",
                         "__class__": "quam.components.pulses.DragCosinePulse"
@@ -492,7 +503,7 @@
                     "saturation": {
                         "length": 20000,
                         "digital_marker": "ON",
-                        "amplitude": 0.5,
+                        "amplitude": 0.32109448768389093,
                         "axis_angle": 0,
                         "__class__": "quam.components.pulses.SquarePulse"
                     },
@@ -500,13 +511,13 @@
                         "length": 16,
                         "digital_marker": "ON",
                         "axis_angle": 0,
-                        "amplitude": 0.09511977433456727,
+                        "amplitude": 0.09219884961683128,
                         "alpha": 0.0,
                         "anharmonicity": 203000000,
                         "__class__": "quam.components.pulses.DragCosinePulse"
                     }
                 },
-                "intermediate_frequency": 248454058.1288513,
+                "intermediate_frequency": 248681710.98820007,
                 "thread": "c",
                 "opx_output": "#/wiring/qubits/q3/xy/opx_output",
                 "__class__": "quam.components.channels.MWChannel"
@@ -517,30 +528,36 @@
                         "length": 100,
                         "amplitude": 0.1,
                         "__class__": "quam.components.pulses.SquarePulse"
+                    },
+                    "flux_pulse": {
+                        "length": 100,
+                        "amplitude": 0.2,
+                        "__class__": "quam.components.pulses.SquarePulse"
                     }
                 },
                 "opx_output": "#/wiring/qubits/q3/z/opx_output",
-                "independent_offset": 0.11694288952645328
+                "independent_offset": 0.07750620902417796,
+                "min_offset": "#./independent_offset"
             },
             "resonator": {
                 "depletion_time": 1000,
                 "confusion_matrix": [
                     [
-                        0.9695,
-                        0.0305
+                        0.968,
+                        0.032
                     ],
                     [
-                        0.0925,
-                        0.9075
+                        0.0595,
+                        0.9405
                     ]
                 ],
                 "operations": {
                     "readout": {
-                        "length": 2000,
-                        "amplitude": 0.14209886620943551,
-                        "threshold": -9.70013334519735e-06,
-                        "rus_exit_threshold": -9.253055894712506e-05,
-                        "integration_weights_angle": -18.23990904774417,
+                        "length": 1800,
+                        "amplitude": 0.11285474216599096,
+                        "threshold": -2.4068812435000853e-05,
+                        "rus_exit_threshold": -0.00010002221868771658,
+                        "integration_weights_angle": -5.963298074237858,
                         "__class__": "quam.components.pulses.SquareReadoutPulse"
                     },
                     "const": {
@@ -549,21 +566,21 @@
                         "__class__": "quam.components.pulses.SquarePulse"
                     }
                 },
-                "intermediate_frequency": -83173877.0,
+                "intermediate_frequency": -82973877.0,
                 "thread": "c",
                 "opx_input": "#/wiring/qubits/q3/rr/opx_input",
                 "time_of_flight": 28,
                 "opx_output": "#/wiring/qubits/q3/rr/opx_output",
                 "__class__": "quam_libs.components.readout_resonator.ReadoutResonatorMW"
             },
-            "anharmonicity": 202800000,
-            "freq_vs_flux_01_quad_term": -17790814849.333668,
-            "T1": 32836,
-            "T2ramsey": 2.461718327013627e-05,
+            "anharmonicity": 199800000,
+            "freq_vs_flux_01_quad_term": -18094000433.027687,
+            "T1": 51280,
+            "T2ramsey": 2.0772106460898948e-05,
             "thermalization_time_factor": 10,
-            "phi0_current": 28.94330664217265,
-            "phi0_voltage": 0.578866132843453,
-            "chi": -375000.0,
+            "phi0_current": 29.090104249415532,
+            "phi0_voltage": 0.5818020849883107,
+            "chi": -2200000.0,
             "grid_location": "2,0"
         },
         "q4": {
@@ -574,8 +591,8 @@
                         "length": 16,
                         "digital_marker": "ON",
                         "axis_angle": 0,
-                        "amplitude": 0.23037408505482518,
-                        "alpha": -0.3554495749122419,
+                        "amplitude": 0.22968967878563853,
+                        "alpha": -0.3353972645665239,
                         "anharmonicity": "#/qubits/q4/anharmonicity",
                         "__class__": "quam.components.pulses.DragCosinePulse"
                     },
@@ -583,7 +600,7 @@
                         "length": "#../x180_DragCosine/length",
                         "digital_marker": "ON",
                         "axis_angle": 0,
-                        "amplitude": 0.11518704252741259,
+                        "amplitude": 0.11484483939281927,
                         "alpha": -0.034731119958269045,
                         "anharmonicity": "#../x180_DragCosine/anharmonicity",
                         "__class__": "quam.components.pulses.DragCosinePulse"
@@ -679,7 +696,7 @@
                     "saturation": {
                         "length": 20000,
                         "digital_marker": "ON",
-                        "amplitude": 0.5,
+                        "amplitude": 0.19983738301917942,
                         "axis_angle": 0,
                         "__class__": "quam.components.pulses.SquarePulse"
                     },
@@ -687,13 +704,13 @@
                         "length": 16,
                         "digital_marker": "ON",
                         "axis_angle": 0,
-                        "amplitude": 0.3,
+                        "amplitude": 0.18050347368044847,
                         "alpha": 0.0,
                         "anharmonicity": 150000000.0,
                         "__class__": "quam.components.pulses.DragCosinePulse"
                     }
                 },
-                "intermediate_frequency": -224939172.1531327,
+                "intermediate_frequency": -224452033.13395938,
                 "thread": "d",
                 "opx_output": "#/wiring/qubits/q4/xy/opx_output",
                 "__class__": "quam.components.channels.MWChannel"
@@ -704,30 +721,36 @@
                         "length": 100,
                         "amplitude": 0.1,
                         "__class__": "quam.components.pulses.SquarePulse"
+                    },
+                    "flux_pulse": {
+                        "length": 100,
+                        "amplitude": 0.2,
+                        "__class__": "quam.components.pulses.SquarePulse"
                     }
                 },
                 "opx_output": "#/wiring/qubits/q4/z/opx_output",
-                "independent_offset": 0.10169531433294583
+                "independent_offset": 0.02566229505221339,
+                "min_offset": "#./independent_offset"
             },
             "resonator": {
                 "depletion_time": 1000,
                 "confusion_matrix": [
                     [
-                        0.959,
-                        0.041
+                        0.946,
+                        0.054
                     ],
                     [
-                        0.1825,
-                        0.8175
+                        0.1255,
+                        0.8745
                     ]
                 ],
                 "operations": {
                     "readout": {
-                        "length": 2000,
-                        "amplitude": 0.11112322273735684,
-                        "threshold": 9.053834425741879e-05,
-                        "rus_exit_threshold": 1.8382008140488583e-05,
-                        "integration_weights_angle": -14.61282361007536,
+                        "length": 1200,
+                        "amplitude": 0.13978655740652063,
+                        "threshold": 8.619205317508228e-05,
+                        "rus_exit_threshold": 2.6383187848281223e-05,
+                        "integration_weights_angle": -3.108207372548117,
                         "__class__": "quam.components.pulses.SquareReadoutPulse"
                     },
                     "const": {
@@ -736,7 +759,7 @@
                         "__class__": "quam.components.pulses.SquarePulse"
                     }
                 },
-                "intermediate_frequency": 129085329.0,
+                "intermediate_frequency": 129485329.0,
                 "thread": "d",
                 "opx_input": "#/wiring/qubits/q4/rr/opx_input",
                 "time_of_flight": 28,
@@ -744,13 +767,13 @@
                 "__class__": "quam_libs.components.readout_resonator.ReadoutResonatorMW"
             },
             "anharmonicity": 213200000,
-            "freq_vs_flux_01_quad_term": -16116841076.835651,
-            "T1": 27780,
-            "T2ramsey": 2.461718327013627e-05,
+            "freq_vs_flux_01_quad_term": -16632914236.160385,
+            "T1": 51280,
+            "T2ramsey": 2.0772106460898948e-05,
             "thermalization_time_factor": 10,
-            "phi0_current": 32.142058841352544,
-            "phi0_voltage": 0.6428411768270509,
-            "chi": -1200000.0,
+            "phi0_current": 31.374345073908273,
+            "phi0_voltage": 0.6274869014781654,
+            "chi": -1350000.0,
             "grid_location": "3,0"
         },
         "q5": {
@@ -761,17 +784,17 @@
                         "length": 16,
                         "digital_marker": "ON",
                         "axis_angle": 0,
-                        "amplitude": 0.1725182965236667,
-                        "alpha": -0.793604400137943,
+                        "amplitude": 0.16983737620243683,
+                        "alpha": -1.0987732307193239,
                         "anharmonicity": "#/qubits/q5/anharmonicity",
-                        "detuning": -3240000.0,
+                        "detuning": -3260000.0,
                         "__class__": "quam.components.pulses.DragCosinePulse"
                     },
                     "x90_DragCosine": {
                         "length": "#../x180_DragCosine/length",
                         "digital_marker": "ON",
                         "axis_angle": 0,
-                        "amplitude": 0.08625914826183335,
+                        "amplitude": 0.08491868810121841,
                         "alpha": -0.6533073728094025,
                         "anharmonicity": "#../x180_DragCosine/anharmonicity",
                         "__class__": "quam.components.pulses.DragCosinePulse"
@@ -867,7 +890,7 @@
                     "saturation": {
                         "length": 20000,
                         "digital_marker": "ON",
-                        "amplitude": 0.5,
+                        "amplitude": 0.22691457380098676,
                         "axis_angle": 0,
                         "__class__": "quam.components.pulses.SquarePulse"
                     },
@@ -875,13 +898,13 @@
                         "length": 16,
                         "digital_marker": "ON",
                         "axis_angle": 0,
-                        "amplitude": 0.09181083125226845,
+                        "amplitude": 0.10349813102109129,
                         "alpha": 0.0,
                         "anharmonicity": 215000000,
                         "__class__": "quam.components.pulses.DragCosinePulse"
                     }
                 },
-                "intermediate_frequency": -20376556.26164495,
+                "intermediate_frequency": -19823029.868199896,
                 "thread": "e",
                 "opx_output": "#/wiring/qubits/q5/xy/opx_output",
                 "__class__": "quam.components.channels.MWChannel"
@@ -892,30 +915,36 @@
                         "length": 100,
                         "amplitude": 0.1,
                         "__class__": "quam.components.pulses.SquarePulse"
+                    },
+                    "flux_pulse": {
+                        "length": 100,
+                        "amplitude": 0.2,
+                        "__class__": "quam.components.pulses.SquarePulse"
                     }
                 },
                 "opx_output": "#/wiring/qubits/q5/z/opx_output",
-                "independent_offset": 0.027989743029789568
+                "independent_offset": -0.03174863671213873,
+                "min_offset": "#./independent_offset"
             },
             "resonator": {
                 "depletion_time": 1000,
                 "confusion_matrix": [
                     [
-                        0.9675,
-                        0.0325
+                        0.9705,
+                        0.0295
                     ],
                     [
-                        0.07,
-                        0.93
+                        0.054,
+                        0.946
                     ]
                 ],
                 "operations": {
                     "readout": {
-                        "length": 2000,
-                        "amplitude": 0.13319742900235543,
-                        "threshold": -0.00020239014805913122,
-                        "rus_exit_threshold": -0.0003560854552026573,
-                        "integration_weights_angle": -5.222979645800339,
+                        "length": 1200,
+                        "amplitude": 0.14747071615560706,
+                        "threshold": -0.00010755563223762308,
+                        "rus_exit_threshold": -0.00018617241106528039,
+                        "integration_weights_angle": -7.294696042829538,
                         "__class__": "quam.components.pulses.SquareReadoutPulse"
                     },
                     "const": {
@@ -924,7 +953,7 @@
                         "__class__": "quam.components.pulses.SquarePulse"
                     }
                 },
-                "intermediate_frequency": 19264454.0,
+                "intermediate_frequency": 19981319.0,
                 "thread": "e",
                 "opx_input": "#/wiring/qubits/q5/rr/opx_input",
                 "time_of_flight": 28,
@@ -932,13 +961,13 @@
                 "__class__": "quam_libs.components.readout_resonator.ReadoutResonatorMW"
             },
             "anharmonicity": 210600000,
-            "freq_vs_flux_01_quad_term": -15724226144.297281,
-            "T1": 43780,
-            "T2ramsey": 2.461718327013627e-05,
+            "freq_vs_flux_01_quad_term": -16272638613.219044,
+            "T1": 51280,
+            "T2ramsey": 2.0772106460898948e-05,
             "thermalization_time_factor": 10,
-            "phi0_current": 29.970596022051637,
-            "phi0_voltage": 0.5994119204410328,
-            "chi": -1725000.0,
+            "phi0_current": 29.87221624436338,
+            "phi0_voltage": 0.5974443248872676,
+            "chi": -1750000.0,
             "grid_location": "4,0"
         }
     },
@@ -952,6 +981,11 @@
                     "const": {
                         "length": 100,
                         "amplitude": 0.1,
+                        "__class__": "quam.components.pulses.SquarePulse"
+                    },
+                    "flux_pulse": {
+                        "length": 100,
+                        "amplitude": 0.2,
                         "__class__": "quam.components.pulses.SquarePulse"
                     }
                 },
@@ -969,6 +1003,11 @@
                         "length": 100,
                         "amplitude": 0.1,
                         "__class__": "quam.components.pulses.SquarePulse"
+                    },
+                    "flux_pulse": {
+                        "length": 100,
+                        "amplitude": 0.2,
+                        "__class__": "quam.components.pulses.SquarePulse"
                     }
                 },
                 "id": "coupler_q2_q3",
@@ -985,6 +1024,11 @@
                         "length": 100,
                         "amplitude": 0.1,
                         "__class__": "quam.components.pulses.SquarePulse"
+                    },
+                    "flux_pulse": {
+                        "length": 100,
+                        "amplitude": 0.2,
+                        "__class__": "quam.components.pulses.SquarePulse"
                     }
                 },
                 "id": "coupler_q3_q4",
@@ -1000,6 +1044,11 @@
                     "const": {
                         "length": 100,
                         "amplitude": 0.1,
+                        "__class__": "quam.components.pulses.SquarePulse"
+                    },
+                    "flux_pulse": {
+                        "length": 100,
+                        "amplitude": 0.2,
                         "__class__": "quam.components.pulses.SquarePulse"
                     }
                 },

@@ -34,7 +34,7 @@ import numpy as np
 
 # %% {Node_parameters}
 class Parameters(NodeParameters):
-    target_qubits: Optional[List[str]] = None
+    qubits: Optional[List[str]] = None
     num_averages: int = 100
     min_wait_time_in_ns: int = 16
     max_wait_time_in_ns: int = 100000
@@ -62,11 +62,11 @@ config = machine.generate_config()
 qmm = machine.connect()
 
 # Get the relevant QuAM components
-if node.parameters.target_qubits is None or node.parameters.target_qubits == "":
+if node.parameters.qubits is None or node.parameters.qubits == "":
     qubits = machine.active_qubits
 else:
     qubits = [
-        machine.qubits[q] for q in node.parameters.target_qubits.replace(" ", "").split(",")
+        machine.qubits[q] for q in node.parameters.qubits.replace(" ", "").split(",")
     ]
 num_qubits = len(qubits)
 
@@ -168,7 +168,7 @@ else:
             # Fetch results
             n = results.fetch_all()[0]
             # Progress bar
-            progress_counter(n, n_avg, start_time=results.start_time)
+            progress_counter(n, n_avg * len(qubits), start_time=results.start_time)
 
     # %% {Data_fetching_and_dataset_creation}
     # Fetch the data from the OPX and convert it into a xarray with corresponding axes (from most inner to outer loop)
@@ -234,8 +234,8 @@ else:
 
     # %% {Update_state}
     with node.record_state_updates():
-        for index, q in enumerate(qubits):
-            q.T1 = float(tau.sel(qubit=qubit["qubit"]).values) * 1e-6
+        for (ax, qubit), (index, q) in zip(grid_iter(grid), enumerate(qubits)):
+            q.T1 = int(tau.sel(qubit=qubit["qubit"]).values * 1e3)
 
     # %% {Save_results}
     node.results["initial_parameters"] = node.parameters.model_dump()
