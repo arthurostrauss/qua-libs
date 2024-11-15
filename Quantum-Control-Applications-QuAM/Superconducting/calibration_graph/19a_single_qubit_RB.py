@@ -45,10 +45,10 @@ class Parameters(NodeParameters):
     qubits: Optional[List[str]] = None
     use_state_discrimination: bool = True
     use_strict_timing: bool = False
-    num_random_sequences: int = 100  # Number of random sequences
+    num_random_sequences: int = 88  # Number of random sequences
     num_averages: int = 20
-    max_circuit_depth: int = 1000  # Maximum circuit depth
-    delta_clifford: int = 20
+    max_circuit_depth: int = 900  # Maximum circuit depth
+    delta_clifford: int = 15
     seed: int = 345324
     flux_point_joint_or_independent: Literal["joint", "independent"] = "independent"
     reset_type_thermal_or_active: Literal["thermal", "active"] = "thermal"

@@ -19,10 +19,11 @@ def get_band(freq):
 
 path = "/Users/adamachuck/Documents/GitHub/ASQUM/qua-libs/Quantum-Control-Applications-QuAM/Superconducting/configuration/quam_state"
 
-machine = QuAM.load(path)
+machine = QuAM.load()
 
 u = unit(coerce_to_integer=True)
 
+# %%
 # Change active qubits
 # machine.active_qubit_names = ["q0"]
 
@@ -87,14 +88,28 @@ u = unit(coerce_to_integer=True)
 #     qp.coupler.opx_output.upsampling_mode = "pulse"
 
 # %%
+machine.qubits["q1"].xy.thread = "a"
+machine.qubits["q2"].xy.thread = "b"
+machine.qubits["q3"].xy.thread = "c"
+machine.qubits["q4"].xy.thread = "d"
+machine.qubits["q5"].xy.thread = "e"
+
+machine.qubits["q1"].resonator.thread = "b"
+machine.qubits["q2"].resonator.thread = "c"
+machine.qubits["q3"].resonator.thread = "d"
+machine.qubits["q4"].resonator.thread = "e"
+machine.qubits["q5"].resonator.thread = "a"
+
+
+
+# %%
 # save into state.json
-# save_machine(machine, path)
+save_machine(machine, path)
 
 # %%
 # View the corresponding "raw-QUA" config
-with open("./Quantum-Control-Applications-QuAM/Superconducting/configuration/qua_config.json", "w+") as f:
-    json.dump(machine.generate_config(), f, indent=4)
+# with open("./Quantum-Control-Applications-QuAM/Superconducting/configuration/qua_config.json", "w+") as f:
+#     json.dump(machine.generate_config(), f, indent=4)
 
 # %%
-
 

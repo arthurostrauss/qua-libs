@@ -173,7 +173,10 @@ else:
             plt.ylabel("I quadrature [V]")
             plt.title(f"{qubit.name}")
             plt.legend((f"T1 = {np.round(np.abs(fit_res['T1'][0]) / 4) * 4:.0f} ns",))
-            qubit.T1 = int(np.round(np.abs(fit_res["T1"][0]) / 4) * 4)
+
+            # Update QUAM State: 
+            # qubit.T1 = int(np.round(np.abs(fit_res["T1"][0]) / 4) * 4)
+
             data[f"{qubit.name}"] = {"T1": qubit.T1, "successful_fit": True}
             # plt.tight_layout()
             data["figure_analysis"] = fig_analysis

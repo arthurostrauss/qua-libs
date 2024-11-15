@@ -42,11 +42,11 @@ import xarray as xr
 # %% {Node_parameters}
 class Parameters(NodeParameters):
     qubits: Optional[List[str]] = None
-    num_averages: int = 1000
+    num_averages: int = 888
     operation: str = "x180"
     min_amp_factor: float = 0.0001
     max_amp_factor: float = 2.0
-    amp_factor_step: float = 0.05
+    amp_factor_step: float = 0.02
     max_number_pulses_per_sweep: int = 1
     flux_point_joint_or_independent: Literal["joint", "independent"] = "independent"
     reset_type_thermal_or_active: Literal["thermal", "active"] = "thermal"

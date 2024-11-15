@@ -50,6 +50,7 @@ machine = QuAM.load()
 
 # Get the relevant QuAM components
 qubits = machine.active_qubits
+qubits = [q for q in qubits if q.name in ["q4","q2","q3","q1"]]
 num_qubits = len(qubits)
 
 # # Resetting angles: (has to be before generate_config())
@@ -76,19 +77,21 @@ with program() as iq_blobs:
 
     with for_(n, 0, n < n_runs, n + 1):
         # ground iq blobs for all qubits
-        wait(machine.thermalization_time * u.ns)
+        # wait(machine.thermalization_time * u.ns)
+        for qubit in qubits: qubit.wait(qubit.thermalization_time * u.ns)
         align()
         multiplexed_readout(qubits, I_g, I_g_st, Q_g, Q_g_st)
+        for qubit in qubits: qubit.resonator.wait(qubit.resonator.depletion_time * u.ns)
 
         align()
-        wait(machine.thermalization_time * u.ns)
-        for qubit in qubits:
-            # excited iq blobs for all qubits
-            qubit.xy.play("x180")
-            # qubit.xy.play("x90")
-            wait(1000*u.ns)
+        # wait(machine.thermalization_time * u.ns)
+        for qubit in qubits: qubit.wait(qubit.thermalization_time * u.ns)
+        align()
+        for qubit in qubits: qubit.xy.play("x180") # excited iq blobs for all qubits
+        # for qubit in qubits: qubit.xy.play("x180")
         align()
         multiplexed_readout(qubits, I_e, I_e_st, Q_e, Q_e_st)
+        for qubit in qubits: qubit.resonator.wait(qubit.resonator.depletion_time * u.ns)
 
     with stream_processing():
         for i in range(num_qubits):

@@ -103,7 +103,7 @@ config = machine.generate_config()
 ###################
 
 simulate = False
-mode = "pulse" # dc or pulse
+mode = "dc" # dc or pulse
 sweep_flux = "qb" # qb or qc or others
 
 n_avg = 137000
@@ -114,9 +114,8 @@ ts = np.arange(4, 160, 1)
 # The flux bias sweep in V
 if sweep_flux == "qb": 
     dcs = np.linspace(-0.3, 0.3, 501) 
-    # dcs = np.linspace(-0.0184, 0, 501) # qb (4_5) (dc)
-    # dcs = np.linspace(-0.12, -0.11, 501) # qb (4_5) (pulse, under)
-    # dcs = np.linspace(-0.12, -0.11, 501) # qb (4_5) (pulse, under) 
+    # dcs = np.linspace(-0.12, -0.11, 501) # qb (4_5) (pulse/dc, under)
+    dcs = np.linspace(0.137, 0.150, 501) # qb (4_5) (pulse/dc, above, center=0.1417) 
     # dcs = np.linspace(-0.12, -0.08, 501) # qb (3_4) (pulse) 
 elif sweep_flux == "qc": 
     dcs = np.linspace(-0.4, 0.4, 501) 

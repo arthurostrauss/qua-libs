@@ -18,7 +18,7 @@ graph = QualibrationGraph(
     ),  # Instantiate graph parameters
     nodes={  # Specify nodes used in the graph
         "close_qms": library.nodes["00_Close_other_QMs"],
-        "res_spec": library.nodes["02a_Resonator_Spectroscopy"],
+        # "res_spec": library.nodes["02a_Resonator_Spectroscopy"],
         "res_spec_vs_flux_with_min": library.nodes["02b_Resonator_Spectroscopy_vs_Flux"].copy(
             frequency_span_in_mhz=20,
             update_flux_min=False
@@ -34,8 +34,8 @@ graph = QualibrationGraph(
             operation_amplitude_factor=0.01,
             frequency_span_in_mhz=80,
             frequency_step_in_mhz=0.5,
-            min_flux_offset_in_v=-0.1,
-            max_flux_offset_in_v=0.1,
+            min_flux_offset_in_v=-0.02,
+            max_flux_offset_in_v=0.02,
         ),
         "power_rabi_1": library.nodes["04_Power_Rabi"],
         "ramsey_1": library.nodes["05_Ramsey"].copy(
@@ -104,32 +104,32 @@ graph = QualibrationGraph(
             reset_type_thermal_or_active="thermal"
         ),
         "iq_blobs_2": library.nodes["07_IQ_Blobs"].copy(),
-        "stark_detuning_x180_1": library.nodes["09a_Stark_Detuning"].copy(
-            operation_x180_or_any_90="x180",
-            reset_type_thermal_or_active="thermal"
-        ),
-        "stark_detuning_x90_1": library.nodes["09a_Stark_Detuning"].copy(
-            operation_x180_or_any_90="x90",
-            reset_type_thermal_or_active="thermal"
-        ),
-        "stark_detuning_x180_2": library.nodes["09a_Stark_Detuning"].copy(
-            operation_x180_or_any_90="x180",
-            reset_type_thermal_or_active="thermal",
-            max_number_pulses_per_sweep=200,
-            frequency_span_in_mhz=2,
-            frequency_step_in_mhz = 0.002
-        ),
-        "stark_detuning_x90_2": library.nodes["09a_Stark_Detuning"].copy(
-            operation_x180_or_any_90="x90",
-            reset_type_thermal_or_active="thermal",
-            max_number_pulses_per_sweep=200,
-            frequency_span_in_mhz=2,
-            frequency_step_in_mhz=0.002
-        ),
+        # "stark_detuning_x180_1": library.nodes["09a_Stark_Detuning"].copy(
+        #     operation_x180_or_any_90="x180",
+        #     reset_type_thermal_or_active="thermal"
+        # ),
+        # "stark_detuning_x90_1": library.nodes["09a_Stark_Detuning"].copy(
+        #     operation_x180_or_any_90="x90",
+        #     reset_type_thermal_or_active="thermal"
+        # ),
+        # "stark_detuning_x180_2": library.nodes["09a_Stark_Detuning"].copy(
+        #     operation_x180_or_any_90="x180",
+        #     reset_type_thermal_or_active="thermal",
+        #     max_number_pulses_per_sweep=200,
+        #     frequency_span_in_mhz=2,
+        #     frequency_step_in_mhz = 0.002
+        # ),
+        # "stark_detuning_x90_2": library.nodes["09a_Stark_Detuning"].copy(
+        #     operation_x180_or_any_90="x90",
+        #     reset_type_thermal_or_active="thermal",
+        #     max_number_pulses_per_sweep=200,
+        #     frequency_span_in_mhz=2,
+        #     frequency_step_in_mhz=0.002
+        # ),
         "drag_calibration_x180_1": library.nodes["09c_DRAG_Calibration_180_90"].copy(
             operation_x180_or_any_90="x180",
             reset_type_thermal_or_active="thermal",
-            num_averages=10000,
+            num_averages=1000,
             max_number_pulses_per_sweep=100,
             min_amp_factor=0.5,
             max_amp_factor=1.5,
@@ -138,7 +138,7 @@ graph = QualibrationGraph(
         "drag_calibration_x90_1": library.nodes["09c_DRAG_Calibration_180_90"].copy(
             operation_x180_or_any_90="x90",
             reset_type_thermal_or_active="thermal",
-            num_averages=10000,
+            num_averages=1000,
             max_number_pulses_per_sweep=100,
             min_amp_factor=0.5,
             max_amp_factor=1.5,
@@ -147,7 +147,7 @@ graph = QualibrationGraph(
         "drag_calibration_x180_2": library.nodes["09c_DRAG_Calibration_180_90"].copy(
             operation_x180_or_any_90="x180",
             reset_type_thermal_or_active="thermal",
-            num_averages=20000,
+            num_averages=1000,
             max_number_pulses_per_sweep=100,
             min_amp_factor=0.9,
             max_amp_factor=1.1,
@@ -156,7 +156,7 @@ graph = QualibrationGraph(
         "drag_calibration_x90_2": library.nodes["09c_DRAG_Calibration_180_90"].copy(
             operation_x180_or_any_90="x90",
             reset_type_thermal_or_active="thermal",
-            num_averages=20000,
+            num_averages=1000,
             max_number_pulses_per_sweep=100,
             min_amp_factor=0.9,
             max_amp_factor=1.1,
@@ -166,10 +166,12 @@ graph = QualibrationGraph(
     },
     # Specify directed relationships between graph nodes
     connectivity=[
-        ("close_qms", "res_spec"),
-        ("res_spec", "res_spec_vs_flux_with_min"),
+        # ("close_qms", "res_spec"),
+
+        ("close_qms", "res_spec_vs_flux_with_min"),
         ("res_spec_vs_flux_with_min", "res_spec_vs_flux"),
         ("res_spec_vs_flux", "qubit_spec"),
+
         ("qubit_spec", "qubit_spec_vs_flux"),
         ("qubit_spec_vs_flux", "power_rabi_1"),
         ("power_rabi_1", "ramsey_1"),
@@ -189,11 +191,13 @@ graph = QualibrationGraph(
         ("power_rabi_state_x90_1", "power_rabi_state_x90_2"),
         ("power_rabi_state_x90_2", "power_rabi_state_x90_3"),
         ("power_rabi_state_x90_3", "iq_blobs_2"),
-        ("iq_blobs_2", "stark_detuning_x180_1"),
-        ("stark_detuning_x180_1", "stark_detuning_x90_1"),
-        ("stark_detuning_x90_1", "stark_detuning_x180_2"),
-        ("stark_detuning_x180_2", "stark_detuning_x90_2"),
-        ("stark_detuning_x90_2", "drag_calibration_x180_1"),
+
+        # ("iq_blobs_2", "stark_detuning_x180_1"),
+        # ("stark_detuning_x180_1", "stark_detuning_x90_1"),
+        # ("stark_detuning_x90_1", "stark_detuning_x180_2"),
+        # ("stark_detuning_x180_2", "stark_detuning_x90_2"),
+
+        ("iq_blobs_2", "drag_calibration_x180_1"),
         ("drag_calibration_x180_1", "drag_calibration_x90_1"),
         ("drag_calibration_x90_1", "drag_calibration_x180_2"),
         ("drag_calibration_x180_2", "drag_calibration_x90_2"),

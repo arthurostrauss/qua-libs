@@ -132,6 +132,7 @@ with program() as drag_calibration:
                         qubit.resonator.wait(qubit.thermalization_time * u.ns)
                     qubit.align()
                     # Loop for error amplification (perform many qubit pulses)
+                    # A = qubit.xy.operations[operation].alpha
                     with for_(count, 0, count < npi, count + 1):
                         if operation == "x180":
                             play(operation * amp(1, 0, 0, a), qubit.xy.name)

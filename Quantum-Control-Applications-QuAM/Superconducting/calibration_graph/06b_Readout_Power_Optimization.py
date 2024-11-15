@@ -44,14 +44,14 @@ import xarray as xr
 class Parameters(NodeParameters):
 
     qubits: Optional[List[str]] = None
-    num_runs: int = 2000
+    num_runs: int = 1024
     reset_type_thermal_or_active: Literal['thermal', 'active'] = "thermal"
     flux_point_joint_or_independent: Literal['joint', 'independent'] = "independent"
     simulate: bool = False
     timeout: int = 100
-    start_amp: float = 0.5
+    start_amp: float = 0.2
     end_amp: float = 1.99
-    num_amps: int = 10
+    num_amps: int = 40
     outliers_threshold: float = 0.98
 
 node = QualibrationNode(
