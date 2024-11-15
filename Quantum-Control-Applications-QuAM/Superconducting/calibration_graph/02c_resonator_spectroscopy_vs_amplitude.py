@@ -1,4 +1,3 @@
-# %%
 """
         RESONATOR SPECTROSCOPY VERSUS READOUT AMPLITUDE
 This sequence involves measuring the resonator by sending a readout pulse and demodulating the signals to
@@ -24,7 +23,7 @@ Before proceeding to the next node:
 
 # %% {Imports}
 from qualibrate import QualibrationNode, NodeParameters
-from quam_libs.components import QuAM
+from quam_libs.components import QuAM, ReadoutResonatorIQ, ReadoutResonatorMW
 from quam_libs.macros import qua_declaration
 from quam_libs.lib.qua_datasets import convert_IQ_to_V
 from quam_libs.lib.plot_utils import QubitGrid, grid_iter
@@ -51,6 +50,7 @@ class Parameters(NodeParameters):
     frequency_span_in_mhz: float = 15
     frequency_step_in_mhz: float = 0.1
     simulate: bool = False
+    simulation_duration_ns: int = 2500
     timeout: int = 100
     max_power_dbm: int = -30
     min_power_dbm: int = -50
@@ -61,49 +61,7 @@ class Parameters(NodeParameters):
     multiplexed: bool = False
 
 
-node = QualibrationNode(
-    name="02c_Resonator_Spectroscopy_vs_Amplitude", parameters=Parameters()
-)
-
-
-
-# %% {Utility functions}
-def set_output_power(
-    quam_object,
-    operation,
-    power_dBm,
-    amplitude=None,
-    gain_or_full_scale_power_dbm=None,
-    Z=50,
-):
-    if amplitude is not None:
-        quam_object.operations[operation].amplitude = amplitude
-        # if not -0.5 <= quam_object.operations[operation].amplitude < 0.5:
-        #     raise ValueError("The OPX+ pulse amplitude must be within [-0.5, 0.5) V.")
-        quam_object.frequency_converter_up.gain = (
-            round((power_dBm - u.volts2dBm(amplitude, Z=Z)) * 2) / 2
-        )
-        print(
-            f"Setting the Octave gain to {round((power_dBm - u.volts2dBm(amplitude, Z=Z)) * 2) / 2} dB"
-        )
-        # if not -20 <= quam_object.frequency_converter_up.gain <= 20:
-        #     raise ValueError("The Octave gain must be within [-20:0.5:20] dB.")
-    elif gain_or_full_scale_power_dbm is not None:
-        quam_object.frequency_converter_up.gain = gain_or_full_scale_power_dbm
-        # if not -20 <= quam_object.frequency_converter_up.gain <= 20:
-        #     raise ValueError("The Octave gain must be within [-20:0.5:20] dB.")
-        quam_object.operations[operation].amplitude = u.dBm2volts(
-            power_dBm - quam_object.frequency_converter_up.gain
-        )
-        print(
-            f"Setting the {operation} amplitude to {u.dBm2volts(power_dBm - quam_object.frequency_converter_up.gain)} V"
-        )
-        # if not -0.5 <= quam_object.operations[operation].amplitude < 0.5:
-        #     raise ValueError("The OPX+ pulse amplitude must be within [-0.5, 0.5) V.")
-    else:
-        raise RuntimeError(
-            "Either amplitude or gain_or_full_scale_power_dbm must be specified."
-        )
+node = QualibrationNode(name="02c_Resonator_Spectroscopy_vs_Amplitude", parameters=Parameters())
 
 
 # %% {Initialize_QuAM_and_QOP}
@@ -121,34 +79,30 @@ prev_amps = [rr.operations["readout"].amplitude for rr in resonators]
 num_qubits = len(qubits)
 
 # Update the readout power to match the desired range, this change will be reverted at the end of the node.
-tracked_qubits = []
+tracked_resonators = []
 for i, qubit in enumerate(qubits):
-    with tracked_updates(qubit, auto_revert=False, dont_assign_to_none=True) as qubit:
-        qubit.resonator.operations["readout"].amplitude = node.parameters.max_amp
-        # TODO: I can't call function of the trackable object
-        # qubit.resonator.set_output_power("readout", power_dBm=node.parameters.max_power_dbm, amplitude=qubit.resonator.operations["readout"].amplitude)
-        # TODO: the two below are not reverted at the end of the node...
-        # set_output_power(
-        #     qubit.resonator,
-        #     "readout",
-        #     power_dBm=node.parameters.max_power_dbm,
-        #     amplitude=node.parameters.max_amp,
-        # )
-        qubit.resonator.frequency_converter_up.gain = min(10, max(-20, int(node.parameters.max_power_dbm - u.volts2dBm(node.parameters.max_amp))))
-        # qubit.resonator.operations["readout"].full_scale_power_dbm = node.parameters.max_power_dbm
-        tracked_qubits.append(qubit)
+    with tracked_updates(qubit.resonator, auto_revert=False, dont_assign_to_none=True) as resonator:
+        resonator.set_output_power(
+            power_in_dbm=node.parameters.max_power_dbm,
+            max_amplitude=node.parameters.max_amp
+        )
+        tracked_resonators.append(resonator)
 
 # Generate the OPX and Octave configurations
 config = machine.generate_config()
 # Open Communication with the QOP
 qmm = machine.connect()
 
-
 # %% {QUA_program}
 n_avg = node.parameters.num_averages  # The number of averages
+
 # The readout amplitude sweep (as a pre-factor of the readout amplitude) - must be within [-2; 2)
-amp_max = 10 ** (-(node.parameters.max_power_dbm - node.parameters.max_power_dbm) / 20)
-amp_min = 10 ** (-(node.parameters.max_power_dbm - node.parameters.min_power_dbm) / 20)
+amp_min = resonators[0].calculate_voltage_scaling_factor(
+    fixed_power_dBm=node.parameters.max_power_dbm,
+    target_power_dBm=node.parameters.min_power_dbm
+)
+amp_max = 1
+
 amps = np.geomspace(amp_min, amp_max, node.parameters.num_power_points)
 
 # The frequency sweep around the resonator resonance frequencies
@@ -207,9 +161,17 @@ with program() as multi_res_spec_vs_amp:
 # %% {Simulate_or_execute}
 if node.parameters.simulate:
     # Simulates the QUA program for the specified duration
-    simulation_config = SimulationConfig(duration=10_000)  # In clock cycles = 4ns
+    simulation_config = SimulationConfig(duration=node.parameters.simulation_duration_ns * 4)  # In clock cycles = 4ns
     job = qmm.simulate(config, multi_res_spec_vs_amp, simulation_config)
-    job.get_simulated_samples().con1.plot()
+    # Get the simulated samples and plot them for all controllers
+    samples = job.get_simulated_samples()
+    fig, ax = plt.subplots(nrows=len(samples.keys()), sharex=True)
+    for i, con in enumerate(samples.keys()):
+        plt.subplot(len(samples.keys()),1,i+1)
+        samples[con].plot()
+        plt.title(con)
+    plt.tight_layout()
+    # Save the figure
     node.results = {"figure": plt.gcf()}
     node.machine = machine
     node.save()
@@ -225,7 +187,6 @@ else:
             n = results.fetch_all()[0]
             # Progress bar
             progress_counter(n, n_avg, start_time=results.start_time)
-
 
     # %% {Data_fetching_and_dataset_creation}
     # Fetch the data from the OPX and convert it into a xarray with corresponding axes (from most inner to outer loop)
@@ -259,15 +220,13 @@ else:
     ds.abs_amp.attrs["long_name"] = "Amplitude"
     ds.abs_amp.attrs["units"] = "V"
     # Add the absolute readout power to the dataset
-    # ds = ds.assign_coords({'power_dbm': (['qubit', 'amp'], np.array([u.volts2dBm(a) - node.parameters.ro_line_attenuation_dB for a in ds.abs_amp.values]))})
     ds = ds.assign_coords(
         {
             "power_dbm": (
                 ["qubit", "amp"],
                 np.array(
                     [
-                        abs_pow(q)(20 * np.log10(amps))
-                        - node.parameters.ro_line_attenuation_dB
+                        abs_pow(q)(20 * np.log10(amps)) - node.parameters.ro_line_attenuation_dB
                         for q in qubits
                     ]
                 ),
@@ -306,7 +265,6 @@ else:
     # Take 30% of it for being sure to be far from the punch out (?)
     RO_power_ratio = 0.45
     rr_pwr = RO_power_ratio * rr_pwr
-
 
     # %% {Plotting}
     grid = QubitGrid(ds, [q.grid_location for q in qubits])
@@ -352,19 +310,15 @@ else:
         fit_results[q.name] = {}
         if float(rr_pwr.sel(qubit=q.name)) > 0:
             with node.record_state_updates():
-                q.resonator.operations["readout"].amplitude = float(
-                    rr_pwr.sel(qubit=q.name)
-                )
-                q.resonator.intermediate_frequency += int(
-                    res_low_power.sel(qubit=q.name).values
-                )
+                q.resonator.operations["readout"].amplitude = float(rr_pwr.sel(qubit=q.name))
+                q.resonator.intermediate_frequency += int(res_low_power.sel(qubit=q.name).values)
         fit_results[q.name]["RO_amplitude"] = float(rr_pwr.sel(qubit=q.name))
         fit_results[q.name]["RO_frequency"] = q.resonator.RF_frequency
     node.results["resonator_frequency"] = fit_results
 
     # Revert the change done at the beginning of the node
-    for tracked_qubit in tracked_qubits:
-        tracked_qubit.revert_changes()
+    for tracked_resonator in tracked_resonators:
+        tracked_resonator.revert_changes()
 
     # %% {Save_results}
     node.outcomes = {q.name: "successful" for q in qubits}
@@ -372,4 +326,3 @@ else:
     node.machine = machine
     node.save()
 
-# %%
