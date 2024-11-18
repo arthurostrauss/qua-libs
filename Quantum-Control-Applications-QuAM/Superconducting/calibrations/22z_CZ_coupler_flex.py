@@ -59,8 +59,8 @@ machine = QuAM.load(config_path)
 qmm = machine.connect()
 
 # Get the relevant QuAM components
-q1 = machine.qubits["q2"]
-q2 = machine.qubits["q3"]
+q1 = machine.qubits["q1"]
+q2 = machine.qubits["q2"]
 # qn1 = machine.qubits["q3"]
 readout_qubits = [qubit for qubit in machine.qubits.values() if qubit not in [q1, q2]]
 
@@ -69,7 +69,7 @@ try:
 except:
     coupler = (q2 @ q1).coupler 
 
-qb = q2  # The qubit whose flux will be swept
+qb = q1  # The qubit whose flux will be swept
 
 print("%s: %s" % (q1.name, q1.xy.RF_frequency))
 print("%s: %s" % (q2.name, q2.xy.RF_frequency))
@@ -104,7 +104,7 @@ config = machine.generate_config()
 
 simulate = False
 mode = "dc" # dc or pulse
-sweep_flux = "qb" # qb or qc or others
+sweep_flux = "qc" # qb or qc or others
 
 n_avg = 137000
 # The flux pulse durations in clock cycles (4ns) - Must be larger than 4 clock cycles.
@@ -114,26 +114,29 @@ ts = np.arange(4, 160, 1)
 # The flux bias sweep in V
 if sweep_flux == "qb": 
     dcs = np.linspace(-0.3, 0.3, 501) 
-    # dcs = np.linspace(-0.066, -0.056, 501) # qb (4_5) (pulse/dc, q5<q4) 
-    # dcs = np.linspace(-0.140, -0.125, 501) # qb (3_4) (pulse/dc, q3<q4) 
-    dcs = np.linspace(0.005, 0.025, 301) # qb (2_3) (pulse/dc, q3<q4) 
+    # dcs = np.linspace(-0.07, -0.04, 301) # qb (4_5) (pulse/dc, q5<q4) 
+    # dcs = np.linspace(-0.140, -0.125, 301) # qb (3_4) (pulse/dc, q3<q4) 
+    # dcs = np.linspace(0.010, 0.025, 301) # qb (2_3) (pulse/dc, q2<q3)
+    dcs = np.linspace(-0.105, -0.090, 301) # qb (1_2) (pulse/dc, q1<q2) 
 elif sweep_flux == "qc": 
     dcs = np.linspace(-0.4, 0.4, 501) 
-    # dcs = np.linspace(-0.14, -0.05, 501) # qc (4_5) (pulse/dc) 
-    # dcs = np.linspace(-0.128, -0.06, 501) # qc (3_4) (pulse/dc) 
+    # dcs = np.linspace(-0.14, -0.05, 301) # qc (4_5) (pulse/dc) 
+    # dcs = np.linspace(-0.128, -0.06, 301) # qc (3_4) (pulse/dc)
+    # dcs = np.linspace(-0.09, 0.0, 301) # qc (2_3) (pulse/dc)
+    dcs = np.linspace(-0.11, -0.02, 301) # qc (1_2) (pulse/dc)
 else: 
     ts = [30]
     dcs = [-0.045]
 
 # Guess points: 
-cz_point = -0.06 
-#q4_5:-0.06 #q3_4:-0.1322 #q2_3:0.01726 
+cz_point = -0.0977 
+#q4_5:-0.0577, q3_4:-0.12995, q2_3:0.01726, q1_2:-0.0977
 coupler_point = 0 
 # NOTE: turn ~20mV left to the FAST LANE. 
-#q4_5: -0.0904(off,left), -0.19874 (cz) #q3_4: -0.091(off,left), -0.13210 (cz) 
-#q2_3: 
-scale = -0.0119 
-# q4_5: -0.0119, q3_4: 0.0287, q2_3: -0.117 
+#q4_5: -0.0893(off,left), -0.19874 (cz) #q3_4: -0.088(off,left), -0.13210 (cz) 
+#q2_3: -0.0492(off,left). - (cz) #q1_2:-0.0701(off,left), - (cz)
+scale = 0.0397 
+# q4_5:-0.0119, q3_4:0.0287, q2_3:-0.0087, q1_2:0.0397
 
 pulse_dc_factor = 1.0 #(0.00859 - q1.z.min_offset)/(0.00908 - q1.z.min_offset) * 1.08
 print("pulse_dc_factor: %s" % pulse_dc_factor)

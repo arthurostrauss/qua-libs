@@ -105,8 +105,10 @@ q3 = machine.qubits["q3"]
 q4 = machine.qubits["q4"]
 q5 = machine.qubits["q5"]
 print("\nsetting couplers's offset.........\n")
-(q4 @ q5).coupler.decouple_offset = -0.0904 
-(q3 @ q4).coupler.decouple_offset = -0.091
+(q4 @ q5).coupler.decouple_offset = -0.0893 
+(q3 @ q4).coupler.decouple_offset = -0.0880
+(q2 @ q3).coupler.decouple_offset = -0.0492
+(q1 @ q2).coupler.decouple_offset = -0.0701
 
 # %%
 # save into state.json
