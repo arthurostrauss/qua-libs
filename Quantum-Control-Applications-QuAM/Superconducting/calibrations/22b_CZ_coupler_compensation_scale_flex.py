@@ -59,8 +59,8 @@ config = machine.generate_config()
 qmm = machine.connect()
 
 # Get the relevant QuAM components
-q1 = machine.qubits["q3"]
-q2 = machine.qubits["q4"]
+q1 = machine.qubits["q2"]
+q2 = machine.qubits["q3"]
 
 try: 
     coupler = (q1 @ q2).coupler
@@ -79,25 +79,25 @@ inv_arr = np.linalg.inv(compensation_arr)
 ###################
 # The QUA program #
 ###################
-qb = q1  # The qubit whose flux will be swept
+qb = q2  # The qubit whose flux will be swept
 
 n_avg = 3000
 # The flux pulse durations in clock cycles (4ns) - Must be larger than 4 clock cycles.
 # The flux bias sweep in V
 dcs = np.linspace(-0.3, 0.3, 501)
-dcs = np.linspace(-0.14196, -0.11, 501) # q3_4
-# dcs = np.linspace(-0.21, -0.17, 501) # q4_5
+# dcs = np.linspace(-0.17, -0.11, 501) # q4_5
+# dcs = np.linspace(-0.135, -0.088, 501) # q3_4
 # dcs = [-0.046, -0.045]
 
 scales = np.linspace(-0.2, 0.2, 101)
-scales = np.linspace(0, 0.08, 101) # q3_4
-# scales = np.linspace(0.015, 0.085, 101) # q4_5
+# scales = np.linspace(-0.02, 0.00, 101) # q4_5
+# scales = np.linspace(0, 0.06, 101) # q3_4
 # scales = [0.4, 0.41]
 
-cz_dur = 92 #360
-cz_point = -0.10219 # when coupler=0 
+cz_dur = 100 #360
+cz_point = 0.01726 # when coupler = 0 
 
-mode = "pulse" # dc or pulse
+mode = "dc" # dc or pulse
 simulate = False
 scope_debug = False
 
@@ -147,12 +147,12 @@ with program() as cz:
                 if mode == "dc":
                     ########## Set DC Offset Version
                     wait(40 * u.ns)
-                    q1.z.set_dc_offset(cz_point + scale * dc) # 0.0175
+                    qb.z.set_dc_offset(cz_point + scale * dc) # 0.0175
                     # q2.z.set_dc_offset(q2.z.min_offset)
                     coupler.set_dc_offset(dc)
                     wait(t)
                     coupler.set_dc_offset(0)
-                    q1.z.to_min()
+                    qb.z.to_min()
                     # q2.z.to_min()
                     wait(20 * u.ns)
                     #############################

@@ -59,9 +59,9 @@ machine = QuAM.load(config_path)
 qmm = machine.connect()
 
 # Get the relevant QuAM components
-q1 = machine.qubits["q4"]
-q2 = machine.qubits["q5"]
-qn1 = machine.qubits["q3"]
+q1 = machine.qubits["q2"]
+q2 = machine.qubits["q3"]
+# qn1 = machine.qubits["q3"]
 readout_qubits = [qubit for qubit in machine.qubits.values() if qubit not in [q1, q2]]
 
 try: 
@@ -75,7 +75,7 @@ print("%s: %s" % (q1.name, q1.xy.RF_frequency))
 print("%s: %s" % (q2.name, q2.xy.RF_frequency))
 
 # neighbour coupling off:
-coupler_n1 = (qn1 @ q1).coupler
+# coupler_n1 = (qn1 @ q1).coupler
 
 # compensations = {
 #     q1: coupler.opx_output.crosstalk[q1.z.opx_output.port_id],
@@ -114,25 +114,31 @@ ts = np.arange(4, 160, 1)
 # The flux bias sweep in V
 if sweep_flux == "qb": 
     dcs = np.linspace(-0.3, 0.3, 501) 
-    # dcs = np.linspace(-0.12, -0.11, 501) # qb (4_5) (pulse/dc, under)
-    dcs = np.linspace(0.137, 0.150, 501) # qb (4_5) (pulse/dc, above, center=0.1417) 
-    # dcs = np.linspace(-0.12, -0.08, 501) # qb (3_4) (pulse) 
+    # dcs = np.linspace(-0.066, -0.056, 501) # qb (4_5) (pulse/dc, q5<q4) 
+    # dcs = np.linspace(-0.140, -0.125, 501) # qb (3_4) (pulse/dc, q3<q4) 
+    dcs = np.linspace(0.005, 0.025, 301) # qb (2_3) (pulse/dc, q3<q4) 
 elif sweep_flux == "qc": 
     dcs = np.linspace(-0.4, 0.4, 501) 
-    # dcs = np.linspace(-0.21, -0.195, 501) # qc (4_5) (pulse) 
-    # dcs = np.linspace(-0.147, -0.0915, 501) # qc (3_4) (pulse) 
+    # dcs = np.linspace(-0.14, -0.05, 501) # qc (4_5) (pulse/dc) 
+    # dcs = np.linspace(-0.128, -0.06, 501) # qc (3_4) (pulse/dc) 
 else: 
     ts = [30]
     dcs = [-0.045]
 
 # Guess points: 
-cz_point = -0.08652 #q3_2:-0.09529 #q3_4:-0.10219 #q4_5:-0.08722
-coupler_point = 0 #q3_4_off: -0.11173, -0.13210 (op) #q4_5_off: -0.17835, -0.19874 (op)
-scale = 0.04958 # q4_5: 0.04958, q3_4: 0.0389, q3_2: -0.117 
+cz_point = -0.06 
+#q4_5:-0.06 #q3_4:-0.1322 #q2_3:0.01726 
+coupler_point = 0 
+# NOTE: turn ~20mV left to the FAST LANE. 
+#q4_5: -0.0904(off,left), -0.19874 (cz) #q3_4: -0.091(off,left), -0.13210 (cz) 
+#q2_3: 
+scale = -0.0119 
+# q4_5: -0.0119, q3_4: 0.0287, q2_3: -0.117 
 
 pulse_dc_factor = 1.0 #(0.00859 - q1.z.min_offset)/(0.00908 - q1.z.min_offset) * 1.08
 print("pulse_dc_factor: %s" % pulse_dc_factor)
 print("qb's offset: %s" % qb.z.min_offset)
+print("coupler's decouple-offset: %s" %coupler.decouple_offset)
 
 
 with program() as cz:
@@ -142,6 +148,7 @@ with program() as cz:
 
     # Bring the active qubits to the minimum frequency point
     machine.apply_all_flux_to_min()
+    machine.apply_all_couplers_to_min()
 
     # turn off neighboring coupler(s)
     # coupler_n1.set_dc_offset(-0.02257)
@@ -171,13 +178,17 @@ with program() as cz:
                 coupler_dc_point = declare(fixed)
 
                 if sweep_flux == "qb":
+                    # Pulse: 
                     assign(z_amp, Cast.mul_fixed_by_int(pulse_dc_factor*((dc - qb.z.min_offset + scale * coupler_point)), 5))
-                    assign(coupler_amp, Cast.mul_fixed_by_int(pulse_dc_factor*(coupler_point), 5))
+                    assign(coupler_amp, Cast.mul_fixed_by_int(pulse_dc_factor*(coupler_point-coupler.decouple_offset), 5))
+                    # dc: 
                     assign(q1_dc_point, dc + scale * coupler_point)
                     assign(coupler_dc_point, coupler_point)
                 else:
+                    # Pulse: 
                     assign(z_amp, Cast.mul_fixed_by_int(pulse_dc_factor*((cz_point - qb.z.min_offset + scale * dc)), 5))
-                    assign(coupler_amp, Cast.mul_fixed_by_int(pulse_dc_factor*(dc), 5))
+                    assign(coupler_amp, Cast.mul_fixed_by_int(pulse_dc_factor*(dc-coupler.decouple_offset), 5))
+                    # dc: 
                     assign(q1_dc_point, cz_point + scale * dc)
                     assign(coupler_dc_point, dc)
 
@@ -186,6 +197,7 @@ with program() as cz:
                     wait( (24) * u.ns, qb.z.name, coupler.name) # another bug 
                     qb.z.play("flux_pulse", duration=t, amplitude_scale=z_amp)
                     coupler.play("flux_pulse", duration=t, amplitude_scale=coupler_amp)
+                    # q1.z.play("flux_pulse", duration=t, amplitude_scale=0)
                     # wait(64 * u.ns, qb.z.name)
                     #############################
 
@@ -195,8 +207,9 @@ with program() as cz:
                     qb.z.set_dc_offset(q1_dc_point) # 0.0175
                     coupler.set_dc_offset(coupler_dc_point)
                     wait(t)
-                    coupler.set_dc_offset(0)
-                    qb.z.to_min()
+                    # coupler.set_dc_offset(0)
+                    coupler.to_decouple_idle()
+                    q1.z.to_min()
                     q2.z.to_min()
                     # wait(t - 36 * u.ns)
                     #############################

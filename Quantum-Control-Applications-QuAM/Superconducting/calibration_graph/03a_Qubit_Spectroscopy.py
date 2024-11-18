@@ -153,6 +153,7 @@ with program() as qubit_spec:
         # Bring the active qubits to the minimum frequency point
         if flux_point == "independent":
             machine.apply_all_flux_to_min()
+            machine.apply_all_couplers_to_min()
             qubit.z.to_independent_idle()
             dc_offset = qubit.z.independent_offset
         elif flux_point == "joint" or "arbitrary":

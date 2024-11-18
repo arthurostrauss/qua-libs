@@ -92,6 +92,7 @@ with program() as t1:
         # Bring the active qubits to the minimum frequency point
         if flux_point == "independent":
             machine.apply_all_flux_to_min()
+            machine.apply_all_couplers_to_min()
             qubit.z.to_independent_idle()
         elif flux_point == "joint" or "arbitrary":
             machine.apply_all_flux_to_joint_idle()

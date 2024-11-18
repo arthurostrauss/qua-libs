@@ -115,6 +115,7 @@ with program() as ramsey:
         # Bring the active qubits to the desired frequency point
         if flux_point == "independent":
             machine.apply_all_flux_to_min()
+            machine.apply_all_couplers_to_min()
             qubit.z.to_independent_idle()
         elif flux_point == "joint":
             machine.apply_all_flux_to_joint_idle()

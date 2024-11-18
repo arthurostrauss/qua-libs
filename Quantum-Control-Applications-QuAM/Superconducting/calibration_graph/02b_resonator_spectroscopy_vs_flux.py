@@ -52,7 +52,7 @@ class Parameters(NodeParameters):
     flux_point_joint_or_independent: Literal["joint", "independent", ""] = "independent"
     input_line_impedance_in_ohm: float = 50
     line_attenuation_in_db: float = 0
-    update_flux_min: bool = True 
+    update_flux_min: bool = False 
     simulate: bool = False
     timeout: int = 100
 

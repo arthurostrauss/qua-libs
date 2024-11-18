@@ -18,9 +18,7 @@ def get_band(freq):
 
 
 path = "/Users/adamachuck/Documents/GitHub/ASQUM/qua-libs/Quantum-Control-Applications-QuAM/Superconducting/configuration/quam_state"
-
 machine = QuAM.load()
-
 u = unit(coerce_to_integer=True)
 
 # %%
@@ -88,19 +86,27 @@ u = unit(coerce_to_integer=True)
 #     qp.coupler.opx_output.upsampling_mode = "pulse"
 
 # %%
-machine.qubits["q1"].xy.thread = "a"
-machine.qubits["q2"].xy.thread = "b"
-machine.qubits["q3"].xy.thread = "c"
-machine.qubits["q4"].xy.thread = "d"
-machine.qubits["q5"].xy.thread = "e"
+# machine.qubits["q1"].xy.thread = "a"
+# machine.qubits["q2"].xy.thread = "b"
+# machine.qubits["q3"].xy.thread = "c"
+# machine.qubits["q4"].xy.thread = "d"
+# machine.qubits["q5"].xy.thread = "e"
 
-machine.qubits["q1"].resonator.thread = "b"
-machine.qubits["q2"].resonator.thread = "c"
-machine.qubits["q3"].resonator.thread = "d"
-machine.qubits["q4"].resonator.thread = "e"
-machine.qubits["q5"].resonator.thread = "a"
+# machine.qubits["q1"].resonator.thread = "b"
+# machine.qubits["q2"].resonator.thread = "c"
+# machine.qubits["q3"].resonator.thread = "d"
+# machine.qubits["q4"].resonator.thread = "e"
+# machine.qubits["q5"].resonator.thread = "a"
 
-
+# %%
+q1 = machine.qubits["q1"]
+q2 = machine.qubits["q2"]
+q3 = machine.qubits["q3"]
+q4 = machine.qubits["q4"]
+q5 = machine.qubits["q5"]
+print("\nsetting couplers's offset.........\n")
+(q4 @ q5).coupler.decouple_offset = -0.0904 
+(q3 @ q4).coupler.decouple_offset = -0.091
 
 # %%
 # save into state.json
