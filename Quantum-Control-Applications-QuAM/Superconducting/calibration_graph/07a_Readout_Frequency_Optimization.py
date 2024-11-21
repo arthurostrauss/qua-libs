@@ -105,14 +105,14 @@ with program() as ro_freq_opt:
                 # Update the resonator frequencies
                 update_frequency(qubit.resonator.name, df + qubit.resonator.intermediate_frequency)
                 # Wait for the qubits to decay to the ground state
-                wait(qubit.thermalization_time * u.ns)
+                qubit.wait(qubit.thermalization_time * u.ns)
                 align()
                 # Measure the state of the resonators
                 qubit.resonator.measure("readout", qua_vars=(I_g[i], Q_g[i]))
 
                 align()
                 # Wait for thermalization again in case of measurement induced transitions
-                wait(qubit.thermalization_time * u.ns)
+                qubit.wait(qubit.thermalization_time * u.ns)
                 # Play the x180 gate to put the qubits in the excited state
                 qubit.xy.play("x180")
                 # Align the elements to measure after playing the qubit pulses.

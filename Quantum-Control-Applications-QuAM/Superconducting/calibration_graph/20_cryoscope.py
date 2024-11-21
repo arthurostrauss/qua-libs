@@ -156,7 +156,7 @@ with program() as cryoscope:
                     for qubit in qubits:
                         active_reset(qubit, "readout")
                 else:
-                    wait(qubit.thermalization_time * u.ns)
+                    qubit.wait(qubit.thermalization_time * u.ns)
                 align()
                 
                 # Play first X/2
@@ -207,7 +207,7 @@ with program() as cryoscope:
                         for qubit in qubits:
                             active_reset(qubit, "readout")
                     else:
-                        wait(qubit.thermalization_time * u.ns)
+                        qubit.wait(qubit.thermalization_time * u.ns)
                     align()
                     # Play first X/2
                     for qubit in qubits:
