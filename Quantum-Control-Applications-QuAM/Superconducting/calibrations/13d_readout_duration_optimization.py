@@ -55,7 +55,7 @@ qubits = machine.active_qubits
 num_qubits = len(qubits)
 
 # Select the resonator and qubit to measure (no multiplexing here)
-qb = qubits[4]
+qb = qubits[1]
 rr = qb.resonator
 
 ####################
@@ -82,7 +82,7 @@ rr = qb.resonator
 
 n_avg = 3e4  # number of averages
 # Set maximum readout duration for this scan and update the configuration accordingly
-readout_len = 7 * u.us
+readout_len = 4 * u.us
 ringdown_len = 0 * u.us
 rr.operations["readout"].length = readout_len
 config = machine.generate_config()
@@ -120,6 +120,7 @@ with program() as ro_duration_opt:
 
     # Bring the active qubits to the minimum frequency point
     machine.apply_all_flux_to_min()
+    machine.apply_all_couplers_to_min()
 
     with for_(n, 0, n < n_avg, n + 1):
         # Measure the ground state.
