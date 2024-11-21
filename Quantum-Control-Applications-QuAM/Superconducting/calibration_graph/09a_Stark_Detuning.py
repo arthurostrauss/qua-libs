@@ -27,7 +27,7 @@ from quam_libs.components import QuAM
 from quam_libs.macros import qua_declaration, active_reset
 from quam_libs.lib.qua_datasets import convert_IQ_to_V
 from quam_libs.lib.plot_utils import QubitGrid, grid_iter
-from quam_libs.lib.save_utils import fetch_results_as_xarray
+from quam_libs.lib.save_utils import fetch_results_as_xarray, load_dataset
 from quam_libs.trackable_object import tracked_updates
 from qualang_tools.results import progress_counter, fetching_tool
 from qualang_tools.loops import from_array
@@ -52,8 +52,10 @@ class Parameters(NodeParameters):
     reset_type_thermal_or_active: Literal["thermal", "active"] = "thermal"
     DRAG_setpoint: Optional[float] = -1.0
     simulate: bool = False
+    simulation_duration_ns: int = 2500
     timeout: int = 100
-
+    load_data_id: Optional[int] = None
+    multiplexed: bool = False
 
 node = QualibrationNode(name="09a_Stark_Detuning", parameters=Parameters())
 
@@ -84,7 +86,8 @@ for q in qubits:
 # Generate the OPX and Octave configurations
 config = machine.generate_config()
 # Open Communication with the QOP
-qmm = machine.connect()
+if node.parameters.load_data_id is None:
+    qmm = machine.connect()
 
 
 # %% {QUA_program}
@@ -109,14 +112,9 @@ with program() as stark_detuning:
 
     for i, qubit in enumerate(qubits):
         # Bring the active qubits to the desired frequency point
-        if flux_point == "independent":
-            machine.apply_all_flux_to_min()
-            machine.apply_all_couplers_to_min()
-            qubit.z.to_independent_idle()
-        elif flux_point == "joint":
-            machine.apply_all_flux_to_joint_idle()
-        else:
-            machine.apply_all_flux_to_zero()
+        machine.set_all_fluxes(flux_point=flux_point, target=qubit)
+        qubit.z.settle()
+        qubit.align()
 
         with for_(n, 0, n < n_avg, n + 1):
             save(n, n_st)
@@ -129,9 +127,7 @@ with program() as stark_detuning:
                         qubit.wait(qubit.thermalization_time * u.ns)
 
                     # Update the qubit frequency after initialization for active reset
-                    update_frequency(
-                        qubit.xy.name, df + qubit.xy.intermediate_frequency
-                    )
+                    update_frequency(qubit.xy.name, df + qubit.xy.intermediate_frequency)
                     with for_(count, 0, count < npi, count + 1):
                         if operation == "x180":
                             qubit.xy.play(operation)
@@ -147,21 +143,18 @@ with program() as stark_detuning:
                     qubit.align()
                     qubit.resonator.measure("readout", qua_vars=(I[i], Q[i]))
                     # State discrimination
-                    assign(
-                        state[i], I[i] > qubit.resonator.operations["readout"].threshold
-                    )
+                    assign(state[i], I[i] > qubit.resonator.operations["readout"].threshold)
                     save(state[i], state_stream[i])
                     save(I[i], I_st[i])
                     save(Q[i], Q_st[i])
         # Measure sequentially
-        align()
+        if not node.parameters.multiplexed:
+            align()
 
     with stream_processing():
         n_st.save("n")
         for i, qubit in enumerate(qubits):
-            state_stream[i].boolean_to_int().buffer(len(dfs)).buffer(
-                N_pi
-            ).average().save(f"state{i + 1}")
+            state_stream[i].boolean_to_int().buffer(len(dfs)).buffer(N_pi).average().save(f"state{i + 1}")
             I_stream = I_st[i].buffer(len(dfs)).buffer(N_pi).average().save(f"I{i + 1}")
             Q_stream = Q_st[i].buffer(len(dfs)).buffer(N_pi).average().save(f"Q{i + 1}")
 
@@ -169,14 +162,22 @@ with program() as stark_detuning:
 # %% {Simulate_or_execute}
 if node.parameters.simulate:
     # Simulates the QUA program for the specified duration
-    simulation_config = SimulationConfig(duration=10_000)  # In clock cycles = 4ns
+    simulation_config = SimulationConfig(duration=node.parameters.simulation_duration_ns * 4)  # In clock cycles = 4ns
     job = qmm.simulate(config, stark_detuning, simulation_config)
-    job.get_simulated_samples().con1.plot()
+    # Get the simulated samples and plot them for all controllers
+    samples = job.get_simulated_samples()
+    fig, ax = plt.subplots(nrows=len(samples.keys()), sharex=True)
+    for i, con in enumerate(samples.keys()):
+        plt.subplot(len(samples.keys()),1,i+1)
+        samples[con].plot()
+        plt.title(con)
+    plt.tight_layout()
+    # Save the figure
     node.results = {"figure": plt.gcf()}
     node.machine = machine
     node.save()
 
-else:
+elif node.parameters.load_data_id is None:
     with qm_session(qmm, config, timeout=node.parameters.timeout) as qm:
         job = qm.execute(stark_detuning)
         results = fetching_tool(job, ["n"], mode="live")
@@ -186,13 +187,15 @@ else:
             # Progress bar
             progress_counter(n, n_avg, start_time=results.start_time)
 
-    # %% {Data_fetching_and_dataset_creation}
-    # Fetch the data from the OPX and convert it into a xarray with corresponding axes (from most inner to outer loop)
-    ds = fetch_results_as_xarray(
-        job.result_handles, qubits, {"freq": dfs, "N": N_pi_vec}
-    )
-    # Convert IQ data into volts
-    ds = convert_IQ_to_V(ds, qubits)
+# %% {Data_fetching_and_dataset_creation}
+if not node.parameters.simulate:
+    if node.parameters.load_data_id is None:
+        # Fetch the data from the OPX and convert it into a xarray with corresponding axes (from most inner to outer loop)
+        ds = fetch_results_as_xarray(job.result_handles, qubits, {"freq": dfs, "N": N_pi_vec})
+        # Convert IQ data into volts
+        ds = convert_IQ_to_V(ds, qubits)
+    else:
+        ds, machine, json_data, qubits, node.parameters = load_dataset(node.parameters.load_data_id, parameters = node.parameters)
     # Add the dataset to the node
     node.results = {"ds": ds}
 
@@ -203,10 +206,7 @@ else:
     detuning = ds.freq[data_max_idx]
 
     # Save fitting results
-    fit_results = {
-        qubit.name: {"detuning": float(detuning.sel(qubit=qubit.name).values)}
-        for qubit in qubits
-    }
+    fit_results = {qubit.name: {"detuning": float(detuning.sel(qubit=qubit.name).values)} for qubit in qubits}
     for q in qubits:
         print(f"Detuning for {q.name} is {fit_results[q.name]['detuning']} Hz")
     node.results["fit_results"] = fit_results
@@ -214,9 +214,7 @@ else:
     # %% {Plotting}
     grid = QubitGrid(ds, [q.grid_location for q in qubits])
     for ax, qubit in grid_iter(grid):
-        ds.assign_coords(freq_MHz=ds.freq * 1e-6).loc[qubit].state.plot(
-            ax=ax, x="freq_MHz", y="N"
-        )
+        ds.assign_coords(freq_MHz=ds.freq * 1e-6).loc[qubit].state.plot(ax=ax, x="freq_MHz", y="N")
         ax.axvline(1e-6 * fit_results[qubit["qubit"]]["detuning"], color="r")
         ax.set_ylabel("num. of pulses")
         ax.set_xlabel("detuning [MHz]")
@@ -230,18 +228,17 @@ else:
     # Revert the change done at the beginning of the node
     for qubit in tracked_qubits:
         qubit.revert_changes()
-    with node.record_state_updates():
-        for qubit in qubits:
-            qubit.xy.operations[operation].detuning = float(
-                fit_results[qubit.name]["detuning"]
-            )
-            if node.parameters.DRAG_setpoint is not None:
-                qubit.xy.operations[operation].alpha = node.parameters.DRAG_setpoint
+    if node.parameters.load_data_id is None:
+        with node.record_state_updates():
+            for qubit in qubits:
+                qubit.xy.operations[operation].detuning = float(fit_results[qubit.name]["detuning"])
+                if node.parameters.DRAG_setpoint is not None:
+                    qubit.xy.operations[operation].alpha = node.parameters.DRAG_setpoint
 
-    # %% {Save_results}
-    node.outcomes = {q.name: "successful" for q in qubits}
-    node.results["initial_parameters"] = node.parameters.model_dump()
-    node.machine = machine
-    node.save()
+        # %% {Save_results}
+        node.outcomes = {q.name: "successful" for q in qubits}
+        node.results["initial_parameters"] = node.parameters.model_dump()
+        node.machine = machine
+        node.save()
 
 # %%

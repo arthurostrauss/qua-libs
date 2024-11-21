@@ -25,7 +25,7 @@ from qualibrate import QualibrationNode, NodeParameters
 from quam_libs.components import QuAM
 from quam_libs.macros import qua_declaration, active_reset
 from quam_libs.lib.plot_utils import QubitGrid, grid_iter
-from quam_libs.lib.save_utils import fetch_results_as_xarray
+from quam_libs.lib.save_utils import fetch_results_as_xarray, load_dataset
 from quam_libs.trackable_object import tracked_updates
 from qualang_tools.results import progress_counter, fetching_tool
 from qualang_tools.loops import from_array
@@ -47,12 +47,13 @@ class Parameters(NodeParameters):
     min_amp_factor: float = 0.0001
     max_amp_factor: float = 2.0
     amp_factor_step: float = 0.02
-    max_number_pulses_per_sweep: int = 1
     flux_point_joint_or_independent: Literal["joint", "independent"] = "independent"
     reset_type_thermal_or_active: Literal["thermal", "active"] = "thermal"
     simulate: bool = False
+    simulation_duration_ns: int = 2500
     timeout: int = 100
-
+    load_data_id: Optional[int] = None
+    multiplexed: bool = False
 
 node = QualibrationNode(name="09c_DRAG_Calibration_180_90", parameters=Parameters())
 
@@ -78,7 +79,8 @@ for q in qubits:
 
 config = machine.generate_config()
 # Open Communication with the QOP
-qmm = machine.connect()
+if node.parameters.load_data_id is None:
+    qmm = machine.connect()
 
 
 # %% {QUA_program}
@@ -103,14 +105,10 @@ with program() as drag_calibration:
 
     for i, qubit in enumerate(qubits):
         # Bring the active qubits to the desired frequency point
-        if flux_point == "independent":
-            machine.apply_all_flux_to_min()
-            machine.apply_all_couplers_to_min()
-            qubit.z.to_independent_idle()
-        elif flux_point == "joint":
-            machine.apply_all_flux_to_joint_idle()
-        else:
-            machine.apply_all_flux_to_zero()
+        machine.set_all_fluxes(flux_point=flux_point, target=qubit)
+        qubit.z.settle()
+        qubit.align()
+
 
         with for_(n, 0, n < n_avg, n + 1):
             save(n, n_st)
@@ -131,12 +129,11 @@ with program() as drag_calibration:
 
                     qubit.align()
                     qubit.resonator.measure("readout", qua_vars=(I[i], Q[i]))
-                    assign(
-                        state[i], I[i] > qubit.resonator.operations["readout"].threshold
-                    )
+                    assign(state[i], I[i] > qubit.resonator.operations["readout"].threshold)
                     save(state[i], state_stream[i])
         # Measure sequentially
-        align()
+        if not node.parameters.multiplexed:
+            align()
 
     with stream_processing():
         n_st.save("n")
@@ -147,14 +144,22 @@ with program() as drag_calibration:
 # %% {Simulate_or_execute}
 if node.parameters.simulate:
     # Simulates the QUA program for the specified duration
-    simulation_config = SimulationConfig(duration=10_000)  # In clock cycles = 4ns
+    simulation_config = SimulationConfig(duration=node.parameters.simulation_duration_ns * 4)  # In clock cycles = 4ns
     job = qmm.simulate(config, drag_calibration, simulation_config)
-    job.get_simulated_samples().con1.plot()
+    # Get the simulated samples and plot them for all controllers
+    samples = job.get_simulated_samples()
+    fig, ax = plt.subplots(nrows=len(samples.keys()), sharex=True)
+    for i, con in enumerate(samples.keys()):
+        plt.subplot(len(samples.keys()),1,i+1)
+        samples[con].plot()
+        plt.title(con)
+    plt.tight_layout()
+    # Save the figure
     node.results = {"figure": plt.gcf()}
     node.machine = machine
     node.save()
 
-else:
+elif node.parameters.load_data_id is None:
     with qm_session(qmm, config, timeout=node.parameters.timeout) as qm:
         job = qm.execute(drag_calibration)
         results = fetching_tool(job, ["n"], mode="live")
@@ -164,16 +169,17 @@ else:
             # Progress bar
             progress_counter(n, n_avg, start_time=results.start_time)
 
-
-    # %% {Data_fetching_and_dataset_creation}
-    # Fetch the data from the OPX and convert it into a xarray with corresponding axes (from most inner to outer loop)
-    ds = fetch_results_as_xarray(
-        job.result_handles, qubits, {"amp": amps, "sequence": [0, 1]}
-    )
-    # Add the qubit pulse absolute alpha coefficient to the dataset
-    ds = ds.assign_coords(
-        {"alpha": (["qubit", "amp"], np.array([q.xy.operations[operation].alpha * amps for q in qubits]))}
-    )
+# %% {Data_fetching_and_dataset_creation}
+if not node.parameters.simulate:
+    if node.parameters.load_data_id is None:
+        # Fetch the data from the OPX and convert it into a xarray with corresponding axes (from most inner to outer loop)
+        ds = fetch_results_as_xarray(job.result_handles, qubits, {"amp": amps, "sequence": [0, 1]})
+        # Add the qubit pulse absolute alpha coefficient to the dataset
+        ds = ds.assign_coords(
+            {"alpha": (["qubit", "amp"], np.array([q.xy.operations[operation].alpha * amps for q in qubits]))}
+        )
+    else:
+        ds, machine, json_data, qubits, node.parameters = load_dataset(node.parameters.load_data_id, parameters = node.parameters)
     # Add the dataset to the node
     node.results = {"ds": ds}
 
@@ -183,11 +189,7 @@ else:
     state = ds.state
     fitted = xr.polyval(state.amp, state.polyfit(dim="amp", deg=1).polyfit_coefficients)
     # TODO: what does it do? Explain the analysis
-    diffs = (
-        state.polyfit(dim="amp", deg=1)
-        .polyfit_coefficients.diff(dim="sequence")
-        .drop("sequence")
-    )
+    diffs = state.polyfit(dim="amp", deg=1).polyfit_coefficients.diff(dim="sequence").drop("sequence")
     intersection = -diffs.sel(degree=0) / diffs.sel(degree=1)
     intersection_alpha = intersection * xr.DataArray(
         [q.xy.operations[operation].alpha for q in qubits],
@@ -196,14 +198,10 @@ else:
     )
 
     # Save fitting results
-    fit_results = {
-        qubit.name: {"alpha": float(intersection_alpha.sel(qubit=qubit.name).values)}
-        for qubit in qubits
-    }
+    fit_results = {qubit.name: {"alpha": float(intersection_alpha.sel(qubit=qubit.name).values)} for qubit in qubits}
     for q in qubits:
         print(f"DRAG coefficient for {q.name} is {fit_results[q.name]['alpha']}")
     node.results["fit_results"] = fit_results
-
 
     # %% {Plotting}
     grid = QubitGrid(ds, [q.grid_location for q in qubits])
@@ -223,11 +221,12 @@ else:
     for qubit in tracked_qubits:
         qubit.revert_changes()
     # Update the state
-    with node.record_state_updates():
-        for q in qubits:
-            q.xy.operations[operation].alpha = fit_results[q.name]["alpha"]
+    if node.parameters.load_data_id is None:
+        with node.record_state_updates():
+            for q in qubits:
+                q.xy.operations[operation].alpha = fit_results[q.name]["alpha"]
 
-    # %% {Save_results}
-    node.results["initial_parameters"] = node.parameters.model_dump()
-    node.machine = machine
-    node.save()
+        # %% {Save_results}
+        node.results["initial_parameters"] = node.parameters.model_dump()
+        node.machine = machine
+        node.save()

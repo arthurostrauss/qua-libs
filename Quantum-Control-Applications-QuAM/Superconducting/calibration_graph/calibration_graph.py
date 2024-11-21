@@ -38,17 +38,17 @@ graph = QualibrationGraph(
             max_flux_offset_in_v=0.02,
         ),
         "power_rabi_1": library.nodes["04_Power_Rabi"],
-        "ramsey_1": library.nodes["05_Ramsey"].copy(
+        "ramsey_1": library.nodes["06_Ramsey"].copy(
             max_wait_time_in_ns=5000,
             log_or_linear_sweep='linear'
         ),
         "power_rabi_2": library.nodes["04_Power_Rabi"].copy(),
-        "ramsey_2": library.nodes["05_Ramsey"].copy(
+        "ramsey_2": library.nodes["06_Ramsey"].copy(
             max_wait_time_in_ns=5000,
             log_or_linear_sweep='linear'
         ),
         "power_rabi_3": library.nodes["04_Power_Rabi"].copy(),
-        "ramsey_3": library.nodes["05_Ramsey"].copy(
+        "ramsey_3": library.nodes["06_Ramsey"].copy(
             max_wait_time_in_ns=5000,
             log_or_linear_sweep='linear'
         ),
@@ -56,13 +56,13 @@ graph = QualibrationGraph(
             num_averages=20,
             max_number_rabi_pulses_per_sweep=15
         ),
-        "ramsey_4": library.nodes["05_Ramsey"].copy(
+        "ramsey_4": library.nodes["06_Ramsey"].copy(
             max_wait_time_in_ns=5000,
             log_or_linear_sweep='linear'
         ),
-        "readout_freq_opt": library.nodes["06a_Readout_Frequency_Optimization"],
-        "readout_power_opt": library.nodes["06b_Readout_Power_Optimization"],
-        "iq_blobs_1": library.nodes["07_IQ_Blobs"].copy(),
+        "readout_freq_opt": library.nodes["07a_Readout_Frequency_Optimization"],
+        "readout_power_opt": library.nodes["07c_Readout_Power_Optimization"],
+        "iq_blobs_1": library.nodes["07b_IQ_Blobs"].copy(),
         "power_rabi_state_x180_1": library.nodes["09_Power_Rabi_State"].copy(
             operation_x180_or_any_90="x180",
             reset_type_thermal_or_active="thermal"
@@ -103,7 +103,7 @@ graph = QualibrationGraph(
             amp_factor_step=0.0005,
             reset_type_thermal_or_active="thermal"
         ),
-        "iq_blobs_2": library.nodes["07_IQ_Blobs"].copy(),
+        "iq_blobs_2": library.nodes["07b_IQ_Blobs"].copy(),
         # "stark_detuning_x180_1": library.nodes["09a_Stark_Detuning"].copy(
         #     operation_x180_or_any_90="x180",
         #     reset_type_thermal_or_active="thermal"

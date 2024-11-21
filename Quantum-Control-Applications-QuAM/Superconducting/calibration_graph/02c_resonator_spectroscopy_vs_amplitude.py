@@ -23,12 +23,12 @@ Before proceeding to the next node:
 
 # %% {Imports}
 from qualibrate import QualibrationNode, NodeParameters
-from quam_libs.components import QuAM, ReadoutResonatorIQ, ReadoutResonatorMW
+from quam_libs.components import QuAM
+from quam_libs.lib.fit_utils import fit_resonator
 from quam_libs.macros import qua_declaration
-from quam_libs.lib.qua_datasets import convert_IQ_to_V
+from quam_libs.lib.qua_datasets import convert_IQ_to_V, subtract_slope, apply_angle
 from quam_libs.lib.plot_utils import QubitGrid, grid_iter
-from quam_libs.lib.save_utils import fetch_results_as_xarray
-from quam_libs.lib.fit import peaks_dips
+from quam_libs.lib.save_utils import fetch_results_as_xarray, load_dataset
 from quam_libs.trackable_object import tracked_updates
 from qualang_tools.results import progress_counter, fetching_tool
 from qualang_tools.loops import from_array
@@ -39,7 +39,6 @@ from qm.qua import *
 from typing import Literal, Optional, List
 import matplotlib.pyplot as plt
 import numpy as np
-import xarray as xr
 
 
 # %% {Node_parameters}
@@ -58,8 +57,11 @@ class Parameters(NodeParameters):
     max_amp: float = 0.1
     flux_point_joint_or_independent: Literal["joint", "independent"] = "independent"
     ro_line_attenuation_dB: float = 0
+    derivative_crossing_threshold_in_hz_per_dbm: int = int(-50e3)
+    derivative_smoothing_window_num_points: int = 30
+    moving_average_filter_window_num_points: int = 30
     multiplexed: bool = False
-
+    load_data_id: Optional[int] = None
 
 node = QualibrationNode(name="02c_Resonator_Spectroscopy_vs_Amplitude", parameters=Parameters())
 
@@ -91,7 +93,10 @@ for i, qubit in enumerate(qubits):
 # Generate the OPX and Octave configurations
 config = machine.generate_config()
 # Open Communication with the QOP
-qmm = machine.connect()
+if node.parameters.load_data_id is None:
+    qmm = machine.connect()
+    
+
 
 # %% {QUA_program}
 n_avg = node.parameters.num_averages  # The number of averages
@@ -121,15 +126,9 @@ with program() as multi_res_spec_vs_amp:
     for i, qubit in enumerate(qubits):
 
         # Bring the active qubits to the desired frequency point
-        if flux_point == "independent":
-            machine.apply_all_flux_to_min()
-            machine.apply_all_couplers_to_min()
-            qubit.z.to_independent_idle()
-        elif flux_point == "joint":
-            machine.apply_all_flux_to_joint_idle()
-        else:
-            machine.apply_all_flux_to_zero()
-
+        machine.set_all_fluxes(flux_point=flux_point, target=qubit)
+        qubit.align()
+        
         # resonator of this qubit
         rr = qubit.resonator
 
@@ -150,7 +149,7 @@ with program() as multi_res_spec_vs_amp:
                     save(I[i], I_st[i])
                     save(Q[i], Q_st[i])
         if not node.parameters.multiplexed:
-            align(*[rr.name for rr in resonators])
+            align()
 
     with stream_processing():
         n_st.save("n")
@@ -177,11 +176,9 @@ if node.parameters.simulate:
     node.machine = machine
     node.save()
 
-else:
+elif node.parameters.load_data_id is None:
     with qm_session(qmm, config, timeout=node.parameters.timeout) as qm:
         job = qm.execute(multi_res_spec_vs_amp)
-
-        # %% {Live_plot}
         results = fetching_tool(job, ["n"], mode="live")
         while results.is_processing():
             # Fetch results
@@ -189,115 +186,105 @@ else:
             # Progress bar
             progress_counter(n, n_avg, start_time=results.start_time)
 
-    # %% {Data_fetching_and_dataset_creation}
+# %% {Data_fetching_and_dataset_creation}
+if not node.parameters.simulate:
     # Fetch the data from the OPX and convert it into a xarray with corresponding axes (from most inner to outer loop)
-    ds = fetch_results_as_xarray(job.result_handles, qubits, {"amp": amps, "freq": dfs})
-    # Convert IQ data into volts
-    ds = convert_IQ_to_V(ds, qubits)
-    # Derive the amplitude IQ_abs = sqrt(I**2 + Q**2)
-    ds = ds.assign({"IQ_abs": np.sqrt(ds["I"] ** 2 + ds["Q"] ** 2)})
-    # Add the resonator RF frequency axis of each qubit to the dataset coordinates for plotting
-    RF_freq = np.array([dfs + q.resonator.RF_frequency for q in qubits])
-    ds = ds.assign_coords({"freq_full": (["qubit", "freq"], RF_freq)})
-    ds.freq_full.attrs["long_name"] = "Frequency"
-    ds.freq_full.attrs["units"] = "GHz"
+    if node.parameters.load_data_id is not None:
+        ds, machine, json_data, qubits, node.parameters = load_dataset(node.parameters.load_data_id, parameters = node.parameters)
+    else:
+        power_dbm = np.linspace(
+            node.parameters.min_power_dbm,
+            node.parameters.max_power_dbm,
+            node.parameters.num_power_points
+        ) - node.parameters.ro_line_attenuation_dB
+        ds = fetch_results_as_xarray(job.result_handles, qubits, {"power_dbm": power_dbm, "freq": dfs})
+        # Convert IQ data into volts
+        ds = convert_IQ_to_V(ds, qubits)
+        # Derive the amplitude IQ_abs = sqrt(I**2 + Q**2)
+        ds = ds.assign({"IQ_abs": np.sqrt(ds["I"] ** 2 + ds["Q"] ** 2)})
+        ds = ds.assign({"phase": subtract_slope(apply_angle(ds.I + 1j * ds.Q, dim="freq"), dim="freq")})
+        # Add the resonator RF frequency axis of each qubit to the dataset coordinates for plotting
+        RF_freq = np.array([dfs + q.resonator.RF_frequency for q in qubits])
+        ds = ds.assign_coords({"freq_full": (["qubit", "freq"], RF_freq)})
+        ds.freq_full.attrs["long_name"] = "Frequency"
+        ds.freq_full.attrs["units"] = "GHz"
+        ds.power_dbm.attrs["long_name"] = "Power"
+        ds.power_dbm.attrs["units"] = "dBm"
 
-    # Add the absolute readout pulse amplitude to the dataset
-    def abs_amp(q):
-        def foo(amp):
-            return amp * node.parameters.max_amp
+        # Normalize the IQ_abs with respect to the amplitude axis
+        ds = ds.assign({"IQ_abs_norm": ds["IQ_abs"] / ds.IQ_abs.mean(dim=["freq"])})
 
-        return foo
-
-    def abs_pow(q):
-        def foo(amp):
-            return amp + q.resonator.get_output_power("readout")
-
-        return foo
-
-    ds = ds.assign_coords(
-        {"abs_amp": (["qubit", "amp"], np.array([abs_amp(q)(amps) for q in qubits]))}
-    )
-    ds.abs_amp.attrs["long_name"] = "Amplitude"
-    ds.abs_amp.attrs["units"] = "V"
-    # Add the absolute readout power to the dataset
-    ds = ds.assign_coords(
-        {
-            "power_dbm": (
-                ["qubit", "amp"],
-                np.array(
-                    [
-                        abs_pow(q)(20 * np.log10(amps)) - node.parameters.ro_line_attenuation_dB
-                        for q in qubits
-                    ]
-                ),
-            )
-        }
-    )
-    ds.power_dbm.attrs["long_name"] = "Power"
-    ds.power_dbm.attrs["units"] = "dBm"
-    # Normalize the IQ_abs with respect to the amplitude axis
-    ds = ds.assign({"IQ_abs_norm": ds["IQ_abs"] / ds.IQ_abs.mean(dim=["freq"])})
     # Add the dataset to the node
     node.results = {"ds": ds}
 
     # %% {Data_analysis}
-    # Follow the resonator line for each amplitude - This gives a ds with all qubits for each amplitude
-    res_min_vs_amp = [
-        peaks_dips(
-            ds.IQ_abs_norm.sel(amp=amp), dim="freq", prominence_factor=5
-        ).position
-        for amp in ds.amp
-    ]
-    # This concatenates all the amplitudes within the same ds
-    res_min_vs_amp = xr.concat(res_min_vs_amp, "amp")
-    # Get the full resonance frequencies for all amplitudes
-    res_freq_full = ds.freq_full.sel(freq=0, method="nearest") + res_min_vs_amp
-    # Get the resonance frequency at high and low readout powers
-    res_low_power = res_min_vs_amp.sel(amp=slice(0.001, 0.05)).mean(dim="amp")
-    res_hi_power = res_min_vs_amp.isel(amp=-1)
-    # TODO: the fit is not very robust and it is better to set the amplitude manually... To be improved!
-    # Find the maximum readout amplitude for which the resonance frequency is close to the low power resonance
-    rr_pwr = xr.where(
-        abs(res_min_vs_amp - res_low_power) < 0.15 * abs(res_hi_power - res_low_power),
-        res_min_vs_amp.amp,
-        0,
-    ).max(dim="amp")
-    # Take 30% of it for being sure to be far from the punch out (?)
-    RO_power_ratio = 0.45
-    rr_pwr = RO_power_ratio * rr_pwr
+    # Generate 1D dataset tracking the minimum IQ value, as a proxy for resonator frequency
+    ds["rr_min_response"] = ds.IQ_abs_norm.idxmin(dim="freq")
+    rr_min_response = ds.IQ_abs_norm.idxmin(dim="freq")
+    # Calculate the derivative along the power_dbm axis
+    ds["rr_min_response_diff"] = ds.rr_min_response.differentiate(coord="power_dbm").dropna("power_dbm")
+    # Calculate the moving average of the derivative
+    ds["rr_min_response_diff_avg"] = ds.rr_min_response_diff.rolling(
+        power_dbm=node.parameters.derivative_smoothing_window_num_points,  # window size in points
+        center=True
+    ).mean().dropna("power_dbm")
+    # Apply a filter to scale down the initial noisy values in the moving average if needed
+    for j in range(node.parameters.moving_average_filter_window_num_points):
+        ds.rr_min_response_diff_avg.isel(power_dbm=j).data /= (node.parameters.moving_average_filter_window_num_points - j)
+    # Find the first position where the moving average crosses below the threshold
+    below_threshold = ds.rr_min_response_diff_avg < node.parameters.derivative_crossing_threshold_in_hz_per_dbm
+    # Get the first occurrence below the derivative threshold
+    rr_optimal_power_dbm = {}
+    rr_optimal_frequencies = {}
+    for qubit in qubits:
+        if below_threshold.sel(qubit=qubit.name).any():
+            rr_optimal_power_dbm[qubit.name] = below_threshold.sel(qubit=qubit.name).idxmax(dim="power_dbm")  # Get the first occurrence
+        else:
+            rr_optimal_power_dbm[qubit.name] = np.nan
+
+        if not np.isnan(rr_optimal_power_dbm[qubit.name]):
+            fit, fit_eval = fit_resonator(
+                s21_data=ds.sel(power_dbm=rr_optimal_power_dbm[qubit.name].data).sel(qubit=qubit.name),
+                frequency_LO_IF=qubit.resonator.RF_frequency,
+                print_report=True
+            )
+            rr_optimal_frequencies[qubit.name] = int(fit.params["omega_r"].value)
+        else:
+            rr_optimal_frequencies[qubit.name] = np.nan
+
 
     # %% {Plotting}
     grid = QubitGrid(ds, [q.grid_location for q in qubits])
     for ax, qubit in grid_iter(grid):
-        # Create a secondary y-axis for power in dBm
-        ax2 = ax.twinx()
         # Plot the data using the secondary y-axis
         ds.loc[qubit].IQ_abs_norm.plot(
-            ax=ax2,
+            ax=ax,
             add_colorbar=False,
             x="freq_full",
-            y="abs_amp",
+            y="power_dbm",
             robust=True,
-            yscale="log",
-        )
-        ds.loc[qubit].IQ_abs_norm.plot(
-            ax=ax, add_colorbar=False, x="freq_full", y="power_dbm", robust=True
         )
         ax.set_ylabel("Power (dBm)")
         # Plot the resonance frequency  for each amplitude
-        ax2.plot(
-            res_freq_full.loc[qubit],
-            ds.abs_amp.loc[qubit],
+        ax.plot(
+            ds.rr_min_response.loc[qubit],
+            ds.power_dbm,
             color="orange",
             linewidth=0.5,
         )
         # Plot where the optimum readout power was found
-        ax2.axhline(
-            y=abs_amp(machine.qubits[qubit["qubit"]])(rr_pwr.loc[qubit]).values,
-            color="r",
-            linestyle="--",
-        )
+        if not np.isnan(rr_optimal_power_dbm[qubit['qubit']]):
+            ax.axhline(
+                y=rr_optimal_power_dbm[qubit['qubit']],
+                color="r",
+                linestyle="--",
+            )
+        if not np.isnan(rr_optimal_frequencies[qubit['qubit']]):
+            ax.axvline(
+                x=rr_optimal_frequencies[qubit['qubit']] + machine.qubits[qubit['qubit']].resonator.RF_frequency,
+                color="blue",
+                linestyle="--",
+            )
 
     grid.fig.suptitle("Resonator spectroscopy VS. power at base")
     plt.tight_layout()
@@ -305,25 +292,35 @@ else:
     node.results["figure"] = grid.fig
 
     # %% {Update_state}
-    # Save fitting results
-    fit_results = {}
-    for q in qubits:
-        fit_results[q.name] = {}
-        if float(rr_pwr.sel(qubit=q.name)) > 0:
-            with node.record_state_updates():
-                q.resonator.operations["readout"].amplitude = float(rr_pwr.sel(qubit=q.name))
-                q.resonator.intermediate_frequency += int(res_low_power.sel(qubit=q.name).values)
-        fit_results[q.name]["RO_amplitude"] = float(rr_pwr.sel(qubit=q.name))
-        fit_results[q.name]["RO_frequency"] = q.resonator.RF_frequency
-    node.results["resonator_frequency"] = fit_results
-
     # Revert the change done at the beginning of the node
     for tracked_resonator in tracked_resonators:
         tracked_resonator.revert_changes()
 
+    # Save fitting results
+    fit_results = {}
+    for q in qubits:
+        fit_results[q.name] = {}
+        if not node.parameters.load_data_id:
+            with node.record_state_updates():
+                if not np.isnan(rr_optimal_power_dbm[q.name]):
+                    power_settings = q.resonator.set_output_power(
+                        power_in_dbm=rr_optimal_power_dbm[q.name].item(),
+                        max_amplitude=0.1
+                    )
+                if not np.isnan(rr_optimal_frequencies[q.name]):
+                    q.resonator.intermediate_frequency += rr_optimal_frequencies[q.name]
+        fit_results[q.name] = power_settings
+        fit_results[q.name]["RO_frequency"] = q.resonator.RF_frequency
+    node.results["fit_results"] = fit_results
+
     # %% {Save_results}
+    if node.parameters.load_data_id is not None:
+        if node.storage_manager is not None:
+            node.storage_manager.active_machine_path = None
     node.outcomes = {q.name: "successful" for q in qubits}
     node.results["initial_parameters"] = node.parameters.model_dump()
     node.machine = machine
     node.save()
 
+
+# %%

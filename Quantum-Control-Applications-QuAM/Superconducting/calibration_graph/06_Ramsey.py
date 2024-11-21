@@ -1,4 +1,3 @@
-# %%
 """
         RAMSEY WITH VIRTUAL Z ROTATIONS
 The program consists in playing a Ramsey sequence (x90 - idle_time - x90 - measurement) for different idle times.
@@ -25,7 +24,7 @@ from quam_libs.components import QuAM
 from quam_libs.macros import qua_declaration, readout_state
 from quam_libs.lib.qua_datasets import convert_IQ_to_V
 from quam_libs.lib.plot_utils import QubitGrid, grid_iter
-from quam_libs.lib.save_utils import fetch_results_as_xarray
+from quam_libs.lib.save_utils import fetch_results_as_xarray, load_dataset
 from quam_libs.lib.fit import fit_oscillation_decay_exp, oscillation_decay_exp
 from qualang_tools.results import progress_counter, fetching_tool
 from qualang_tools.loops import from_array
@@ -45,18 +44,21 @@ class Parameters(NodeParameters):
     num_averages: int = 100
     frequency_detuning_in_mhz: float = 1.0
     min_wait_time_in_ns: int = 16
-    max_wait_time_in_ns: int = 4000
-    num_time_points: int = 280
-    log_or_linear_sweep: Literal["log", "linear"] = "linear"
+    max_wait_time_in_ns: int = 3000
+    num_time_points: int = 500
+    log_or_linear_sweep: Literal["log", "linear"] = "log"
     flux_point_joint_or_independent: Literal["joint", "independent"] = "independent"
     use_state_discrimination: bool = False
     simulate: bool = False
+    simulation_duration_ns: int = 2500
     timeout: int = 100
+    load_data_id: Optional[int] = None
+    multiplexed: bool = False
+
+node = QualibrationNode(name="06_Ramsey", parameters=Parameters())
 
 
-node = QualibrationNode(name="05_Ramsey", parameters=Parameters())
-
-
+# %% {Initialize_QuAM_and_QOP}
 # Class containing tools to help handle units and conversions.
 u = unit(coerce_to_integer=True)
 # Instantiate the QuAM class from the state file
@@ -64,8 +66,9 @@ machine = QuAM.load()
 # Generate the OPX and Octave configurations
 config = machine.generate_config()
 # Open Communication with the QOP
-qmm = machine.connect()
-
+if node.parameters.load_data_id is None:
+    qmm = machine.connect()
+    
 # Get the relevant QuAM components
 if node.parameters.qubits is None or node.parameters.qubits == "":
     qubits = machine.active_qubits
@@ -115,7 +118,6 @@ with program() as ramsey:
         # Bring the active qubits to the desired frequency point
         if flux_point == "independent":
             machine.apply_all_flux_to_min()
-            machine.apply_all_couplers_to_min()
             qubit.z.to_independent_idle()
         elif flux_point == "joint":
             machine.apply_all_flux_to_joint_idle()
@@ -132,7 +134,7 @@ with program() as ramsey:
                         assign(phi, Cast.mul_fixed_by_int(detuning * 1e-9, 4 * t))
                     with else_():
                         assign(phi, Cast.mul_fixed_by_int(-detuning * 1e-9, 4 * t))
-                    align()
+                    qubit.align()
                     # # Strict_timing ensures that the sequence will be played without gaps
                     # with strict_timing_():
                     qubit.xy.play("x90")
@@ -141,7 +143,7 @@ with program() as ramsey:
                     qubit.xy.play("x90")
 
                     # Align the elements to measure after playing the qubit pulse.
-                    align()
+                    qubit.align()
                     # Measure the state of the resonators and save data
                     if node.parameters.use_state_discrimination:
                         readout_state(qubit, state[i])
@@ -156,15 +158,14 @@ with program() as ramsey:
                     # Reset the frame of the qubits in order not to accumulate rotations
                     reset_frame(qubit.xy.name)
         # Measure sequentially
-        align()
+        if not node.parameters.multiplexed:
+            align()
 
     with stream_processing():
         n_st.save("n")
         for i in range(num_qubits):
             if node.parameters.use_state_discrimination:
-                state_st[i].buffer(2).buffer(len(idle_times)).average().save(
-                    f"state{i + 1}"
-                )
+                state_st[i].buffer(2).buffer(len(idle_times)).average().save(f"state{i + 1}")
             else:
                 I_st[i].buffer(2).buffer(len(idle_times)).average().save(f"I{i + 1}")
                 Q_st[i].buffer(2).buffer(len(idle_times)).average().save(f"Q{i + 1}")
@@ -173,14 +174,22 @@ with program() as ramsey:
 # %% {Simulate_or_execute}
 if node.parameters.simulate:
     # Simulates the QUA program for the specified duration
-    simulation_config = SimulationConfig(duration=10_000)  # In clock cycles = 4ns
+    simulation_config = SimulationConfig(duration=node.parameters.simulation_duration_ns * 4)  # In clock cycles = 4ns
     job = qmm.simulate(config, ramsey, simulation_config)
-    job.get_simulated_samples().con1.plot()
+    # Get the simulated samples and plot them for all controllers
+    samples = job.get_simulated_samples()
+    fig, ax = plt.subplots(nrows=len(samples.keys()), sharex=True)
+    for i, con in enumerate(samples.keys()):
+        plt.subplot(len(samples.keys()),1,i+1)
+        samples[con].plot()
+        plt.title(con)
+    plt.tight_layout()
+    # Save the figure
     node.results = {"figure": plt.gcf()}
     node.machine = machine
     node.save()
 
-else:
+elif node.parameters.load_data_id is None:
     with qm_session(qmm, config, timeout=node.parameters.timeout) as qm:
         job = qm.execute(ramsey)
         results = fetching_tool(job, ["n"], mode="live")
@@ -190,19 +199,23 @@ else:
             # Progress bar
             progress_counter(n, n_avg, start_time=results.start_time)
 
-    # %% {Data_fetching_and_dataset_creation}
-    # Fetch the data from the OPX and convert it into a xarray with corresponding axes (from most inner to outer loop)
-    ds = fetch_results_as_xarray(
-        job.result_handles, qubits, {"sign": [-1, 1], "time": idle_times}
-    )
-    # Convert IQ data into volts
-    ds = convert_IQ_to_V(ds, qubits)
-    # Add the absolute time to the dataset
-    ds = ds.assign_coords({"time": (["time"], 4 * idle_times)})
-    ds.time.attrs["long_name"] = "idle_time"
-    ds.time.attrs["units"] = "nS"
+
+# %% {Data_fetching_and_dataset_creation}
+if not node.parameters.simulate:
+    if node.parameters.load_data_id is None:
+        # Fetch the data from the OPX and convert it into a xarray with corresponding axes (from most inner to outer loop)
+        ds = fetch_results_as_xarray(job.result_handles, qubits, {"sign": [-1, 1], "time": idle_times})
+        # Convert IQ data into volts
+        ds = convert_IQ_to_V(ds, qubits)
+        # Add the absolute time to the dataset
+        ds = ds.assign_coords({"time": (["time"], 4 * idle_times)})
+        ds.time.attrs["long_name"] = "idle_time"
+        ds.time.attrs["units"] = "ns"
+    else:
+        ds, machine, json_data, qubits, node.parameters = load_dataset(node.parameters.load_data_id, parameters = node.parameters)
     # Add the dataset to the node
     node.results = {"ds": ds}
+
 
     # %% {Data_analysis}
     # Fit the Ramsey oscillations based on the qubit state or the 'I' quadrature
@@ -261,10 +274,9 @@ else:
     }
     node.results["fit_results"] = fit_results
     for q in qubits:
-        print(
-            f"Frequency offset for qubit {q.name} : {(fit_results[q.name]['freq_offset']/1e6):.2f} MHz "
-        )
+        print(f"Frequency offset for qubit {q.name} : {(fit_results[q.name]['freq_offset']/1e6):.2f} MHz ")
         print(f"T2* for qubit {q.name} : {1e6*fit_results[q.name]['decay']:.2f} us")
+
 
     # %% {Plotting}
     grid = QubitGrid(ds, [q.grid_location for q in qubits])
@@ -290,7 +302,7 @@ else:
             ax.plot(ds.time, 1e3 * fitted.loc[qubit].sel(sign=1), c="C0", ls="-", lw=1)
             ax.plot(ds.time, 1e3 * fitted.loc[qubit].sel(sign=-1), c="C1", ls="-", lw=1)
 
-        ax.set_xlabel("Idle time [nS]")
+        ax.set_xlabel("Idle time [ns]")
         ax.set_title(qubit["qubit"])
         ax.text(
             0.1,
@@ -307,16 +319,19 @@ else:
     plt.show()
     node.results["figure"] = grid.fig
 
-    # %% {Update_state}
-    with node.record_state_updates():
-        for q in qubits:
-            q.xy.intermediate_frequency -= float(fit_results[q.name]["freq_offset"])
-            q.T2ramsey = float(fit_results[qubit["qubit"]]["decay"])
 
-    # %% {Save_results}
-    node.outcomes = {q.name: "successful" for q in qubits}
-    node.results["initial_parameters"] = node.parameters.model_dump()
-    node.machine = machine
-    node.save()
+    # %% {Update_state}
+    if node.parameters.load_data_id is None:
+        with node.record_state_updates():
+            for q in qubits:
+                q.xy.intermediate_frequency -= float(fit_results[q.name]["freq_offset"])
+                q.T2ramsey = float(fit_results[q.name]["decay"])
+
+
+        # %% {Save_results}
+        node.outcomes = {q.name: "successful" for q in qubits}
+        node.results["initial_parameters"] = node.parameters.model_dump()
+        node.machine = machine
+        node.save()
 
 # %%

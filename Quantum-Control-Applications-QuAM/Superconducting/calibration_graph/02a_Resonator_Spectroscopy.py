@@ -44,6 +44,7 @@ class Parameters(NodeParameters):
     frequency_span_in_mhz: float = 30.0
     frequency_step_in_mhz: float = 0.1
     simulate: bool = False
+    simulation_duration_ns: int = 2500
     timeout: int = 100
     load_data_id: Optional[int] = None
     multiplexed: bool = False
@@ -104,8 +105,8 @@ with program() as multi_res_spec:
                 # save data
                 save(I[i], I_st[i])
                 save(Q[i], Q_st[i])
-                if not node.parameters.multiplexed:
-                    align()
+    if not node.parameters.multiplexed:
+        align()
 
     with stream_processing():
         n_st.save("n")
@@ -117,11 +118,17 @@ with program() as multi_res_spec:
 # %% {Simulate_or_execute}
 if node.parameters.simulate:
     # Simulates the QUA program for the specified duration
-    simulation_config = SimulationConfig(duration=10_000)  # In clock cycles = 4ns
+    simulation_config = SimulationConfig(duration=node.parameters.simulation_duration_ns * 4)  # In clock cycles = 4ns
     # Simulate blocks python until the simulation is done
     job = qmm.simulate(config, multi_res_spec, simulation_config)
     # Plot the simulated samples
-    job.get_simulated_samples().con1.plot()
+    samples = job.get_simulated_samples()
+    fig, ax = plt.subplots(nrows=len(samples.keys()), sharex=True)
+    for i, con in enumerate(samples.keys()):
+        plt.subplot(len(samples.keys()),1,i+1)
+        samples[con].plot()
+        plt.title(con)
+    plt.tight_layout()
     # Update the node & save
     node.results = {"figure": plt.gcf()}
     node.machine = machine
@@ -138,30 +145,28 @@ elif node.parameters.load_data_id is None:
             # Progress bar
             progress_counter(n, n_avg, start_time=results.start_time)
 
-
-    # %% {Data_fetching_and_dataset_creation}
+# %% {Data_fetching_and_dataset_creation}
+if not node.parameters.simulate:
     # Fetch the data from the OPX and convert it into a xarray with corresponding axes (from most inner to outer loop)
     if node.parameters.load_data_id is not None:
-        ds = load_dataset(node.parameters.load_data_id)
+        ds, machine, json_data, qubits, node.parameters = load_dataset(node.parameters.load_data_id, parameters = node.parameters)
     else:
         ds = fetch_results_as_xarray(job.result_handles, qubits, {"freq": dfs})
-    # Convert IQ data into volts
-    ds = convert_IQ_to_V(ds, qubits)
-    # Derive the amplitude IQ_abs = sqrt(I**2 + Q**2)
-    ds = ds.assign({"IQ_abs": np.sqrt(ds["I"] ** 2 + ds["Q"] ** 2)})
-    # Derive the phase IQ_abs = angle(I + j*Q)
-    ds = ds.assign(
-        {"phase": subtract_slope(apply_angle(ds.I + 1j * ds.Q, dim="freq"), dim="freq")}
-    )
-    # Add the resonator RF frequency axis of each qubit to the dataset coordinates for plotting
-    ds = ds.assign_coords(
-        {
-            "freq_full": (
-                ["qubit", "freq"],
-                np.array([dfs + q.resonator.RF_frequency for q in qubits]),
-            )
-        }
-    )
+        # Convert IQ data into volts
+        ds = convert_IQ_to_V(ds, qubits)
+        # Derive the amplitude IQ_abs = sqrt(I**2 + Q**2)
+        ds = ds.assign({"IQ_abs": np.sqrt(ds["I"] ** 2 + ds["Q"] ** 2)})
+        # Derive the phase IQ_abs = angle(I + j*Q)
+        ds = ds.assign({"phase": subtract_slope(apply_angle(ds.I + 1j * ds.Q, dim="freq"), dim="freq")})
+        # Add the resonator RF frequency axis of each qubit to the dataset coordinates for plotting
+        ds = ds.assign_coords(
+            {
+                "freq_full": (
+                    ["qubit", "freq"],
+                    np.array([dfs + q.resonator.RF_frequency for q in qubits]),
+                )
+            }
+        )
     # Add the dataset to the node
     node.results = {"ds": ds}
 
@@ -177,26 +182,20 @@ elif node.parameters.load_data_id is None:
         Qe = np.abs(fit.params["Qe_real"].value + 1j * fit.params["Qe_imag"].value)
         Qi = 1 / (1 / fit.params["Q"].value - 1 / Qe)
         fit_results[q.name] = {}
-        fit_results[q.name]["resonator_freq"] = (
-            fit.params["omega_r"].value + q.resonator.RF_frequency
-        )
+        fit_results[q.name]["resonator_freq"] = fit.params["omega_r"].value + q.resonator.RF_frequency
         fit_results[q.name]["Quality_external"] = Qe
         fit_results[q.name]["Quality_internal"] = Qi
         print(
             f"Resonator frequency for {q.name} is {(fit.params['omega_r'].value + q.resonator.RF_frequency) / 1e9:.3f} GHz"
         )
-        print(
-            f"freq shift for {q.name} is {fit.params['omega_r'].value/1e6:.2f} MHz with respect to the previous IF"
-        )
+        print(f"freq shift for {q.name} is {fit.params['omega_r'].value/1e6:.2f} MHz with respect to the previous IF")
         print(f"Qe for {q.name} is {Qe:,.0f}")
         print(f"Qi for {q.name} is {Qi:,.0f} \n")
 
     # %% {Plotting}
     grid = QubitGrid(ds, [q.grid_location for q in qubits])
     for ax, qubit in grid_iter(grid):
-        (ds.assign_coords(freq_MHz=ds.freq / 1e6).loc[qubit].IQ_abs * 1e3).plot(
-            ax=ax, x="freq_MHz"
-        )
+        (ds.assign_coords(freq_MHz=ds.freq / 1e6).loc[qubit].IQ_abs * 1e3).plot(ax=ax, x="freq_MHz")
         ax.set_xlabel("Resonator detuning [MHz]")
         ax.set_ylabel("Trans. amp. [mV]")
         ax.set_title(qubit["qubit"])
@@ -206,9 +205,7 @@ elif node.parameters.load_data_id is None:
 
     grid = QubitGrid(ds, [q.grid_location for q in qubits])
     for ax, qubit in grid_iter(grid):
-        (ds.assign_coords(freq_MHz=ds.freq / 1e6).loc[qubit].phase * 1e3).plot(
-            ax=ax, x="freq_MHz"
-        )
+        (ds.assign_coords(freq_MHz=ds.freq / 1e6).loc[qubit].phase * 1e3).plot(ax=ax, x="freq_MHz")
         ax.set_xlabel("Resonator detuning [MHz]")
         ax.set_ylabel("Trans. phase [mrad]")
         ax.set_title(qubit["qubit"])
@@ -218,9 +215,7 @@ elif node.parameters.load_data_id is None:
 
     grid = QubitGrid(ds, [q.grid_location for q in qubits])
     for ax, qubit in grid_iter(grid):
-        (ds.assign_coords(freq_GHz=ds.freq_full / 1e9).loc[qubit].IQ_abs * 1e3).plot(
-            ax=ax, x="freq_GHz"
-        )
+        (ds.assign_coords(freq_GHz=ds.freq_full / 1e9).loc[qubit].IQ_abs * 1e3).plot(ax=ax, x="freq_GHz")
         ax.plot(
             ds.assign_coords(freq_GHz=ds.freq_full / 1e9).loc[qubit].freq_GHz,
             1e3 * np.abs(fit_evals[qubit["qubit"]]),
@@ -238,15 +233,14 @@ elif node.parameters.load_data_id is None:
     if node.parameters.load_data_id is None:
         with node.record_state_updates():
             for index, q in enumerate(qubits):
-                q.resonator.intermediate_frequency += int(
-                    fits[q.name].params["omega_r"].value
-                )
+                q.resonator.intermediate_frequency += int(fits[q.name].params["omega_r"].value)
 
-    # %% {Save_results}
-    node.outcomes = {q.name: "successful" for q in qubits}
-    node.results["initial_parameters"] = node.parameters.model_dump()
-    node.machine = machine
-    node.save()
-    print("Results saved")
+        # %% {Save_results}
+        node.outcomes = {q.name: "successful" for q in qubits}
+        node.results["initial_parameters"] = node.parameters.model_dump()
+        node.machine = machine
+        node.save()
+        print("Results saved")
+
 
 # %%

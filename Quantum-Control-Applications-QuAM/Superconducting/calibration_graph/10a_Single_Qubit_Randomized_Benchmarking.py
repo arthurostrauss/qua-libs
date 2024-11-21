@@ -1,4 +1,3 @@
-# %%
 """
         SINGLE QUBIT RANDOMIZED BENCHMARKING
 The program consists in playing random sequences of Clifford gates and measuring the state of the resonator afterward.
@@ -25,7 +24,7 @@ from qualibrate import QualibrationNode, NodeParameters
 from quam_libs.components import QuAM, Transmon
 from quam_libs.macros import qua_declaration, active_reset
 from quam_libs.lib.plot_utils import QubitGrid, grid_iter
-from quam_libs.lib.save_utils import fetch_results_as_xarray
+from quam_libs.lib.save_utils import fetch_results_as_xarray, load_dataset
 from quam_libs.lib.fit import fit_decay_exp, decay_exp
 from qualang_tools.results import progress_counter, fetching_tool
 from qualang_tools.bakery.randomized_benchmark_c1 import c1_table
@@ -45,18 +44,20 @@ class Parameters(NodeParameters):
     qubits: Optional[List[str]] = None
     use_state_discrimination: bool = True
     use_strict_timing: bool = False
-    num_random_sequences: int = 88  # Number of random sequences
+    num_random_sequences: int = 100  # Number of random sequences
     num_averages: int = 20
-    max_circuit_depth: int = 900  # Maximum circuit depth
-    delta_clifford: int = 15
+    max_circuit_depth: int = 1000  # Maximum circuit depth
+    delta_clifford: int = 20
     seed: int = 345324
     flux_point_joint_or_independent: Literal["joint", "independent"] = "independent"
     reset_type_thermal_or_active: Literal["thermal", "active"] = "thermal"
     simulate: bool = False
+    simulation_duration_ns: int = 2500
     timeout: int = 100
+    load_data_id: Optional[int] = None
+    multiplexed: bool = False
 
-
-node = QualibrationNode(name="11a_Randomized_Benchmarking", parameters=Parameters())
+node = QualibrationNode(name="10a_Single_Qubit_Randomized_Benchmarking", parameters=Parameters())
 
 
 # %% {Initialize_QuAM_and_QOP}
@@ -68,7 +69,8 @@ machine = QuAM.load()
 
 config = machine.generate_config()
 # Open Communication with the QOP
-qmm = machine.connect()
+if node.parameters.load_data_id is None:
+    qmm = machine.connect()
 
 if node.parameters.qubits is None or node.parameters.qubits == "":
     qubits = machine.active_qubits
@@ -88,9 +90,7 @@ if node.parameters.delta_clifford < 1:
 delta_clifford = node.parameters.delta_clifford
 flux_point = node.parameters.flux_point_joint_or_independent
 reset_type = node.parameters.reset_type_thermal_or_active
-assert (
-    max_circuit_depth / delta_clifford
-).is_integer(), "max_circuit_depth / delta_clifford must be an integer."
+assert (max_circuit_depth / delta_clifford).is_integer(), "max_circuit_depth / delta_clifford must be an integer."
 num_depths = max_circuit_depth // delta_clifford + 1
 seed = node.parameters.seed  # Pseudo-random number generator seed
 # Flag to enable state discrimination if the readout has been calibrated (rotated blobs and threshold)
@@ -219,7 +219,6 @@ with program() as randomized_benchmarking:
         # Bring the active qubits to the desired frequency point
         if flux_point == "independent":
             machine.apply_all_flux_to_min()
-            machine.apply_all_couplers_to_min()
             qubit.z.to_independent_idle()
         elif flux_point == "joint":
             machine.apply_all_flux_to_joint_idle()
@@ -244,8 +243,9 @@ with program() as randomized_benchmarking:
                         # Bring the active qubits to the desired frequency point
                         if flux_point == "independent":
                             machine.apply_all_flux_to_min()
-                            machine.apply_all_couplers_to_min()
                             qubit.z.to_independent_idle()
+                        if node.parameters.multiplexed:
+                            qubit.align()
                         else:
                             align()
                         # Initialize the qubits
@@ -269,9 +269,7 @@ with program() as randomized_benchmarking:
                         # Make sure you updated the ge_threshold
                         assign(
                             state[i],
-                            Cast.to_int(
-                                I[i] > qubit.resonator.operations["readout"].threshold
-                            ),
+                            Cast.to_int(I[i] > qubit.resonator.operations["readout"].threshold),
                         )
                         save(state[i], state_st[i])
 
@@ -286,45 +284,52 @@ with program() as randomized_benchmarking:
     with stream_processing():
         m_st.save("iteration")
         for i in range(num_qubits):
-            state_st[i].buffer(n_avg).map(FUNCTIONS.average()).buffer(
-                num_depths
-            ).buffer(num_of_sequences).save(f"state{i + 1}")
+            state_st[i].buffer(n_avg).map(FUNCTIONS.average()).buffer(num_depths).buffer(num_of_sequences).save(
+                f"state{i + 1}"
+            )
 
 # %% {Simulate_or_execute}
 if node.parameters.simulate:
     simulation_config = SimulationConfig(duration=100_000)  # in clock cycles
     job = qmm.simulate(config, randomized_benchmarking, simulation_config)
-    job.get_simulated_samples().con1.plot()
+    samples = job.get_simulated_samples()
+    fig, ax = plt.subplots(nrows=len(samples.keys()), sharex=True)
+    for i, con in enumerate(samples.keys()):
+        plt.subplot(len(samples.keys()),1,i+1)
+        samples[con].plot()
+        plt.title(con)
+    plt.tight_layout()
     node.results["figure"] = plt.gcf()
     node.machine = machine
     node.save()
 
-else:
+elif node.parameters.load_data_id is None:
     # Prepare data for saving
     node.results = {}
     with qm_session(qmm, config, timeout=node.parameters.timeout) as qm:
         job = qm.execute(randomized_benchmarking)
-        for i in range(num_qubits):
-            print(f"Fetching results for qubit {qubits[i].name}")
-            data_list = ["iteration"]
-            results = fetching_tool(job, data_list, mode="live")
-            while results.is_processing():
-                # Fetch results
-                m = results.fetch_all()[0]
-                progress_counter(m, num_of_sequences, start_time=results.start_time)
+        results = fetching_tool(job, ["iteration"], mode="live")
+        while results.is_processing():
+            # Fetch results
+            m = results.fetch_all()[0]
+            # Progress bar
+            progress_counter(m, num_of_sequences, start_time=results.start_time)
+
 
     # %% {Data_fetching_and_dataset_creation}
-    depths = np.arange(0, max_circuit_depth + 0.1, delta_clifford)
-    depths[0] = 1
-    # Fetch the data from the OPX and convert it into a xarray with corresponding axes (from most inner to outer loop)
-    ds = fetch_results_as_xarray(
+    if node.parameters.load_data_id is None:
+        depths = np.arange(0, max_circuit_depth + 0.1, delta_clifford)
+        depths[0] = 1
+        # Fetch the data from the OPX and convert it into a xarray with corresponding axes (from most inner to outer loop)
+        ds = fetch_results_as_xarray(
         job.result_handles,
         qubits,
-        {"depths": depths, "sequence": np.arange(num_of_sequences)},
-    )
+            {"depths": depths, "sequence": np.arange(num_of_sequences)},
+        )
+    else:
+        ds, machine, json_data, qubits, node.parameters = load_dataset(node.parameters.load_data_id, parameters = node.parameters)
     # Add the dataset to the node
     node.results = {"ds": ds}
-
     # %% {Data_analysis}
     da_state = 1 - ds["state"].mean(dim="sequence")
     da_state: xr.DataArray
@@ -371,10 +376,7 @@ if not node.parameters.simulate:
         m = da_state.m.values
         ax.set_title(qubit["qubit"], pad=22)
         ax.set_xlabel("Circuit depth")
-        fit_dict = {
-            k: da_fit.sel(**qubit).sel(fit_vals=k).values
-            for k in da_fit.fit_vals.values
-        }
+        fit_dict = {k: da_fit.sel(**qubit).sel(fit_vals=k).values for k in da_fit.fit_vals.values}
         ax.plot(m, decay_exp(m, **fit_dict), "r--", label="fit")
         ax.text(
             0.0,
@@ -387,11 +389,10 @@ if not node.parameters.simulate:
     node.results["figure"] = grid.fig
 
 
-# %% {Save_results}
-if not node.parameters.simulate:
-    node.outcomes = {q.name: "successful" for q in qubits}
-    node.results["initial_parameters"] = node.parameters.model_dump()
-    node.machine = machine
-    node.save()
+    # %% {Save_results}
+    if not node.parameters.simulate:
+        node.outcomes = {q.name: "successful" for q in qubits}
+        node.results["initial_parameters"] = node.parameters.model_dump()
+        node.machine = machine
+        node.save()
 
-# %%
