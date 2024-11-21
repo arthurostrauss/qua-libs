@@ -105,10 +105,23 @@ q3 = machine.qubits["q3"]
 q4 = machine.qubits["q4"]
 q5 = machine.qubits["q5"]
 print("\nsetting couplers's offset.........\n")
-(q4 @ q5).coupler.decouple_offset = -0.0893 
-(q3 @ q4).coupler.decouple_offset = -0.0880
-(q2 @ q3).coupler.decouple_offset = -0.0492
-(q1 @ q2).coupler.decouple_offset = -0.0701
+
+# q1.z.independent_offset = 0
+# q2.z.independent_offset = 0
+# q3.z.independent_offset = 0
+# q4.z.independent_offset = 0
+# q5.z.independent_offset = 0
+
+(q4 @ q5).coupler.decouple_offset = -0.051 #-0.0515 
+(q3 @ q4).coupler.decouple_offset = -0.053 #-0.0535
+(q2 @ q3).coupler.decouple_offset = -0.03 #-0.0727
+(q1 @ q2).coupler.decouple_offset = -0.01 #-0.0414 #to save q2's T2 #off:-0.0635 
+
+# %%
+# Add qubit pulses
+# q1.z.operations["flux_pulse"] = pulses.SquarePulse(length=100, amplitude=0.1)
+# q2.z.operations["flux_pulse"] = pulses.SquarePulse(length=100, amplitude=0.1)
+
 
 # %%
 # save into state.json
@@ -120,4 +133,5 @@ save_machine(machine, path)
 #     json.dump(machine.generate_config(), f, indent=4)
 
 # %%
+
 

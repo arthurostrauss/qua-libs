@@ -50,7 +50,7 @@ machine = QuAM.load()
 
 # Get the relevant QuAM components
 qubits = machine.active_qubits
-qubits = [q for q in qubits if q.name in ["q4","q2","q3","q1"]]
+qubits = [q for q in qubits if q.name in ["q4","q2","q3","q1","q5"]]
 num_qubits = len(qubits)
 
 # # Resetting angles: (has to be before generate_config())
@@ -74,6 +74,7 @@ with program() as iq_blobs:
 
     # Bring the active qubits to the minimum frequency point
     machine.apply_all_flux_to_min()
+    machine.apply_all_couplers_to_min()
 
     with for_(n, 0, n < n_runs, n + 1):
         # ground iq blobs for all qubits

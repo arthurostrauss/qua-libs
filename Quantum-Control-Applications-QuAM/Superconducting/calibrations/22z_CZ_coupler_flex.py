@@ -39,7 +39,6 @@ from quam_libs.components import QuAM
 from quam_libs.macros import qua_declaration, multiplexed_readout, node_save
 from quam.components import pulses
 
-
 import matplotlib
 import json
 
@@ -61,41 +60,21 @@ qmm = machine.connect()
 # Get the relevant QuAM components
 q1 = machine.qubits["q1"]
 q2 = machine.qubits["q2"]
-# qn1 = machine.qubits["q3"]
+
 readout_qubits = [qubit for qubit in machine.qubits.values() if qubit not in [q1, q2]]
-
-try: 
-    coupler = (q1 @ q2).coupler
-except:
-    coupler = (q2 @ q1).coupler 
-
+try: coupler = (q1 @ q2).coupler
+except: coupler = (q2 @ q1).coupler 
 qb = q1  # The qubit whose flux will be swept
 
-print("%s: %s" % (q1.name, q1.xy.RF_frequency))
-print("%s: %s" % (q2.name, q2.xy.RF_frequency))
-
-# neighbour coupling off:
-# coupler_n1 = (qn1 @ q1).coupler
-
-# compensations = {
-#     q1: coupler.opx_output.crosstalk[q1.z.opx_output.port_id],
-#     q2: coupler.opx_output.crosstalk[q2.z.opx_output.port_id]
-# }
-
-import numpy as np
-compensation_arr = np.array([[1, 0.177], [0.408, 1]])
-inv_arr = np.linalg.inv(compensation_arr)
-
-# Add qubit pulses
-# q1.z.operations["flux_pulse"] = pulses.SquarePulse(length=100, amplitude=0.1)
-# q2.z.operations["flux_pulse"] = pulses.SquarePulse(length=100, amplitude=0.1)
-# coupler.operations["flux_pulse"] = pulses.SquarePulse(length=100, amplitude=0.1)
+mode = "pulse" # dc or pulse
+sweep_flux = "qb" # qb or qc or others
+coupler_point = 0 # coupler.decouple_offset # -0.020 
+# NOTE: always start from 0, turn ~20-40mV left to the FAST LANE. 
 
 config = machine.generate_config()
 
 # debugging qua: 
-# with open("qua_config.json", "w+") as f:
-#     json.dump(config, f, indent=4)
+# with open("qua_config.json", "w+") as f: json.dump(config, f, indent=4)
 # raise Exception
 
 ###################
@@ -103,9 +82,6 @@ config = machine.generate_config()
 ###################
 
 simulate = False
-mode = "dc" # dc or pulse
-sweep_flux = "qc" # qb or qc or others
-
 n_avg = 137000
 # The flux pulse durations in clock cycles (4ns) - Must be larger than 4 clock cycles.
 ts = np.arange(4, 40, 1)
@@ -113,36 +89,30 @@ ts = np.arange(4, 160, 1)
 
 # The flux bias sweep in V
 if sweep_flux == "qb": 
-    dcs = np.linspace(-0.3, 0.3, 501) 
-    # dcs = np.linspace(-0.07, -0.04, 301) # qb (4_5) (pulse/dc, q5<q4) 
-    # dcs = np.linspace(-0.140, -0.125, 301) # qb (3_4) (pulse/dc, q3<q4) 
-    # dcs = np.linspace(0.010, 0.025, 301) # qb (2_3) (pulse/dc, q2<q3)
-    dcs = np.linspace(-0.105, -0.090, 301) # qb (1_2) (pulse/dc, q1<q2) 
+    if coupler.name=="coupler_q4_q5": dcs = np.linspace(-0.079, -0.053, 301) # (q5<q4, Top-Left) 
+    if coupler.name=="coupler_q3_q4": dcs = np.linspace(-0.118, -0.090, 301) # (q3<q4, Top-Left) 
+    if coupler.name=="coupler_q2_q3": dcs = np.linspace(0.040, 0.062, 301) # (q3>q2, Top-Left)
+    if coupler.name=="coupler_q1_q2": dcs = np.linspace(0.05, 0.08, 301) # (q1>q2, Top-Left) 
+    # dcs = np.linspace(-0.3, 0.3, 501) # default wide-sweep 
 elif sweep_flux == "qc": 
-    dcs = np.linspace(-0.4, 0.4, 501) 
-    # dcs = np.linspace(-0.14, -0.05, 301) # qc (4_5) (pulse/dc) 
-    # dcs = np.linspace(-0.128, -0.06, 301) # qc (3_4) (pulse/dc)
-    # dcs = np.linspace(-0.09, 0.0, 301) # qc (2_3) (pulse/dc)
-    dcs = np.linspace(-0.11, -0.02, 301) # qc (1_2) (pulse/dc)
+    if coupler.name=="coupler_q4_q5": dcs = np.linspace(-0.08, -0.01, 301) 
+    if coupler.name=="coupler_q3_q4": dcs = np.linspace(-0.093, -0.00, 301) 
+    if coupler.name=="coupler_q2_q3": dcs = np.linspace(-0.113, -0.026, 301) 
+    if coupler.name=="coupler_q1_q2": dcs = np.linspace(-0.089, 0.0, 301) 
+    # dcs = np.linspace(-0.4, 0.4, 501) # default wide-sweep 
 else: 
     ts = [30]
     dcs = [-0.045]
 
-# Guess points: 
-cz_point = -0.0977 
-#q4_5:-0.0577, q3_4:-0.12995, q2_3:0.01726, q1_2:-0.0977
-coupler_point = 0 
-# NOTE: turn ~20mV left to the FAST LANE. 
-#q4_5: -0.0893(off,left), -0.19874 (cz) #q3_4: -0.088(off,left), -0.13210 (cz) 
-#q2_3: -0.0492(off,left). - (cz) #q1_2:-0.0701(off,left), - (cz)
-scale = 0.0397 
-# q4_5:-0.0119, q3_4:0.0287, q2_3:-0.0087, q1_2:0.0397
+if coupler.name=="coupler_q4_q5": cz_point, scale = -0.0636, -0.0119
+if coupler.name=="coupler_q3_q4": cz_point, scale = -0.1001, 0.0287 
+if coupler.name=="coupler_q2_q3": cz_point, scale = 0.04993, -0.0087
+if coupler.name=="coupler_q1_q2": cz_point, scale = 0.0634, 0.0397
 
-pulse_dc_factor = 1.0 #(0.00859 - q1.z.min_offset)/(0.00908 - q1.z.min_offset) * 1.08
-print("pulse_dc_factor: %s" % pulse_dc_factor)
-print("qb's offset: %s" % qb.z.min_offset)
-print("coupler's decouple-offset: %s" %coupler.decouple_offset)
-
+print("%s: %s" % (q1.name, q1.xy.RF_frequency))
+print("%s: %s" % (q2.name, q2.xy.RF_frequency))
+print("sweeping %s's offset: %s" % (qb.name,qb.z.min_offset))
+print("%s's decouple-offset: %s" %(coupler.name,coupler.decouple_offset))
 
 with program() as cz:
     I, I_st, Q, Q_st, n, n_st = qua_declaration(num_qubits=2)
@@ -159,40 +129,30 @@ with program() as cz:
     with for_(n, 0, n < n_avg, n + 1):
         save(n, n_st)
         with for_(*from_array(t, ts)):
-            # assign(dc, -0.035)
-            # scale = declare(fixed)
-            # scales = np.linspace(0.02, 0.12, 301)
-            # dcs = scales
-            # with for_(*from_array(scale, scales)):
             with for_(*from_array(dc, dcs)):
-                # assign(v1, Cast.mul_fixed_by_int(-0.15, dc))
                 # Put the two qubits in their excited states
-                # wait(300 * u.ns, q1.xy.name, q2.xy.name)
                 q1.xy.play("x180")
                 q2.xy.play("x180")
                 align() # this makes the following flux pulse to have an extra delay of q1.xy length.. weird.. 
 
-                # q1.z.set_dc_offset(cz_point)
-                # wait(20 * u.ns)
-
                 z_amp = declare(fixed)
                 coupler_amp = declare(fixed)
-                q1_dc_point = declare(fixed)
+                qb_dc_point = declare(fixed)
                 coupler_dc_point = declare(fixed)
 
                 if sweep_flux == "qb":
                     # Pulse: 
-                    assign(z_amp, Cast.mul_fixed_by_int(pulse_dc_factor*((dc - qb.z.min_offset + scale * coupler_point)), 5))
-                    assign(coupler_amp, Cast.mul_fixed_by_int(pulse_dc_factor*(coupler_point-coupler.decouple_offset), 5))
+                    assign(z_amp, Cast.mul_fixed_by_int((dc - qb.z.min_offset + scale * coupler_point), 5))
+                    assign(coupler_amp, Cast.mul_fixed_by_int(coupler_point-coupler.decouple_offset, 5))
                     # dc: 
-                    assign(q1_dc_point, dc + scale * coupler_point)
+                    assign(qb_dc_point, dc + scale * coupler_point)
                     assign(coupler_dc_point, coupler_point)
                 else:
                     # Pulse: 
-                    assign(z_amp, Cast.mul_fixed_by_int(pulse_dc_factor*((cz_point - qb.z.min_offset + scale * dc)), 5))
-                    assign(coupler_amp, Cast.mul_fixed_by_int(pulse_dc_factor*(dc-coupler.decouple_offset), 5))
+                    assign(z_amp, Cast.mul_fixed_by_int((cz_point - qb.z.min_offset + scale * dc), 5))
+                    assign(coupler_amp, Cast.mul_fixed_by_int(dc-coupler.decouple_offset, 5))
                     # dc: 
-                    assign(q1_dc_point, cz_point + scale * dc)
+                    assign(qb_dc_point, cz_point + scale * dc)
                     assign(coupler_dc_point, dc)
 
                 if mode == "pulse":
@@ -206,19 +166,23 @@ with program() as cz:
 
                 if mode == "dc":
                     ########## Set DC Offset Version
-                    wait(64 * u.ns)
-                    qb.z.set_dc_offset(q1_dc_point) # 0.0175
+                    wait(24 * u.ns)
+                    qb.z.set_dc_offset(qb_dc_point) # 0.0175
                     coupler.set_dc_offset(coupler_dc_point)
                     wait(t)
                     # coupler.set_dc_offset(0)
                     coupler.to_decouple_idle()
                     q1.z.to_min()
                     q2.z.to_min()
+
+                    # machine.apply_all_flux_to_min()
+                    # machine.apply_all_couplers_to_min()
+
                     # wait(t - 36 * u.ns)
                     #############################
 
                 # Wait some time to ensure that the flux pulse will end before the readout pulse
-                wait(600 * u.ns)
+                # wait(16 * u.ns)
                 # Align the elements to measure after having waited a time "tau" after the qubit pulses.
                 align()
                 # Play the readout on the other resonators to measure in the same condition as when optimizing readout
@@ -282,15 +246,6 @@ else:
         # plt.title(f"{q1.name} - I, f_01={int(q1.f_01 / u.MHz)} MHz")
         plt.ylabel("Interaction time [ns]")
         
-        # feedback from CZ-Pi: 
-        # if sweep_flux=="qc":
-        #     plt.axvline( coupler.operations["cz"].amplitude, color="r", linestyle="--", linewidth=1.5)
-        # else:
-        #     plt.axvline( q1.z.operations["cz"].amplitude + q1.z.min_offset - scale*coupler.operations["cz"].amplitude, color="r", linestyle="--", linewidth=1.5)
-        # plt.axhline( q1.z.operations["cz"].length, color="r", linestyle="--", linewidth=1.5)
-        # plt.axhline( 60, color="g", linestyle="--", linewidth=0.57)
-        # plt.axhline( 40, color="y", linestyle="--", linewidth=0.57)
-        
         plt.subplot(223)
         plt.cla()
         plt.pcolor(dcs, 4 * ts, Q1)
@@ -299,25 +254,44 @@ else:
         plt.xlabel("Flux amplitude [V]")
         plt.ylabel("Interaction time [ns]")
 
+        # feedback from CZ-Pi: 
+        if sweep_flux=="qc":
+            if coupler.decouple_offset>dcs[0] and coupler.decouple_offset<dcs[-1]:
+                # plt.axvline( coupler.operations["cz"].amplitude, color="r", linestyle="--", linewidth=1.5)
+                plt.axvline(coupler.decouple_offset, color="b", linestyle="--", linewidth=1.0)
+        else:
+            if cz_point>dcs[0] and cz_point<dcs[-1]:
+                # plt.axvline( q1.z.operations["cz"].amplitude + q1.z.min_offset - scale*coupler.operations["cz"].amplitude, color="r", linestyle="--", linewidth=1.5)
+                plt.axvline(cz_point, color="b", linestyle="--", linewidth=1.0)
+        # plt.axhline( q1.z.operations["cz"].length, color="r", linestyle="--", linewidth=1.5)
+        # plt.axhline( 60, color="g", linestyle="--", linewidth=0.57)
+        # plt.axhline( 40, color="y", linestyle="--", linewidth=0.57)
+
         plt.subplot(222)
         plt.cla()
         plt.pcolor(dcs, 4 * ts, I2)
         # plt.plot(cz_point, wait_time, color="r", marker="*")
         # plt.title(f"{q2.name} - I, f_01={int(q2.f_01 / u.MHz)} MHz")
+
+        # feedback from CZ-Pi: 
+        if sweep_flux=="qc":
+            if coupler.decouple_offset>dcs[0] and coupler.decouple_offset<dcs[-1]:
+                # plt.axvline( coupler.operations["cz"].amplitude, color="r", linestyle="--", linewidth=1.5)
+                plt.axvline(coupler.decouple_offset, color="b", linestyle="--", linewidth=1.0)
+        else:
+            if cz_point>dcs[0] and cz_point<dcs[-1]:
+                # plt.axvline( q1.z.operations["cz"].amplitude + q1.z.min_offset - scale*coupler.operations["cz"].amplitude, color="r", linestyle="--", linewidth=1.5)
+                plt.axvline(cz_point, color="b", linestyle="--", linewidth=1.0)
+        # plt.axhline( q1.z.operations["cz"].length, color="r", linestyle="--", linewidth=1.5)
+        # plt.axhline( 60, color="g", linestyle="--", linewidth=0.57)
+        # plt.axhline( 40, color="y", linestyle="--", linewidth=0.57)
+
         plt.subplot(224)
         plt.cla()
         plt.pcolor(dcs, 4 * ts, Q2)
         # plt.plot(cz_point, wait_time, color="r", marker="*")
         plt.title(f"{q2.name} - Q")
         plt.xlabel("Flux amplitude [V]")
-
-        # feedback from CZ-Pi: 
-        # if sweep_flux=="qc":
-        #     plt.axvline( coupler_point, color="r", linestyle="--", linewidth=0.5)
-        # else:
-        #     plt.axvline( cz_point, color="r", linestyle="--", linewidth=0.5)
-        # plt.axhline( 60, color="r", linestyle="--", linewidth=0.5)
-        # plt.axhline( 40, color="g", linestyle="--", linewidth=0.5)
 
         plt.tight_layout()
         plt.pause(0.3)

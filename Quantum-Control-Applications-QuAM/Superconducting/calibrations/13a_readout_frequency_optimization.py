@@ -75,6 +75,7 @@ with program() as ro_freq_opt:
 
     # Bring the active qubits to the minimum frequency point
     machine.apply_all_flux_to_min()
+    machine.apply_all_couplers_to_min()
 
     with for_(n, 0, n < n_avg, n + 1):
         with for_(*from_array(df, dfs)):

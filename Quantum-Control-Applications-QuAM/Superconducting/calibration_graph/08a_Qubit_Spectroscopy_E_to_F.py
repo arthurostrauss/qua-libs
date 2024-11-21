@@ -52,10 +52,10 @@ class Parameters(NodeParameters):
     qubits: Optional[List[str]] = None
     num_averages: int = 200
     operation: str = "saturation"
-    operation_amplitude_factor: Optional[float] = None
+    operation_amplitude_factor: Optional[float] = 0.0075
     operation_len_in_ns: Optional[int] = None
-    frequency_span_in_mhz: float = 500
-    frequency_step_in_mhz: float = 1
+    frequency_span_in_mhz: float = 300
+    frequency_step_in_mhz: float = 0.15
     flux_point_joint_or_independent: Literal["joint", "independent"] = "independent"
     simulate: bool = False
     timeout: int = 100
