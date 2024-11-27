@@ -71,10 +71,10 @@ num_qubits = len(qubits)
 ###################
 # The QUA program #
 ###################
-n_runs = 3000
+n_runs = 3500
 
 # The readout amplitude sweep (as a pre-factor of the readout amplitude) - must be within [-2; 2)
-amplitudes = np.arange(0.1, 1.5, 0.02)
+amplitudes = np.arange(0.1, 1.9, 0.02)
 
 with program() as ro_amp_opt:
     I_g, I_g_st, Q_g, Q_g_st, n, n_st = qua_declaration(num_qubits=num_qubits)
@@ -84,6 +84,7 @@ with program() as ro_amp_opt:
 
     # Bring the active qubits to the minimum frequency point
     machine.apply_all_flux_to_min()
+    machine.apply_all_couplers_to_min()
 
     with for_(*from_array(a, amplitudes)):
         save(counter, n_st)

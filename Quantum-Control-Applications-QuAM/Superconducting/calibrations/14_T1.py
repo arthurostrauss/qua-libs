@@ -48,12 +48,14 @@ qmm = machine.connect()
 
 # Get the relevant QuAM components
 qubits = machine.active_qubits
+# qubits = [q for q in qubits if q.name in ["q4","q5"]]
 num_qubits = len(qubits)
 
 ###################
 # The QUA program #
 ###################
 n_avg = 2000
+simulate = False
 
 # The wait time sweep (in clock cycles = 4ns) - must be larger than 4 clock cycles
 # Linear sweep
@@ -67,6 +69,7 @@ with program() as T1:
 
     # Bring the active qubits to the minimum frequency point
     machine.apply_all_flux_to_min()
+    machine.apply_all_couplers_to_min()
 
     with for_(n, 0, n < n_avg, n + 1):
         save(n, n_st)
@@ -78,7 +81,7 @@ with program() as T1:
             align()
             multiplexed_readout(qubits, I, I_st, Q, Q_st)
             # Wait for the qubits to decay to the ground state
-            wait(machine.thermalization_time * u.ns)
+            if not simulate: wait(machine.thermalization_time * u.ns)
 
     with stream_processing():
         # Cast the data into a 1D vector, average the 1D vectors together and store the results on the OPX processor
@@ -87,7 +90,7 @@ with program() as T1:
         if np.isclose(np.std(t_delay[1:] / t_delay[:-1]), 0, atol=1e-3):
             t_delay = get_equivalent_log_array(t_delay)
 
-        for i in range(len(machine.active_qubits)):
+        for i in range(len(qubits)):
             I_st[i].buffer(len(t_delay)).average().save(f"I{i + 1}")
             Q_st[i].buffer(len(t_delay)).average().save(f"Q{i + 1}")
         n_st.save("n")
@@ -96,13 +99,13 @@ with program() as T1:
 ###########################
 # Run or Simulate Program #
 ###########################
-simulate = False
 
 if simulate:
     # Simulates the QUA program for the specified duration
     simulation_config = SimulationConfig(duration=10_000)  # In clock cycles = 4ns
     job = qmm.simulate(config, T1, simulation_config)
     job.get_simulated_samples().con1.plot()
+    plt.show()
 else:
     # Open the quantum machine
     qm = qmm.open_qm(config)

@@ -55,7 +55,7 @@ qubits = machine.active_qubits
 num_qubits = len(qubits)
 
 # Select the resonator and qubit to measure (no multiplexing here)
-qb = qubits[1]
+qb = qubits[2]
 rr = qb.resonator
 
 ####################

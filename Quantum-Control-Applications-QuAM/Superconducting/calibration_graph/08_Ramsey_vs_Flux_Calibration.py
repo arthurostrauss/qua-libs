@@ -102,6 +102,7 @@ with program() as ramsey:
     phi = declare(fixed)  # QUA variable for dephasing the second pi/2 pulse (virtual Z-rotation)
     flux = declare(fixed)  # QUA variable for the flux dc level
 
+    machine.apply_all_couplers_to_min()
     for i, qubit in enumerate(qubits):
         # Bring the active qubits to the desired frequency point
         machine.set_all_fluxes(flux_point=flux_point, target=qubit)

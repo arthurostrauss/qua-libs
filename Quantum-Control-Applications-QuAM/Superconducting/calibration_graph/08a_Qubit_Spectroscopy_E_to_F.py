@@ -103,6 +103,7 @@ with program() as qubit_spec:
     I, I_st, Q, Q_st, n, n_st = qua_declaration(num_qubits=num_qubits)
     df = declare(int)  # QUA variable for the qubit frequency
 
+    machine.apply_all_couplers_to_min()
     for i, qubit in enumerate(qubits):
         # Bring the active qubits to the minimum frequency point
         if flux_point == "independent":

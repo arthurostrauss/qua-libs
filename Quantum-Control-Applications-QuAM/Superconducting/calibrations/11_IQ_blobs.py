@@ -50,7 +50,7 @@ machine = QuAM.load()
 
 # Get the relevant QuAM components
 qubits = machine.active_qubits
-qubits = [q for q in qubits if q.name in ["q4","q2","q3","q1","q5"]]
+qubits = [q for q in qubits if q.name in ["q1","q2","q3","q4","q5"]]
 num_qubits = len(qubits)
 
 # # Resetting angles: (has to be before generate_config())
@@ -67,6 +67,7 @@ qmm = machine.connect()
 # The QUA program #
 ###################
 n_runs = 10000  # Number of runs
+simulate = False
 
 with program() as iq_blobs:
     I_g, I_g_st, Q_g, Q_g_st, n, _ = qua_declaration(num_qubits=num_qubits)
@@ -79,20 +80,24 @@ with program() as iq_blobs:
     with for_(n, 0, n < n_runs, n + 1):
         # ground iq blobs for all qubits
         # wait(machine.thermalization_time * u.ns)
-        for qubit in qubits: qubit.wait(qubit.thermalization_time * u.ns)
+        if not simulate: 
+            for qubit in qubits: qubit.wait(qubit.thermalization_time * u.ns)
         align()
         multiplexed_readout(qubits, I_g, I_g_st, Q_g, Q_g_st)
-        for qubit in qubits: qubit.resonator.wait(qubit.resonator.depletion_time * u.ns)
+        if not simulate: 
+            for qubit in qubits: qubit.resonator.wait(qubit.resonator.depletion_time * u.ns)
 
         align()
         # wait(machine.thermalization_time * u.ns)
-        for qubit in qubits: qubit.wait(qubit.thermalization_time * u.ns)
+        if not simulate: 
+            for qubit in qubits: qubit.wait(qubit.thermalization_time * u.ns)
         align()
         for qubit in qubits: qubit.xy.play("x180") # excited iq blobs for all qubits
         # for qubit in qubits: qubit.xy.play("x180")
         align()
         multiplexed_readout(qubits, I_e, I_e_st, Q_e, Q_e_st)
-        for qubit in qubits: qubit.resonator.wait(qubit.resonator.depletion_time * u.ns)
+        if not simulate: 
+            for qubit in qubits: qubit.resonator.wait(qubit.resonator.depletion_time * u.ns)
 
     with stream_processing():
         for i in range(num_qubits):
@@ -105,13 +110,13 @@ with program() as iq_blobs:
 ###########################
 # Run or Simulate Program #
 ###########################
-simulate = False
 
 if simulate:
     # Simulates the QUA program for the specified duration
     simulation_config = SimulationConfig(duration=10_000)  # In clock cycles = 4ns
     job = qmm.simulate(config, iq_blobs, simulation_config)
     job.get_simulated_samples().con1.plot()
+    plt.show()
 
 else:
     # Open the quantum machine

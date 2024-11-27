@@ -92,6 +92,7 @@ with program() as iq_blobs:
     I_e, I_e_st, Q_e, Q_e_st, _, _ = qua_declaration(num_qubits=num_qubits)
     a = declare(fixed)
 
+    machine.apply_all_couplers_to_min()
     for i, qubit in enumerate(qubits):
 
         # Bring the active qubits to the desired frequency point

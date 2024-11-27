@@ -110,6 +110,7 @@ with program() as multi_res_spec_vs_flux:
     dc = declare(fixed)  # QUA variable for the flux bias
     df = declare(int)  # QUA variable for the readout frequency
 
+    machine.apply_all_couplers_to_min()
     for i, qubit in enumerate(qubits):
         # resonator of the qubit
         rr = resonators[i]

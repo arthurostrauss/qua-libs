@@ -123,6 +123,7 @@ with program() as multi_res_spec_vs_amp:
     a = declare(fixed)  # QUA variable for the readout amplitude pre-factor
     df = declare(int)  # QUA variable for the readout frequency
 
+    machine.apply_all_couplers_to_min()
     for i, qubit in enumerate(qubits):
 
         # Bring the active qubits to the desired frequency point

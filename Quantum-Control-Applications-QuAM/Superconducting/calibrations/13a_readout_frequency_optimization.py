@@ -56,10 +56,10 @@ num_qubits = len(qubits)
 ###################
 # The QUA program #
 ###################
-n_avg = 2000  # The number of averages
+n_avg = 300  # The number of averages
 
 # The frequency sweep parameters with respect to the resonators resonance frequencies
-dfs = np.arange(-3e6, 3e6, 0.02e6)
+dfs = np.arange(-6e6, 6e6, 0.02e6)
 
 with program() as ro_freq_opt:
     n = declare(int)
@@ -173,7 +173,7 @@ else:
         opt_readout_frequency = qubit.resonator.RF_frequency + dfs[np.argmax(D_data[i])]
         print(f">>> The OPTIMAL readout frequency is {opt_readout_frequency} Hz (D_data={max(D_data[i])})")
         if input(f"Update {qubit.name} readout frequency (y/n)") == 'y':
-            qubit.resonator.RF_frequency += dfs[np.argmax(D_data[i])]
+            qubit.resonator.intermediate_frequency += dfs[np.argmax(D_data[i])]
 
     data["figure"] = fig
     node_save(machine, "readout_frequency_optimization", data, additional_files=True)

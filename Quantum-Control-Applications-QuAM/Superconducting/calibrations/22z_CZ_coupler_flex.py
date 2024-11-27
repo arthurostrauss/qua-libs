@@ -58,8 +58,8 @@ machine = QuAM.load(config_path)
 qmm = machine.connect()
 
 # Get the relevant QuAM components
-q1 = machine.qubits["q1"]
-q2 = machine.qubits["q2"]
+q1 = machine.qubits["q5"]
+q2 = machine.qubits["q4"]
 
 readout_qubits = [qubit for qubit in machine.qubits.values() if qubit not in [q1, q2]]
 try: coupler = (q1 @ q2).coupler
@@ -67,7 +67,7 @@ except: coupler = (q2 @ q1).coupler
 qb = q1  # The qubit whose flux will be swept
 
 mode = "pulse" # dc or pulse
-sweep_flux = "qb" # qb or qc or others
+sweep_flux = "qc" # qb or qc or others
 coupler_point = 0 # coupler.decouple_offset # -0.020 
 # NOTE: always start from 0, turn ~20-40mV left to the FAST LANE. 
 
@@ -82,10 +82,10 @@ config = machine.generate_config()
 ###################
 
 simulate = False
-n_avg = 137000
+n_avg = 1373 #137000
 # The flux pulse durations in clock cycles (4ns) - Must be larger than 4 clock cycles.
-ts = np.arange(4, 40, 1)
-ts = np.arange(4, 160, 1)
+ts = np.arange(4, 30, 1)
+# ts = np.arange(4, 160, 1)
 
 # The flux bias sweep in V
 if sweep_flux == "qb": 
@@ -95,19 +95,20 @@ if sweep_flux == "qb":
     if coupler.name=="coupler_q1_q2": dcs = np.linspace(0.05, 0.08, 301) # (q1>q2, Top-Left) 
     # dcs = np.linspace(-0.3, 0.3, 501) # default wide-sweep 
 elif sweep_flux == "qc": 
-    if coupler.name=="coupler_q4_q5": dcs = np.linspace(-0.08, -0.01, 301) 
-    if coupler.name=="coupler_q3_q4": dcs = np.linspace(-0.093, -0.00, 301) 
-    if coupler.name=="coupler_q2_q3": dcs = np.linspace(-0.113, -0.026, 301) 
+    if coupler.name=="coupler_q4_q5": dcs = np.linspace(-0.105, -0.06, 301) 
+    if coupler.name=="coupler_q3_q4": dcs = np.linspace(-0.105, -0.00, 301) 
+    if coupler.name=="coupler_q2_q3": dcs = np.linspace(-0.120, -0.026, 301) 
     if coupler.name=="coupler_q1_q2": dcs = np.linspace(-0.089, 0.0, 301) 
     # dcs = np.linspace(-0.4, 0.4, 501) # default wide-sweep 
+    # dcs = np.linspace(-0.15, 0.4, 501) # Catching Sweet-Spot 
 else: 
     ts = [30]
     dcs = [-0.045]
 
-if coupler.name=="coupler_q4_q5": cz_point, scale = -0.0636, -0.0119
-if coupler.name=="coupler_q3_q4": cz_point, scale = -0.1001, 0.0287 
-if coupler.name=="coupler_q2_q3": cz_point, scale = 0.04993, -0.0087
-if coupler.name=="coupler_q1_q2": cz_point, scale = 0.0634, 0.0397
+if coupler.name=="coupler_q4_q5": cz_point, scale = -0.06308, -0.0119
+if coupler.name=="coupler_q3_q4": cz_point, scale = -0.0990, 0.0287 
+if coupler.name=="coupler_q2_q3": cz_point, scale = 0.05274, -0.0087
+if coupler.name=="coupler_q1_q2": cz_point, scale = 0.0653, 0.0397
 
 print("%s: %s" % (q1.name, q1.xy.RF_frequency))
 print("%s: %s" % (q2.name, q2.xy.RF_frequency))
@@ -245,6 +246,20 @@ else:
         # plt.plot(cz_point, wait_time, color="r", marker="*")
         # plt.title(f"{q1.name} - I, f_01={int(q1.f_01 / u.MHz)} MHz")
         plt.ylabel("Interaction time [ns]")
+
+        # feedback from CZ-Pi: 
+        if sweep_flux=="qc":
+            if coupler.decouple_offset>dcs[0] and coupler.decouple_offset<dcs[-1]:
+                # plt.axvline( coupler.operations["cz"].amplitude, color="r", linestyle="--", linewidth=1.5)
+                plt.axvline(coupler.decouple_offset, color="b", linestyle="--", linewidth=1.0)
+        else:
+            if cz_point>dcs[0] and cz_point<dcs[-1]:
+                # plt.axvline( q1.z.operations["cz"].amplitude + q1.z.min_offset - scale*coupler.operations["cz"].amplitude, color="r", linestyle="--", linewidth=1.5)
+                plt.axvline(cz_point, color="b", linestyle="--", linewidth=1.0)
+        # plt.axhline( q1.z.operations["cz"].length, color="r", linestyle="--", linewidth=1.5)
+        plt.axhline( 60, color="g", linestyle="--", linewidth=0.57)
+        plt.axhline( 40, color="y", linestyle="--", linewidth=0.57)
+        plt.axhline( 48, color="r", linestyle="--", linewidth=0.57)
         
         plt.subplot(223)
         plt.cla()
@@ -264,8 +279,9 @@ else:
                 # plt.axvline( q1.z.operations["cz"].amplitude + q1.z.min_offset - scale*coupler.operations["cz"].amplitude, color="r", linestyle="--", linewidth=1.5)
                 plt.axvline(cz_point, color="b", linestyle="--", linewidth=1.0)
         # plt.axhline( q1.z.operations["cz"].length, color="r", linestyle="--", linewidth=1.5)
-        # plt.axhline( 60, color="g", linestyle="--", linewidth=0.57)
-        # plt.axhline( 40, color="y", linestyle="--", linewidth=0.57)
+        plt.axhline( 60, color="g", linestyle="--", linewidth=0.57)
+        plt.axhline( 40, color="y", linestyle="--", linewidth=0.57)
+        plt.axhline( 48, color="r", linestyle="--", linewidth=0.57)
 
         plt.subplot(222)
         plt.cla()
@@ -283,8 +299,9 @@ else:
                 # plt.axvline( q1.z.operations["cz"].amplitude + q1.z.min_offset - scale*coupler.operations["cz"].amplitude, color="r", linestyle="--", linewidth=1.5)
                 plt.axvline(cz_point, color="b", linestyle="--", linewidth=1.0)
         # plt.axhline( q1.z.operations["cz"].length, color="r", linestyle="--", linewidth=1.5)
-        # plt.axhline( 60, color="g", linestyle="--", linewidth=0.57)
-        # plt.axhline( 40, color="y", linestyle="--", linewidth=0.57)
+        plt.axhline( 60, color="g", linestyle="--", linewidth=0.57)
+        plt.axhline( 40, color="y", linestyle="--", linewidth=0.57)
+        plt.axhline( 48, color="r", linestyle="--", linewidth=0.57)
 
         plt.subplot(224)
         plt.cla()

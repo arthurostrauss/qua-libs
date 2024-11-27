@@ -93,6 +93,8 @@ with program() as t1:
     if node.parameters.use_state_discrimination:
         state = [declare(int) for _ in range(num_qubits)]
         state_st = [declare_stream() for _ in range(num_qubits)]
+
+    machine.apply_all_couplers_to_min()
     for i, qubit in enumerate(qubits):
 
         # Bring the active qubits to the desired frequency point

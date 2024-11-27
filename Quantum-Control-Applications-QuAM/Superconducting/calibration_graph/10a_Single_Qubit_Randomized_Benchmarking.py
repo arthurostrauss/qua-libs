@@ -220,6 +220,7 @@ with program() as randomized_benchmarking:
         if flux_point == "independent":
             machine.apply_all_flux_to_min()
             qubit.z.to_independent_idle()
+            machine.apply_all_couplers_to_min()
         elif flux_point == "joint":
             machine.apply_all_flux_to_joint_idle()
         else:

@@ -52,11 +52,11 @@ class Parameters(NodeParameters):
     reset_type_thermal_or_active: Literal["thermal", "active"] = "thermal"
     state_discrimination: bool = False
     update_x90: bool = True
-    simulate: bool = False
+    simulate: bool = True
     simulation_duration_ns: int = 2500
     timeout: int = 100
     load_data_id: Optional[int] = None
-    multiplexed: bool = False
+    multiplexed: bool = True
 
 node = QualibrationNode(name="04_Power_Rabi", parameters=Parameters())
 
@@ -115,6 +115,7 @@ with program() as power_rabi:
     npi = declare(int)  # QUA variable for the number of qubit pulses
     count = declare(int)  # QUA variable for counting the qubit pulses
 
+    machine.apply_all_couplers_to_min()
     for i, qubit in enumerate(qubits):
         # Bring the active qubits to the minimum frequency point
         machine.set_all_fluxes(flux_point=flux_point, target=qubit)
@@ -129,7 +130,8 @@ with program() as power_rabi:
                     if reset_type == "active":
                         active_reset(qubit, "readout")
                     else:
-                        qubit.wait(qubit.thermalization_time * u.ns)
+                        if node.parameters.simulate: qubit.wait(16 * u.ns)
+                        else: qubit.wait(qubit.thermalization_time * u.ns)
 
                     # Loop for error amplification (perform many qubit pulses)
                     with for_(count, 0, count < npi, count + 1):

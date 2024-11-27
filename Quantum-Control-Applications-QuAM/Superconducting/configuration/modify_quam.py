@@ -86,6 +86,7 @@ u = unit(coerce_to_integer=True)
 #     qp.coupler.opx_output.upsampling_mode = "pulse"
 
 # %%
+# for Active Reset?
 # machine.qubits["q1"].xy.thread = "a"
 # machine.qubits["q2"].xy.thread = "b"
 # machine.qubits["q3"].xy.thread = "c"
@@ -98,6 +99,19 @@ u = unit(coerce_to_integer=True)
 # machine.qubits["q4"].resonator.thread = "e"
 # machine.qubits["q5"].resonator.thread = "a"
 
+# Default: 
+# machine.qubits["q1"].xy.thread = "a"
+# machine.qubits["q2"].xy.thread = "b"
+# machine.qubits["q3"].xy.thread = "c"
+# machine.qubits["q4"].xy.thread = "d"
+# machine.qubits["q5"].xy.thread = "e"
+
+# machine.qubits["q1"].resonator.thread = "a"
+# machine.qubits["q2"].resonator.thread = "b"
+# machine.qubits["q3"].resonator.thread = "c"
+# machine.qubits["q4"].resonator.thread = "d"
+# machine.qubits["q5"].resonator.thread = "e"
+
 # %%
 q1 = machine.qubits["q1"]
 q2 = machine.qubits["q2"]
@@ -106,22 +120,37 @@ q4 = machine.qubits["q4"]
 q5 = machine.qubits["q5"]
 print("\nsetting couplers's offset.........\n")
 
+# RESET ALL Z:  
 # q1.z.independent_offset = 0
 # q2.z.independent_offset = 0
 # q3.z.independent_offset = 0
 # q4.z.independent_offset = 0
 # q5.z.independent_offset = 0
 
-(q4 @ q5).coupler.decouple_offset = -0.051 #-0.0515 
-(q3 @ q4).coupler.decouple_offset = -0.053 #-0.0535
-(q2 @ q3).coupler.decouple_offset = -0.03 #-0.0727
-(q1 @ q2).coupler.decouple_offset = -0.01 #-0.0414 #to save q2's T2 #off:-0.0635 
+# OFF-points: (or close-by)  
+(q4 @ q5).coupler.decouple_offset = 0 #-0.0515 
+(q3 @ q4).coupler.decouple_offset = 0 #-0.0535
+(q2 @ q3).coupler.decouple_offset = 0 #-0.0727
+(q1 @ q2).coupler.decouple_offset = 0 #-0.0414 #to save q2's T2 #off:-0.0635 
+
+# SAFE-points: (Coupler-Sweet-Spot)  
+# (q4 @ q5).coupler.decouple_offset = 0.120 
+# (q3 @ q4).coupler.decouple_offset = 0.143
+# (q2 @ q3).coupler.decouple_offset = 0.109
+# (q1 @ q2).coupler.decouple_offset = 0.130 
 
 # %%
 # Add qubit pulses
 # q1.z.operations["flux_pulse"] = pulses.SquarePulse(length=100, amplitude=0.1)
 # q2.z.operations["flux_pulse"] = pulses.SquarePulse(length=100, amplitude=0.1)
 
+# %%
+# Setting readout durations:
+q1.resonator.operations["readout"].length = 1800
+q2.resonator.operations["readout"].length = 1800
+q3.resonator.operations["readout"].length = 1800
+q4.resonator.operations["readout"].length = 1800
+q5.resonator.operations["readout"].length = 1800
 
 # %%
 # save into state.json

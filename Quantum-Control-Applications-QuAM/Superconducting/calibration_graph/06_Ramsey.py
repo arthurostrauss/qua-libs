@@ -41,19 +41,19 @@ import numpy as np
 class Parameters(NodeParameters):
 
     qubits: Optional[List[str]] = None
-    num_averages: int = 100
+    num_averages: int = 300
     frequency_detuning_in_mhz: float = 1.0
     min_wait_time_in_ns: int = 16
-    max_wait_time_in_ns: int = 3000
+    max_wait_time_in_ns: int = 4000
     num_time_points: int = 500
-    log_or_linear_sweep: Literal["log", "linear"] = "log"
+    log_or_linear_sweep: Literal["log", "linear"] = "linear"
     flux_point_joint_or_independent: Literal["joint", "independent"] = "independent"
     use_state_discrimination: bool = False
     simulate: bool = False
     simulation_duration_ns: int = 2500
     timeout: int = 100
     load_data_id: Optional[int] = None
-    multiplexed: bool = False
+    multiplexed: bool = True
 
 node = QualibrationNode(name="06_Ramsey", parameters=Parameters())
 
@@ -113,16 +113,12 @@ with program() as ramsey:
         state = [declare(int) for _ in range(num_qubits)]
         state_st = [declare_stream() for _ in range(num_qubits)]
 
+    machine.apply_all_couplers_to_min()
     for i, qubit in enumerate(qubits):
 
-        # Bring the active qubits to the desired frequency point
-        if flux_point == "independent":
-            machine.apply_all_flux_to_min()
-            qubit.z.to_independent_idle()
-        elif flux_point == "joint":
-            machine.apply_all_flux_to_joint_idle()
-        else:
-            machine.apply_all_flux_to_zero()
+        machine.set_all_fluxes(flux_point=flux_point, target=qubit)
+        qubit.z.settle()
+        qubit.align()
 
         with for_(n, 0, n < n_avg, n + 1):
             save(n, n_st)

@@ -100,6 +100,7 @@ with program() as ro_freq_opt:
     Q_f_st = [declare_stream() for _ in range(num_qubits)]
     n_st = declare_stream()
 
+
     for i, qubit in enumerate(qubits):
 
         # Bring the active qubits to the minimum frequency point

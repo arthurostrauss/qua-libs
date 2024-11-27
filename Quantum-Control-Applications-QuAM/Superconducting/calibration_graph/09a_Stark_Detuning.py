@@ -110,6 +110,7 @@ with program() as stark_detuning:
     npi = declare(int)  # QUA variable for the number of qubit pulses
     count = declare(int)  # QUA variable for counting the qubit pulses
 
+    machine.apply_all_couplers_to_min()
     for i, qubit in enumerate(qubits):
         # Bring the active qubits to the desired frequency point
         machine.set_all_fluxes(flux_point=flux_point, target=qubit)

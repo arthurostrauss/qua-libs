@@ -165,7 +165,7 @@ class ReadoutResonatorMW(InOutMWChannel, ReadoutResonatorBase):
         )
 
         return {
-            "full_scale_power_dbm": full_scale_power_dbm,
+            "full_scale_power_dbm": self.opx_output.full_scale_power_dbm,
             "amplitude": self.operations[operation].amplitude
         }
 

@@ -107,6 +107,7 @@ with program() as multi_qubit_spec_vs_flux:
     df = declare(int)  # QUA variable for the qubit frequency
     dc = declare(fixed)  # QUA variable for the flux dc level
 
+    machine.apply_all_couplers_to_min()
     for i, qubit in enumerate(qubits):
         # Bring the active qubits to the minimum frequency point
         machine.set_all_fluxes(flux_point=flux_point, target=qubit)

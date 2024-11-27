@@ -74,12 +74,13 @@ qmm = machine.connect()
 # Get the relevant QuAM components
 num_qubits_full = len(machine.active_qubits)
 
-q1 = machine.qubits["q4"]
-q2 = machine.qubits["q5"]
+q1 = machine.qubits["q5"]
+q2 = machine.qubits["q4"]
 
-coupler = (q1 @ q2).coupler
+try: coupler = (q1 @ q2).coupler
+except: coupler = (q2 @ q1).coupler 
+
 qubits = [q1, q2]
-
 num_qubits = len(qubits)
 
 q1_number = machine.active_qubits.index(q1) + 1
@@ -110,23 +111,21 @@ with_set_dc = False
 n_avg = 6000  # The number of averages
 phis = np.arange(0, 3, 1 / points_per_cycle)
 # amps = np.linspace(0.5, 1.5, 25)
-# amps = np.linspace(0.7, 1.3, 25)
-# amps = np.linspace(0.9, 1.1, 25)
+amps = np.linspace(0.7, 1.3, 25)
+amps = np.linspace(0.9, 1.1, 25)
 # amps = np.linspace(0.97, 1.03, 25)
-amps = np.linspace(0.995, 1.005, 25)
+# amps = np.linspace(0.995, 1.005, 25)
 # amps = np.linspace(-0.04085/-0.04128, -0.0425/-0.04128, 25)
 # amps = np.linspace(-0.040/-0.04128, -0.042/-0.04128, 25) 
 
-cz_dur = 68 #92
-# q3-q4: 
-# cz_point = -0.10219*.99
-# cz_coupler = -0.13210*1.0025*0.9875*.995 
-# q4-q5: 
-cz_point = -0.08652 
-cz_coupler = -0.20212   
+cz_dur = 48 #92
 
+# Ref: 22z_CZ_coupler_flex.py 
+if coupler.name=="coupler_q4_q5": cz_coupler, cz_point, scale = -0.08157333, -0.06308, -0.0119
+if coupler.name=="coupler_q3_q4": cz_coupler, cz_point, scale = -0.0812565, -0.0990, 0.0287 
+if coupler.name=="coupler_q2_q3": cz_coupler, cz_point, scale = -0.115, 0.05274, -0.0087
+if coupler.name=="coupler_q1_q2": cz_coupler, cz_point, scale = -0.0807, 0.0653, 0.0397
 
-scale = 0.04958 # Ref: 22z_CZ_coupler_flex.py  
 pulse_dc_factor = 1.0 #(0.00859 - qubit_to_flux_tune.z.min_offset)/(0.00908 - qubit_to_flux_tune.z.min_offset) * 1.08
 print("pulse_dc_factor: %s" % pulse_dc_factor)
 print("%s's offset: %s" % (qubit_to_flux_tune.name, qubit_to_flux_tune.z.min_offset))
@@ -151,6 +150,7 @@ with program() as cz_pi_cal:
     coupler_amp = declare(fixed)
 
     machine.apply_all_flux_to_min()
+    machine.apply_all_couplers_to_min()
 
     with for_(n, 0, n < n_avg, n + 1):
         # Save the averaging iteration to get the progress bar
@@ -177,12 +177,12 @@ with program() as cz_pi_cal:
                         if sweep_flux == "qb":
                             z_pulse_height = pulse_dc_factor*((ampp*cz_point - qubit_to_flux_tune.z.min_offset + scale * cz_coupler))
                             assign(z_amp, Cast.mul_fixed_by_int(z_pulse_height, 5))
-                            c_pulse_height = pulse_dc_factor*(cz_coupler)
+                            c_pulse_height = pulse_dc_factor*(cz_coupler - coupler.decouple_offset)
                             assign(coupler_amp, Cast.mul_fixed_by_int(c_pulse_height, 5))
                         else:
                             z_pulse_height = pulse_dc_factor*((cz_point - qubit_to_flux_tune.z.min_offset + scale * ampp*cz_coupler))
                             assign(z_amp, Cast.mul_fixed_by_int(z_pulse_height, 5))
-                            c_pulse_height = pulse_dc_factor*(ampp*cz_coupler)
+                            c_pulse_height = pulse_dc_factor*(ampp*cz_coupler - coupler.decouple_offset)
                             assign(coupler_amp, Cast.mul_fixed_by_int(c_pulse_height, 5))
                         ########### Pulsed Version
                         wait(24 * u.ns)  
@@ -333,12 +333,12 @@ else:
     print("cz_dur: %s" %cz_dur)
     z_pulse_height = pulse_dc_factor*((cz_point - qubit_to_flux_tune.z.min_offset + scale * cz_coupler))
     print("z_pulse_height: %s" %z_pulse_height)
-    c_pulse_height = pulse_dc_factor*(cz_coupler)
+    c_pulse_height = pulse_dc_factor*(cz_coupler - coupler.decouple_offset)
     print("c_pulse_height: %s" %c_pulse_height)
     if int(input("Update QUAM STATES for cz-pulse: (1/0) ")):
-        qubit_to_flux_tune.z.operations["cz"].length = cz_dur
+        qubit_to_flux_tune.z.operations["cz%s_%s"%(q1.name.replace("q",""),q2.name.replace("q",""))].length = cz_dur
         coupler.operations["cz"].length = cz_dur
-        qubit_to_flux_tune.z.operations["cz"].amplitude = z_pulse_height
+        qubit_to_flux_tune.z.operations["cz%s_%s"%(q1.name.replace("q",""),q2.name.replace("q",""))].amplitude = z_pulse_height
         coupler.operations["cz"].amplitude = c_pulse_height
 
     save = True
