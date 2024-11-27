@@ -1,23 +1,27 @@
-from qm.QuantumMachinesManager import QuantumMachinesManager
+from pathlib import Path
 from qm.qua import *
 from qm import SimulationConfig
-from configuration import *
-
-from qualang_tools.loops import from_array
-from qualang_tools.results import fetching_tool, progress_counter
+from qualang_tools.results import progress_counter, fetching_tool
 from qualang_tools.plot import interrupt_on_close
+from qualang_tools.loops import from_array
 from qualang_tools.units import unit
-from qualang_tools.analysis import two_state_discriminator
-# from oqc import *
 
-import numpy as np
-import matplotlib
-matplotlib.use('TKAgg')
 import matplotlib.pyplot as plt
+import numpy as np
+
+from quam_libs.components import QuAM
+from quam_libs.macros import qua_declaration, multiplexed_readout, node_save
+from quam.components import pulses
+
+import matplotlib
+import json
+
+matplotlib.use("TKAgg")
+
 from collections import Counter
 import pandas as pd
 
-from macros import multiplexed_readout, cz_gate, Dynamical_Decoupling
+
 
 simulate = False
 cz_type = "const_wf"

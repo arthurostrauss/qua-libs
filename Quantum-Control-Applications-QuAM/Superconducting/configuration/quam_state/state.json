@@ -127,7 +127,7 @@
                         "__class__": "quam.components.pulses.DragCosinePulse"
                     }
                 },
-                "intermediate_frequency": 208354724.02641806,
+                "intermediate_frequency": 208310908.11144197,
                 "thread": "a",
                 "opx_output": "#/wiring/qubits/q1/xy/opx_output",
                 "__class__": "quam.components.channels.MWChannel"
@@ -191,7 +191,7 @@
             "anharmonicity": 205400000,
             "freq_vs_flux_01_quad_term": -15685737284.754251,
             "T1": 2.7360837253629486e-05,
-            "T2ramsey": 1.5786671739474274e-05,
+            "T2ramsey": 4.8062357657960025e-06,
             "thermalization_time_factor": 10,
             "phi0_current": 31.47214721502215,
             "phi0_voltage": 0.629442944300443,
@@ -325,7 +325,7 @@
                         "__class__": "quam.components.pulses.DragCosinePulse"
                     }
                 },
-                "intermediate_frequency": -63664094.82610264,
+                "intermediate_frequency": -63657522.39940563,
                 "thread": "b",
                 "opx_output": "#/wiring/qubits/q2/xy/opx_output",
                 "__class__": "quam.components.channels.MWChannel"
@@ -389,7 +389,7 @@
             "anharmonicity": 210800000,
             "freq_vs_flux_01_quad_term": -16066059950.830837,
             "T1": 4.459006154521562e-05,
-            "T2ramsey": 2.1118777532954542e-05,
+            "T2ramsey": 1.5904601294790383e-05,
             "thermalization_time_factor": 10,
             "phi0_current": 28.369115539085062,
             "phi0_voltage": 0.5673823107817012,
@@ -523,7 +523,7 @@
                         "__class__": "quam.components.pulses.DragCosinePulse"
                     }
                 },
-                "intermediate_frequency": 147342799.52961174,
+                "intermediate_frequency": 147339139.80835947,
                 "thread": "c",
                 "opx_output": "#/wiring/qubits/q3/xy/opx_output",
                 "__class__": "quam.components.channels.MWChannel"
@@ -592,7 +592,7 @@
             "anharmonicity": 196200000,
             "freq_vs_flux_01_quad_term": -17885102154.069176,
             "T1": 2.9085903836946977e-05,
-            "T2ramsey": 1.874839569275051e-05,
+            "T2ramsey": 1.958078511326857e-05,
             "thermalization_time_factor": 10,
             "phi0_current": 29.0777337982909,
             "phi0_voltage": 0.581554675965818,
@@ -726,7 +726,7 @@
                         "__class__": "quam.components.pulses.DragCosinePulse"
                     }
                 },
-                "intermediate_frequency": -325618354.22259223,
+                "intermediate_frequency": -325618442.799617,
                 "thread": "d",
                 "opx_output": "#/wiring/qubits/q4/xy/opx_output",
                 "__class__": "quam.components.channels.MWChannel"
@@ -790,7 +790,7 @@
             "anharmonicity": 193400000,
             "freq_vs_flux_01_quad_term": -16595653137.88795,
             "T1": 2.7050327431625877e-05,
-            "T2ramsey": 1.884350623989419e-05,
+            "T2ramsey": 2.5985875247933736e-05,
             "thermalization_time_factor": 10,
             "phi0_current": 26.77030728172833,
             "phi0_voltage": 0.5354061456345666,
@@ -924,7 +924,7 @@
                         "__class__": "quam.components.pulses.DragCosinePulse"
                     }
                 },
-                "intermediate_frequency": -20559726.94652865,
+                "intermediate_frequency": -20540029.356679607,
                 "thread": "e",
                 "opx_output": "#/wiring/qubits/q5/xy/opx_output",
                 "__class__": "quam.components.channels.MWChannel"
@@ -988,7 +988,7 @@
             "anharmonicity": 140000000,
             "freq_vs_flux_01_quad_term": -16273077997.694353,
             "T1": 4.1291512589674674e-05,
-            "T2ramsey": 2.14044264309464e-05,
+            "T2ramsey": 2.1961794767679625e-05,
             "thermalization_time_factor": 10,
             "phi0_current": 33.26182515010174,
             "phi0_voltage": 0.6652365030020349,

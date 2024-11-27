@@ -23,8 +23,8 @@ config = machine.generate_config()
 # Get the relevant QuAM components
 qubits = machine.active_qubits
 num_qubits = len(qubits)
-qc = machine.qubits["q4"]
-qt = machine.qubits["q5"]
+qc = machine.qubits["q5"]
+qt = machine.qubits["q4"]
 readout_qubits = [qubit for qubit in machine.qubits.values() if qubit not in [qc, qt]]
 
 
@@ -50,21 +50,18 @@ qubit2_frame_update = 0 #0.12  # example values, should be taken from QPU parame
 
 
 # defines the CZ gate that realizes the mapping |00> -> |00>, |01> -> |01>, |10> -> |10>, |11> -> -|11>
-def bake_cz(baker: Baking, q1, q2):
+def bake_cz(baker: Baking):
     # print("q1,q2: %s,%s" %(q1,q2))
     qc_xy_element = qc.xy.name
     qt_xy_element = qt.xy.name
-    coupler = (qc @ qt).coupler
-
-    # qc_z_element = qc.z.name
-    # baker.play("cz", qc_z_element)
+    
+    try: coupler = (qc @ qt).coupler
+    except: coupler = (qt @ qc).coupler
     
     ########### Pulsed Version
     baker.wait(24 * u.ns)
-    baker.play("cz", qc.z.name)
+    baker.play("cz%s_%s"%(qc,qt), qc.z.name)
     baker.play("cz", coupler.name)
-    # qc.z.play("flux_pulse", duration=cz_dur//4, amplitude_scale=z_amp)
-    # coupler.play("flux_pulse", duration=cz_dur//4, amplitude_scale=coupler_amp)
     #############################
 
     baker.align()
