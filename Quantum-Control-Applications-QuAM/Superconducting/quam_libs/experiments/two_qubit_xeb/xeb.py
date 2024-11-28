@@ -314,11 +314,13 @@ class XEB:
 
         return xeb_prog
 
-    def run(self, simulate: bool = False):
+    def run(self, simulate: bool = False, simulation_config: SimulationConfig = None, **simulate_kwargs):
         """
         Run QUA program for the XEB experiment
         Args:
             simulate: Indicate if output should be simulated or not
+            simulation_time: The time in clock-cycles to simulate the program.
+            simulate_kwargs: Optional additional keyword arguments passed to `qm.simulate`
 
         Returns: XEBJob object containing the information about the experiment (including results)
 
@@ -326,17 +328,19 @@ class XEB:
         # Compile the QUA program
 
         config = self.quam.generate_config()
-        xeb_prog = self._xeb_prog(simulate=True) # set simulate=True to get the amplitude matrix
+        if simulation_config is None:
+            simulation_config = SimulationConfig(duration=10_000)
+        xeb_prog = self._xeb_prog(simulate=True)  # set simulate=True to get the amplitude matrix
         qmm = self.quam.connect()
+        qm = qmm.open_qm(config)
         if simulate:
-            job = qmm.simulate(config, xeb_prog, simulate=SimulationConfig(1000))
+            job = qm.simulate(xeb_prog, simulate=simulation_config, **simulate_kwargs)
         elif self.xeb_config.generate_new_data:
-            qm = qmm.open_qm(config)
             job = qm.execute(xeb_prog)
         else:
             raise NotImplementedError("Data fetching from previous runs is not yet implemented")
 
-        return XEBJob(job, self.xeb_config, self.data_handler, self.available_combinations, False)
+        return XEBJob(job, self.xeb_config, self.data_handler, self.available_combinations, False, simulate)
 
     def simulate(self, backend: BackendV2):
         """
@@ -431,10 +435,12 @@ class XEBJob:
         data_handler: DataHandler,
         available_combinations: List[Tuple[Tuple[int, int]]],
         simulate=False,
+        hardware_simulate=False
     ):
         self.job = running_job
         self.available_combinations = available_combinations
         self._simulate = simulate
+        self._hardware_simulate = hardware_simulate
         self._result_handles = self.job.result() if isinstance(running_job, AerJob) else self.job.result_handles
         if not isinstance(running_job, AerJob):
             self._result_handles.wait_for_all_values()
@@ -606,6 +612,27 @@ class XEBJob:
 
         """
         return self._circuits
+
+    @property
+    def simulate(self):
+        return self._simulate
+
+    @property
+    def hardware_simulate(self):
+        return self._hardware_simulate
+
+    def plot_simulated_samples(self):
+        if self.hardware_simulate:
+            samples = self.job.get_simulated_samples()
+            plt.subplots(nrows=len(samples.keys()), sharex=True)
+            for i, con in enumerate(samples.keys()):
+                plt.subplot(len(samples.keys()), 1, i + 1)
+                samples[con].plot()
+                plt.title(con)
+            plt.tight_layout()
+            plt.show()
+        else:
+            warnings.warn("Simulated samples are not available because the job was run and not hardware-simulated.")
 
 
 class XEBResult:
