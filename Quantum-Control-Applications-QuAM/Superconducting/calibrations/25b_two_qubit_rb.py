@@ -1,7 +1,7 @@
 from qm.qua import *
 from qualang_tools.bakery.bakery import Baking
 
-from quam_libs.experiments.two_qubit_rb import TwoQubitRb
+from quam_libs.experiments.two_qubit_rb import TwoQubitRb, TwoQubitRbDebugger
 from quam_libs.components import QuAM
 from quam_libs.macros import qua_declaration, multiplexed_readout, node_save
 
@@ -110,10 +110,12 @@ rb = TwoQubitRb(
 
 qmm = machine.connect()
 
-# from quam_libs.experiments.two_qubit_rb import TwoQubitRbDebugger
+# run simpler experiment to verify `bake_phased_xz`, `prep` and `meas`
 # rb_debugger = TwoQubitRbDebugger(rb)
-# rb_debugger.run_phased_xz_commands(qmm, num_averages=1000)
+# rb_debugger.run_phased_xz_commands(qmm, 20)
+# plt.show()
 
+# run 2Q-RB experiment
 res = rb.run(qmm, circuit_depths=np.arange(1, 300, 5), num_circuits_per_depth=60, num_shots_per_circuit=30)
 # circuit_depths ~ how many consecutive Clifford gates within one executed circuit
 # (https://qiskit.org/documentation/apidoc/circuit.html)
