@@ -51,7 +51,7 @@ qubit2_frame_update = 0 #0.12  # example values, should be taken from QPU parame
 
 # defines the CZ gate that realizes the mapping |00> -> |00>, |01> -> |01>, |10> -> |10>, |11> -> -|11>
 def bake_cz(baker: Baking, q1, q2):
-    print("q1,q2: %s,%s" %(q1,q2))
+    # print("q1,q2: %s,%s" %(q1,q2))
     qc_xy_element = qc.xy.name
     qt_xy_element = qt.xy.name
     
@@ -111,12 +111,12 @@ rb = TwoQubitRb(
 qmm = machine.connect()
 
 # run simpler experiment to verify `bake_phased_xz`, `prep` and `meas`
-# rb_debugger = TwoQubitRbDebugger(rb)
-# rb_debugger.run_phased_xz_commands(qmm, 20)
-# plt.show()
+rb_debugger = TwoQubitRbDebugger(rb)
+rb_debugger.run_phased_xz_commands(qmm, 1000)
+plt.show()
 
 # run 2Q-RB experiment
-res = rb.run(qmm, circuit_depths=np.arange(1, 300, 5), num_circuits_per_depth=60, num_shots_per_circuit=30)
+# res = rb.run(qmm, circuit_depths=np.arange(1, 300, 5), num_circuits_per_depth=60, num_shots_per_circuit=30)
 # circuit_depths ~ how many consecutive Clifford gates within one executed circuit
 # (https://qiskit.org/documentation/apidoc/circuit.html)
 # num_circuits_per_depth ~ how many random circuits within one depth

@@ -199,7 +199,6 @@ class TwoQubitRb:
             RuntimeError("Buffer is too small")
         return seq + [0] * (self._buffer_length - len(seq))
 
-    @run_in_thread
     def _insert_all_input_stream(
         self,
         job: RunningQmJob,
