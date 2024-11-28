@@ -21,7 +21,39 @@ matplotlib.use("TKAgg")
 from collections import Counter
 import pandas as pd
 
+###################################################
+#  Load QuAM and open Communication with the QOP  #
+###################################################
+# Class containing tools to help handle units and conversions.
+u = unit(coerce_to_integer=True)
+# Instantiate the QuAM class from the state file
+machine = QuAM.load()
+# Generate the OPX and Octave configurations
+config = machine.generate_config()
+# Open Communication with the QOP
+qmm = machine.connect()
 
+# Get the relevant QuAM components
+qubits = machine.active_qubits
+num_qubits_full = len(qubits)
+q1 = machine.qubits["q5"]
+q2 = machine.qubits["q4"]
+q1_number = qubits.index(q1) + 1
+q2_number = qubits.index(q2) + 1
+
+try: coupler = (q1 @ q2).coupler
+except: coupler = (q2 @ q1).coupler 
+
+readout_qubits = [qubit for qubit in machine.qubits.values() if qubit not in [q1, q2]]
+
+####################
+# Define variables #
+####################
+
+# Qubit to flux-tune to reach some distance of Ec with another qubit, Qubit to meet with:
+qubit_to_flux_tune = q1
+qubit_to_meet_with = q2
+play_cz = True
 
 simulate = False
 cz_type = "const_wf"
@@ -30,16 +62,15 @@ h_loop = 1
 multiplexed = [1,2,3,4,5]
 bitstrings = ['00', '01', '10', '11']
 
-qubit_to_flux_tune, qubit_to_meet_with = 5, 4
+# qubit_to_flux_tune, qubit_to_meet_with = 5, 4
 
 '''NOTE:
 1. switch order in turn to compensate both channel consecutively
 2. Ascent order: first row of cz*_*_2pi_dev in configuration
 3. Descent order: Second row of cz*_*_2pi_dev in configuration
 '''
-cx_control, cx_target = 5, 4  
-
-th_control, th_target = eval(f"ge_threshold_q{cx_control}"), eval(f"ge_threshold_q{cx_target}")
+cx_control, cx_target = q1_number, q2_number  
+th_control, th_target = q1.resonator.operations["readout"].threshold, q2.resonator.operations["readout"].threshold
 phis_corr = np.linspace(-0.9, 0.9, 360)
 
 with program() as cz_ops:
@@ -54,46 +85,55 @@ with program() as cz_ops:
     n_st = declare_stream()
     a = declare(fixed)
     phi_corr = declare(fixed)
-    global_phase_correction = declare(fixed, value=eval(f"cz{qubit_to_flux_tune}_{qubit_to_meet_with}_2pi_dev"))
+    # global_phase_correction = declare(fixed, value=eval(f"cz{qubit_to_flux_tune}_{qubit_to_meet_with}_2pi_dev"))
+
+    # Bring the active qubits to the minimum frequency point
+    machine.apply_all_flux_to_min()
+    machine.apply_all_couplers_to_min()
 
     with for_(n, 0, n < shots, n+1):
         save(n, n_st)
         
         with for_(*from_array(phi_corr, phis_corr)):
-            if not simulate: wait(thermalization_time * u.ns)
+            if not simulate: wait(machine.thermalization_time * u.ns)
 
             align()
-            play("y90", f"q{cx_control}_xy")
-            play("-y90", f"q{cx_target}_xy")
+            q1.xy.play("y90")
+            q2.xy.play("-y90")
             
             align()
             # Dynamical_Decoupling(2,2)
-            cz_gate(qubit_to_meet_with, qubit_to_flux_tune, cz_type)
+            
+            # CZ-gate:  
+            wait(24 * u.ns)  
+            q1.z.play("cz%s_%s"%(q1_number,q2_number))
+            coupler.play("cz")
+            wait(20 * u.ns)
+
             # frame_rotation_2pi(global_phase_correction+phi_corr, f"q{cx_target}_xy")
 
-            # for 3-4, 4-5 upper: Flux-tune = target
-            if (qubit_to_flux_tune==4 and qubit_to_meet_with==3) or (qubit_to_flux_tune==5 and qubit_to_meet_with==4):
-                frame_rotation_2pi(eval(f"cz{cx_target}_{cx_control}_2pi_dev")+phi_corr, f"q{cx_target}_xy")  # <---------
-                frame_rotation_2pi(eval(f"cz{cx_control}_{cx_target}_2pi_dev")+phi_corr, f"q{cx_control}_xy") # from flux-crosstalk
-            # for 1-2, 2-3 upper: Flux-tune = control
-            if (qubit_to_flux_tune==1 and qubit_to_meet_with==2) or (qubit_to_flux_tune==2 and qubit_to_meet_with==3):
-                frame_rotation_2pi(eval(f"cz{cx_control}_{cx_target}_2pi_dev")+phi_corr, f"q{cx_target}_xy")  # <---------
-                frame_rotation_2pi(eval(f"cz{cx_target}_{cx_control}_2pi_dev")+phi_corr, f"q{cx_control}_xy") # from flux-crosstalk
+            # # for 3-4, 4-5 upper: Flux-tune = target
+            # if (qubit_to_flux_tune==4 and qubit_to_meet_with==3) or (qubit_to_flux_tune==5 and qubit_to_meet_with==4):
+            #     frame_rotation_2pi(eval(f"cz{cx_target}_{cx_control}_2pi_dev")+phi_corr, f"q{cx_target}_xy")  # <---------
+            #     frame_rotation_2pi(eval(f"cz{cx_control}_{cx_target}_2pi_dev")+phi_corr, f"q{cx_control}_xy") # from flux-crosstalk
+            # # for 1-2, 2-3 upper: Flux-tune = control
+            # if (qubit_to_flux_tune==1 and qubit_to_meet_with==2) or (qubit_to_flux_tune==2 and qubit_to_meet_with==3):
+            #     frame_rotation_2pi(eval(f"cz{cx_control}_{cx_target}_2pi_dev")+phi_corr, f"q{cx_target}_xy")  # <---------
+            #     frame_rotation_2pi(eval(f"cz{cx_target}_{cx_control}_2pi_dev")+phi_corr, f"q{cx_control}_xy") # from flux-crosstalk
             
-            align()
-            play("y90", f"q{cx_target}_xy") # the channel that we're calibrating
-
-            # align()
-            # play("x180"*amp(phi_corr), f"q{cx_control}_xy")
-            # play("x180"*amp(phi_corr), f"q{cx_target}_xy")
+            q1.xy.frame_rotation_2pi(phi_corr)  # <---------
+            # q2.xy.frame_rotation_2pi(phi_corr) # from flux-crosstalk
 
             align()
-            multiplexed_readout(I, I_st, Q, Q_st, resonators=multiplexed, weights="rotated_")
+            q2.xy.play("y90") # the channel that we're calibrating
 
-            assign(state[0], ((I[multiplexed.index(cx_control)]<th_control) & (I[multiplexed.index(cx_target)]<th_target)))
-            assign(state[1], ((I[multiplexed.index(cx_control)]<th_control) & (I[multiplexed.index(cx_target)]>th_target)))
-            assign(state[2], ((I[multiplexed.index(cx_control)]>th_control) & (I[multiplexed.index(cx_target)]<th_target)))
-            assign(state[3], ((I[multiplexed.index(cx_control)]>th_control) & (I[multiplexed.index(cx_target)]>th_target)))
+            align()
+            multiplexed_readout(qubits, I, I_st, Q, Q_st)
+
+            assign(state[0], ((I[qubits.index(q1)]<th_control) & (I[qubits.index(q2)]<th_target)))
+            assign(state[1], ((I[qubits.index(q1)]<th_control) & (I[qubits.index(q2)]>th_target)))
+            assign(state[2], ((I[qubits.index(q1)]>th_control) & (I[qubits.index(q2)]<th_target)))
+            assign(state[3], ((I[qubits.index(q1)]>th_control) & (I[qubits.index(q2)]>th_target)))
 
             for i in range(len(bitstrings)): save(state[i], state_st[i])
         
@@ -106,9 +146,6 @@ with program() as cz_ops:
         for i in range(len(bitstrings)):
             state_st[i].boolean_to_int().buffer(len(phis_corr)).average().save(f"state_{bitstrings[i]}")
         
-
-# open communication with opx
-qmm = QuantumMachinesManager(host=qop_ip, port=qop_port, cluster_name=cluster_name, octave=octave_config)
 
 if not simulate:
     qm = qmm.open_qm(config)
@@ -148,11 +185,12 @@ if not simulate:
     qm.close()
     plt.show()
     
-    if (qubit_to_flux_tune==4 and qubit_to_meet_with==3) or (qubit_to_flux_tune==5 and qubit_to_meet_with==4):
-        Phi_config = eval(f"cz{cx_target}_{cx_control}_2pi_dev")  # <---------
-    if (qubit_to_flux_tune==1 and qubit_to_meet_with==2) or (qubit_to_flux_tune==2 and qubit_to_meet_with==3):
-        Phi_config = eval(f"cz{cx_control}_{cx_target}_2pi_dev")  # <---------
-        
+    # if (qubit_to_flux_tune==4 and qubit_to_meet_with==3) or (qubit_to_flux_tune==5 and qubit_to_meet_with==4):
+    #     Phi_config = eval(f"cz{cx_target}_{cx_control}_2pi_dev")  # <---------
+    # if (qubit_to_flux_tune==1 and qubit_to_meet_with==2) or (qubit_to_flux_tune==2 and qubit_to_meet_with==3):
+    #     Phi_config = eval(f"cz{cx_control}_{cx_target}_2pi_dev")  # <---------
+    Phi_config = 0
+
     collected_shots = len(I1[:,0])
     for ii,j in enumerate([0, list(phis_corr).index(min(phis_corr, key=lambda x:abs(x))), list(Bell_SNR).index(max(Bell_SNR)), -1]):
         q_states = [] #np.zeros((len(multiplexed),collected_shots))

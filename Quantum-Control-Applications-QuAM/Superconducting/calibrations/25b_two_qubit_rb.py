@@ -23,8 +23,8 @@ config = machine.generate_config()
 # Get the relevant QuAM components
 qubits = machine.active_qubits
 num_qubits = len(qubits)
-qc = machine.qubits["q5"]
-qt = machine.qubits["q4"]
+qc = machine.qubits["q1"]
+qt = machine.qubits["q2"]
 readout_qubits = [qubit for qubit in machine.qubits.values() if qubit not in [qc, qt]]
 
 
@@ -50,8 +50,8 @@ qubit2_frame_update = 0 #0.12  # example values, should be taken from QPU parame
 
 
 # defines the CZ gate that realizes the mapping |00> -> |00>, |01> -> |01>, |10> -> |10>, |11> -> -|11>
-def bake_cz(baker: Baking):
-    # print("q1,q2: %s,%s" %(q1,q2))
+def bake_cz(baker: Baking, q1, q2):
+    print("q1,q2: %s,%s" %(q1,q2))
     qc_xy_element = qc.xy.name
     qt_xy_element = qt.xy.name
     
@@ -60,7 +60,7 @@ def bake_cz(baker: Baking):
     
     ########### Pulsed Version
     baker.wait(24 * u.ns)
-    baker.play("cz%s_%s"%(qc,qt), qc.z.name)
+    baker.play(("cz%s_%s"%(qc.name,qt.name)).replace("q",""), qc.z.name)
     baker.play("cz", coupler.name)
     #############################
 
@@ -114,7 +114,7 @@ qmm = machine.connect()
 # rb_debugger = TwoQubitRbDebugger(rb)
 # rb_debugger.run_phased_xz_commands(qmm, num_averages=1000)
 
-res = rb.run(qmm, circuit_depths=np.arange(1, 100, 10), num_circuits_per_depth=15, num_shots_per_circuit=100)
+res = rb.run(qmm, circuit_depths=np.arange(1, 300, 5), num_circuits_per_depth=60, num_shots_per_circuit=30)
 # circuit_depths ~ how many consecutive Clifford gates within one executed circuit
 # (https://qiskit.org/documentation/apidoc/circuit.html)
 # num_circuits_per_depth ~ how many random circuits within one depth

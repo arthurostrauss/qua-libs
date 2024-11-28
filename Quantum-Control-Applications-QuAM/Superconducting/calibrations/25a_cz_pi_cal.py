@@ -80,13 +80,13 @@ q2 = machine.qubits["q4"]
 try: coupler = (q1 @ q2).coupler
 except: coupler = (q2 @ q1).coupler 
 
-qubits = [q1, q2]
-num_qubits = len(qubits)
+# qubits = [q1, q2]
+# num_qubits = len(qubits)
 
 q1_number = machine.active_qubits.index(q1) + 1
 q2_number = machine.active_qubits.index(q2) + 1
 
-readout_qubits = [qubit for qubit in machine.qubits.values() if qubit not in [q1, q2]]
+# readout_qubits = [qubit for qubit in machine.qubits.values() if qubit not in [q1, q2]]
 
 ####################
 # Define variables #
@@ -204,8 +204,8 @@ with program() as cz_pi_cal:
 
                     # wait(20 * u.ns)
                     # Play the readout on the other resonators to measure in the same condition as when optimizing readout
-                    for other_qubit in readout_qubits:
-                        other_qubit.resonator.play("readout")
+                    # for other_qubit in readout_qubits:
+                    #     other_qubit.resonator.play("readout")
                     # Measure the state of the resonators
                     multiplexed_readout(qubits, I, I_st, Q, Q_st)
 
