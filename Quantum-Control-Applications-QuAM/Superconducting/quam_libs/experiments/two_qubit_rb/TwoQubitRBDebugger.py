@@ -63,7 +63,6 @@ class TwoQubitRbDebugger:
         self.sequence_tracker.print_sequences()
         self._analyze_phased_xz_commands_program(state, list(sequences_dict.keys()))
 
-    @run_in_thread
     def _insert_all_input_stream(self, job, sequence):
         job.insert_input_stream("__gates_len_is__", len(sequence))
         for qe in self.rb._rb_baker.all_elements:
