@@ -64,6 +64,11 @@ if simulate:
     job = xeb.simulate(backend=fake_backend)
 else:
     job = xeb.run(simulate=hardware_simulate)  # If simulate is False, job is run on the QPU, else pulse output is simulated
+    # To increase simulation time, for example:
+    # from qm import SimulationConfig
+    # simulation_config = SimulationConfig(duration=50_000)  # clock cycles
+    # job = xeb.run(simulate=hardware_simulate, simulation_config)
+
 
 # 87 * 500/12 * 1000 = 13m 26.8s 
 # 87 * 1200/24 * 700 = 22m 42.3s
