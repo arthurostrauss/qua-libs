@@ -57,17 +57,27 @@ xeb_config = XEBConfig(
 )
 
 simulate = False  # Set to True to simulate the experiment with Qiskit Aer instead of running it on the QPU
+hardware_simulate = True
+
 xeb = XEB(xeb_config, quam=machine)
 if simulate:
     job = xeb.simulate(backend=fake_backend)
 else:
-    job = xeb.run(simulate=True)  # If simulate is False, job is run on the QPU, else pulse output is simulated
+    job = xeb.run(simulate=hardware_simulate)  # If simulate is False, job is run on the QPU, else pulse output is simulated
+    # To increase simulation time, for example:
+    # from qm import SimulationConfig
+    # simulation_config = SimulationConfig(duration=50_000)  # clock cycles
+    # job = xeb.run(simulate=hardware_simulate, simulation_config)
+
 
 # 87 * 500/12 * 1000 = 13m 26.8s 
 # 87 * 1200/24 * 700 = 22m 42.3s
 
 
 result = job.result()
+
+if hardware_simulate:
+    job.plot_simulated_samples()
 
 result.plot_fidelities()
 
