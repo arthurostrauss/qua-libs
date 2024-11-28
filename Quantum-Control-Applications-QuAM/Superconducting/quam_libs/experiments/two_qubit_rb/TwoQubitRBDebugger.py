@@ -95,7 +95,7 @@ class TwoQubitRbDebugger:
                     save(state, state_os)
 
             with stream_processing():
-                state_os.buffer(num_sequences, num_averages).save("state")
+                state_os.buffer(num_averages).buffer(num_averages).save("state")
 
         return prog
 
