@@ -67,7 +67,7 @@ class TwoQubitRbDebugger:
     def _insert_all_input_stream(self, job, sequence):
         job.insert_input_stream("__gates_len_is__", len(sequence))
         for qe in self.rb._rb_baker.all_elements:
-            job.insert_input_stream(f"_{qe}_is", self.rb._decode_sequence_for_element(qe, sequence))
+            job.insert_input_stream(f"{qe.replace('.', '_')}_is", self.rb._decode_sequence_for_element(qe, sequence))
 
     def _phased_xz_commands_program(self, num_sequences: int, num_averages: int) -> Program:
         with program() as prog:
@@ -78,7 +78,7 @@ class TwoQubitRbDebugger:
             state_os = declare_stream()
             gates_len_is = declare_input_stream(int, name="__gates_len_is__", size=1)
             gates_is = {
-                qe: declare_input_stream(int, name=f"_{qe}_is", size=self.rb._buffer_length)
+                qe: declare_input_stream(int, name=f"{qe.replace('.', '_')}_is", size=self.rb._buffer_length)
                 for qe in self.rb._rb_baker.all_elements
             }
 
