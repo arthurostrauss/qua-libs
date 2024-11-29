@@ -4,6 +4,7 @@ from qualang_tools.bakery.bakery import Baking
 from quam_libs.experiments.two_qubit_rb import TwoQubitRb, TwoQubitRbDebugger
 from quam_libs.components import QuAM
 from quam_libs.macros import qua_declaration, multiplexed_readout, node_save
+from quam_libs.macros import qua_declaration, readout_state
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -23,8 +24,12 @@ config = machine.generate_config()
 # Get the relevant QuAM components
 qubits = machine.active_qubits
 num_qubits = len(qubits)
-qc = machine.qubits["q1"]
-qt = machine.qubits["q2"]
+
+qc_index = 1  # i.e., qc = q1
+qt_index = 2  # i.e., qt = q2
+qc = machine.qubits[f"q{qc_index}"]
+qt = machine.qubits[f"q{qt_index}"]
+
 readout_qubits = [qubit for qubit in machine.qubits.values() if qubit not in [qc, qt]]
 
 
@@ -73,25 +78,31 @@ def bake_cz(baker: Baking, q1, q2):
 def prep():
     machine.apply_all_flux_to_min()
     machine.apply_all_couplers_to_min()
-    wait(machine.thermalization_time)
+    wait(machine.thermalization_time * u.ns)
     align()
 
 
 def meas():
-    threshold1 = qc.resonator.operations["readout"].threshold  # threshold for state discrimination 0 <-> 1 using the I quadrature
-    threshold2 = qt.resonator.operations["readout"].threshold  # threshold for state discrimination 0 <-> 1 using the I quadrature
-    I, I_st, Q, Q_st, n, n_st = qua_declaration(num_qubits=len([qc, qt]))
-    state1 = declare(bool)
-    state2 = declare(bool)
+    # threshold1 = qc.resonator.operations["readout"].threshold  # threshold for state discrimination 0 <-> 1 using the I quadrature
+    # threshold2 = qt.resonator.operations["readout"].threshold  # threshold for state discrimination 0 <-> 1 using the I quadrature
 
-    for other_qubit in readout_qubits:
-        other_qubit.resonator.play("readout")
-    multiplexed_readout([qc, qt], I, I_st, Q, Q_st)
+    # I, I_st, Q, Q_st, n, n_st = qua_declaration(num_qubits=len([qc, qt]))
+    # state1 = declare(bool)
+    # state2 = declare(bool)
 
-    assign(state1, I[0] > threshold1)  # assume that all information is in I
-    assign(state2, I[1] > threshold2)  # assume that all information is in I
+    # for other_qubit in readout_qubits:
+    #     other_qubit.resonator.play("readout")
+    # multiplexed_readout([qc, qt], I, I_st, Q, Q_st)
+        
+    num_qubits = len(machine.qubits)
 
-    return state1, state2
+    state = [declare(int) for _ in range(num_qubits)]
+
+    align()
+    for i in range(num_qubits):
+        readout_state(machine.qubits[f"q{i+1}"], state[i])
+
+    return state[qc_index - 1], state[qt_index - 1]
 
 
 ##############################
