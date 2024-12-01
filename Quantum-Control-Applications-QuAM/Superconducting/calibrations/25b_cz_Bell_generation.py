@@ -36,8 +36,8 @@ qmm = machine.connect()
 # Get the relevant QuAM components
 qubits = machine.active_qubits
 num_qubits_full = len(qubits)
-q1 = machine.qubits["q5"]
-q2 = machine.qubits["q4"]
+q1 = machine.qubits["q1"]
+q2 = machine.qubits["q2"]
 q1_number = qubits.index(q1) + 1
 q2_number = qubits.index(q2) + 1
 
@@ -72,6 +72,7 @@ bitstrings = ['00', '01', '10', '11']
 cx_control, cx_target = q1_number, q2_number  
 th_control, th_target = q1.resonator.operations["readout"].threshold, q2.resonator.operations["readout"].threshold
 phis_corr = np.linspace(-0.9, 0.9, 360)
+phis_corr = np.linspace(0, 3, 360)
 
 with program() as cz_ops:
 
@@ -97,9 +98,18 @@ with program() as cz_ops:
         with for_(*from_array(phi_corr, phis_corr)):
             if not simulate: wait(machine.thermalization_time * u.ns)
 
+            # Bell: 
+            # align()
+            # q1.xy.play("y90")
+            # q2.xy.play("-y90")
+
+            # CX: 
             align()
-            q1.xy.play("y90")
-            q2.xy.play("-y90")
+            q1.xy.play("x180")
+            align()
+            # q2.xy.play("y90")
+            # q2.xy.play("x180")
+            q2.xy.play("x90")
             
             align()
             # Dynamical_Decoupling(2,2)
@@ -108,6 +118,7 @@ with program() as cz_ops:
             wait(24 * u.ns)  
             q1.z.play("cz%s_%s"%(q1_number,q2_number))
             coupler.play("cz")
+            frame_rotation_2pi(0, q2.xy.name)
             wait(20 * u.ns)
 
             # frame_rotation_2pi(global_phase_correction+phi_corr, f"q{cx_target}_xy")
@@ -121,11 +132,18 @@ with program() as cz_ops:
             #     frame_rotation_2pi(eval(f"cz{cx_control}_{cx_target}_2pi_dev")+phi_corr, f"q{cx_target}_xy")  # <---------
             #     frame_rotation_2pi(eval(f"cz{cx_target}_{cx_control}_2pi_dev")+phi_corr, f"q{cx_control}_xy") # from flux-crosstalk
             
-            q1.xy.frame_rotation_2pi(phi_corr)  # <---------
-            # q2.xy.frame_rotation_2pi(phi_corr) # from flux-crosstalk
+            # q1.xy.frame_rotation_2pi(phi_corr)  # <---------
+            frame_rotation_2pi(phi_corr, q2.xy.name) # from flux-crosstalk
 
+            # Bell: 
+            # align()
+            # q2.xy.play("y90") # the channel that we're calibrating
+
+            # CX: 
             align()
-            q2.xy.play("y90") # the channel that we're calibrating
+            # q2.xy.play("y90")
+            # q2.xy.play("x180")
+            q2.xy.play("x90")
 
             align()
             multiplexed_readout(qubits, I, I_st, Q, Q_st)
@@ -167,10 +185,10 @@ if not simulate:
         plt.suptitle(f"Optimizing Phase compensation for CZ ({n}/{shots})")
         plt.subplot(121)
         plt.cla()
-        plt.plot(phis_corr, state00, '.b', phis_corr, state11, '.r')
+        plt.plot(phis_corr, state00, '.b', phis_corr, state11, '.r', phis_corr, state01, '.g', phis_corr, state10, '.k')
         plt.xlabel("Phase adjustment (2pi)")
         plt.ylabel("I quadrature [V]")
-        plt.legend(("00", "11"), loc="upper right")
+        plt.legend(("00", "11", "01", "10"), loc="upper right")
         plt.subplot(122)
         plt.cla()
         plt.plot(phis_corr, Bell_SNR)

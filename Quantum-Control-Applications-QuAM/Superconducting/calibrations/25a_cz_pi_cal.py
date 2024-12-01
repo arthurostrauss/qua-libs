@@ -74,8 +74,8 @@ qmm = machine.connect()
 # Get the relevant QuAM components
 num_qubits_full = len(machine.active_qubits)
 
-q1 = machine.qubits["q5"]
-q2 = machine.qubits["q4"]
+q1 = machine.qubits["q1"]
+q2 = machine.qubits["q2"]
 
 try: coupler = (q1 @ q2).coupler
 except: coupler = (q2 @ q1).coupler 
@@ -113,24 +113,37 @@ phis = np.arange(0, 3, 1 / points_per_cycle)
 # amps = np.linspace(0.5, 1.5, 25)
 amps = np.linspace(0.7, 1.3, 25)
 amps = np.linspace(0.9, 1.1, 25)
-# amps = np.linspace(0.97, 1.03, 25)
-# amps = np.linspace(0.995, 1.005, 25)
+amps = np.linspace(0.97, 1.03, 25)
+amps = np.linspace(0.995, 1.005, 25)
 # amps = np.linspace(-0.04085/-0.04128, -0.0425/-0.04128, 25)
 # amps = np.linspace(-0.040/-0.04128, -0.042/-0.04128, 25) 
 
 cz_dur = 48 #92
 
 # Ref: 22z_CZ_coupler_flex.py 
-if coupler.name=="coupler_q4_q5": cz_coupler, cz_point, scale = -0.08157333, -0.06308, -0.0119
-if coupler.name=="coupler_q3_q4": cz_coupler, cz_point, scale = -0.0812565, -0.0990, 0.0287 
-if coupler.name=="coupler_q2_q3": cz_coupler, cz_point, scale = -0.115, 0.05274, -0.0087
-if coupler.name=="coupler_q1_q2": cz_coupler, cz_point, scale = -0.0807, 0.0653, 0.0397
+if coupler.name=="coupler_q4_q5": 
+    cz_point, scale = -0.05758, -0.0119
+    cz_coupler = -0.07951, 
+    phi_to_flux_tune, phi_to_meet_with = 0, 0
+if coupler.name=="coupler_q3_q4": 
+    cz_point, scale = -0.0900, 0.0287 
+    cz_coupler = -0.07978, 
+    phi_to_flux_tune, phi_to_meet_with = 0, 0
+if coupler.name=="coupler_q2_q3": 
+    cz_point, scale = 0.06154, -0.0087
+    cz_coupler = -0.10547, 
+    phi_to_flux_tune, phi_to_meet_with = 0, 0
+if coupler.name=="coupler_q1_q2": 
+    cz_point, scale = 0.05594, 0.0397
+    cz_coupler = -0.0589468373*1.00125
+    phi_to_flux_tune, phi_to_meet_with = 0.83, 0.52
 
 pulse_dc_factor = 1.0 #(0.00859 - qubit_to_flux_tune.z.min_offset)/(0.00908 - qubit_to_flux_tune.z.min_offset) * 1.08
 print("pulse_dc_factor: %s" % pulse_dc_factor)
 print("%s's offset: %s" % (qubit_to_flux_tune.name, qubit_to_flux_tune.z.min_offset))
 
 sweep_flux = "qc" # qb or qc
+check_phase = "12" # 01: to_meet_with, 12: to_flux_tune
 
 print("updated cz_coupler: %s" %cz_coupler)
 print("cz_coupler tuning from %s to %s" % (cz_coupler*amps[0], cz_coupler*amps[-1]))
@@ -161,12 +174,13 @@ with program() as cz_pi_cal:
                 with for_each_(flag, [True, False]):
 
                     # control qubit
-                    play("x180", qubit_to_meet_with.xy.name, condition=flag)
+                    if check_phase=="12": play("x180", qubit_to_meet_with.xy.name, condition=flag)
+                    if check_phase=="01": play("x180", qubit_to_flux_tune.xy.name, condition=flag)
 
                     # ramsey first pi/2
                     align()
-                    # play("x90", qubit_to_flux_tune.xy.name)
-                    play("x90", qubit_to_meet_with.xy.name)
+                    if check_phase=="12": play("x90", qubit_to_flux_tune.xy.name)
+                    if check_phase=="01": play("x90", qubit_to_meet_with.xy.name)
 
                     align()
                     # Wait some time to ensure that the flux pulse will arrive after the x90 pulse
@@ -196,10 +210,12 @@ with program() as cz_pi_cal:
 
                     # ramsey second pi/2
                     align()
-                    # frame_rotation_2pi(phi, qubit_to_flux_tune.xy.name)
-                    # play("x90", qubit_to_flux_tune.xy.name)
-                    frame_rotation_2pi(phi, qubit_to_meet_with.xy.name)
-                    play("x90", qubit_to_meet_with.xy.name)
+                    if check_phase=="12": 
+                        frame_rotation_2pi(phi_to_flux_tune + phi, qubit_to_flux_tune.xy.name)
+                        play("x90", qubit_to_flux_tune.xy.name)
+                    if check_phase=="01": 
+                        frame_rotation_2pi(phi_to_meet_with + phi, qubit_to_meet_with.xy.name)
+                        play("x90", qubit_to_meet_with.xy.name)
                     align()
 
                     # wait(20 * u.ns)
@@ -275,12 +291,14 @@ else:
             ax[int(i // 5), int(i % 5)].cla()
 
             # Fitting for phase
-            # I_control_g = I1[:, i, 1]
-            # I_control_e = I1[:, i, 0]
-            # I_control_g = Q1[:, i, 1]
-            # I_control_e = Q1[:, i, 0]
-            I_control_g = I2[:, i, 1]
-            I_control_e = I2[:, i, 0]
+            if check_phase=="12": 
+                I_control_g = I1[:, i, 1]
+                I_control_e = I1[:, i, 0]
+                # I_control_g = Q1[:, i, 1]
+                # I_control_e = Q1[:, i, 0]
+            if check_phase=="01": 
+                I_control_g = I2[:, i, 1]
+                I_control_e = I2[:, i, 0]
             try:
                 fit = Cosine(phis, I_control_g, plot=False)
                 phase_g = fit.out.get('phase')[0]
