@@ -50,8 +50,9 @@ def bake_phased_xz(baker: Baking, q, x, z, a):
 
 
 # TODO: single qubit phase corrections in units of 2pi applied after the CZ gate
-qubit1_frame_update = 0 #0.23  # example values, should be taken from QPU parameters
-qubit2_frame_update = 0.52 #0.12  # example values, should be taken from QPU parameters
+phi_to_flux_tune, phi_to_meet_with = 0, 0 #0.83, 0.52
+qubit1_frame_update = phi_to_flux_tune #0.23  # example values, should be taken from QPU parameters
+qubit2_frame_update = phi_to_meet_with #0.12  # example values, should be taken from QPU parameters
 
 
 # defines the CZ gate that realizes the mapping |00> -> |00>, |01> -> |01>, |10> -> |10>, |11> -> -|11>
@@ -64,15 +65,17 @@ def bake_cz(baker: Baking, q1, q2):
     except: coupler = (qt @ qc).coupler
     
     ########### Pulsed Version
-    baker.wait(24 * u.ns)
+    # baker.wait(100 * u.ns)
+    # baker.wait(24 * u.ns)
     baker.play(("cz%s_%s"%(qc.name,qt.name)).replace("q",""), qc.z.name)
     baker.play("cz", coupler.name)
     #############################
-
-    baker.align()
+    
+    # baker.wait(20 * u.ns)
+    baker.align(qc.z.name, coupler.name, qc_xy_element, qt_xy_element)
     baker.frame_rotation_2pi(qubit1_frame_update, qc_xy_element)
     baker.frame_rotation_2pi(qubit2_frame_update, qt_xy_element)
-    baker.align()
+    baker.align(qc.z.name, coupler.name, qc_xy_element, qt_xy_element)
 
 
 def prep():
@@ -123,7 +126,7 @@ qmm = machine.connect()
 
 # run simpler experiment to verify `bake_phased_xz`, `prep` and `meas`
 rb_debugger = TwoQubitRbDebugger(rb)
-rb_debugger.run_phased_xz_commands(qmm, 1000)
+rb_debugger.run_phased_xz_commands(qmm, 280)
 plt.show()
 
 # run 2Q-RB experiment

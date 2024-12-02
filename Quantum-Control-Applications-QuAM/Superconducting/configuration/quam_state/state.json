@@ -127,7 +127,7 @@
                         "__class__": "quam.components.pulses.DragCosinePulse"
                     }
                 },
-                "intermediate_frequency": 207415300.12108883,
+                "intermediate_frequency": 207411975.86018527,
                 "thread": "a",
                 "opx_output": "#/wiring/qubits/q1/xy/opx_output",
                 "__class__": "quam.components.channels.MWChannel"
@@ -191,7 +191,7 @@
             "anharmonicity": 205400000,
             "freq_vs_flux_01_quad_term": -15394165300.843939,
             "T1": 2.7360837253629486e-05,
-            "T2ramsey": 1.4518363808363412e-05,
+            "T2ramsey": 2.0128825453405503e-05,
             "thermalization_time_factor": 10,
             "phi0_current": 31.47214721502215,
             "phi0_voltage": 0.629442944300443,
@@ -325,7 +325,7 @@
                         "__class__": "quam.components.pulses.DragCosinePulse"
                     }
                 },
-                "intermediate_frequency": -64360761.24504683,
+                "intermediate_frequency": -64338258.4320375,
                 "thread": "b",
                 "opx_output": "#/wiring/qubits/q2/xy/opx_output",
                 "__class__": "quam.components.channels.MWChannel"
@@ -389,7 +389,7 @@
             "anharmonicity": 210800000,
             "freq_vs_flux_01_quad_term": -15724479091.452091,
             "T1": 4.459006154521562e-05,
-            "T2ramsey": 1.4149529815360654e-05,
+            "T2ramsey": 2.1434976004114034e-05,
             "thermalization_time_factor": 10,
             "phi0_current": 28.369115539085062,
             "phi0_voltage": 0.5673823107817012,
@@ -523,7 +523,7 @@
                         "__class__": "quam.components.pulses.DragCosinePulse"
                     }
                 },
-                "intermediate_frequency": 146892685.8505458,
+                "intermediate_frequency": 146909096.0724721,
                 "thread": "c",
                 "opx_output": "#/wiring/qubits/q3/xy/opx_output",
                 "__class__": "quam.components.channels.MWChannel"
@@ -542,12 +542,12 @@
                     },
                     "cz3_2": {
                         "length": 48,
-                        "amplitude": -0.07687493418662979,
+                        "amplitude": -0.07730841035676894,
                         "__class__": "quam.components.pulses.SquarePulse"
                     },
                     "cz3_4": {
                         "length": 48,
-                        "amplitude": -0.2316222091866298,
+                        "amplitude": -0.23273652303506162,
                         "__class__": "quam.components.pulses.SquarePulse"
                     }
                 },
@@ -592,7 +592,7 @@
             "anharmonicity": 196200000,
             "freq_vs_flux_01_quad_term": -17871521237.988598,
             "T1": 2.9085903836946977e-05,
-            "T2ramsey": 1.7710440817645046e-05,
+            "T2ramsey": 1.2753445173621873e-05,
             "thermalization_time_factor": 10,
             "phi0_current": 29.0777337982909,
             "phi0_voltage": 0.581554675965818,
@@ -726,7 +726,7 @@
                         "__class__": "quam.components.pulses.DragCosinePulse"
                     }
                 },
-                "intermediate_frequency": -325953695.02582926,
+                "intermediate_frequency": -325936801.3394865,
                 "thread": "d",
                 "opx_output": "#/wiring/qubits/q4/xy/opx_output",
                 "__class__": "quam.components.channels.MWChannel"
@@ -790,7 +790,7 @@
             "anharmonicity": 193400000,
             "freq_vs_flux_01_quad_term": -16258004676.503895,
             "T1": 2.7050327431625877e-05,
-            "T2ramsey": 9.32945210615141e-06,
+            "T2ramsey": 2.3107184485725834e-05,
             "thermalization_time_factor": 10,
             "phi0_current": 26.77030728172833,
             "phi0_voltage": 0.5354061456345666,
@@ -924,7 +924,7 @@
                         "__class__": "quam.components.pulses.DragCosinePulse"
                     }
                 },
-                "intermediate_frequency": -20808444.929978818,
+                "intermediate_frequency": -20806315.80631785,
                 "thread": "e",
                 "opx_output": "#/wiring/qubits/q5/xy/opx_output",
                 "__class__": "quam.components.channels.MWChannel"
@@ -943,7 +943,7 @@
                     },
                     "cz5_4": {
                         "length": 48,
-                        "amplitude": -0.17275006189117903,
+                        "amplitude": -0.17233145930680818,
                         "__class__": "quam.components.pulses.SquarePulse"
                     }
                 },
@@ -988,7 +988,7 @@
             "anharmonicity": 140000000,
             "freq_vs_flux_01_quad_term": -16880903092.557724,
             "T1": 4.1291512589674674e-05,
-            "T2ramsey": 1.771236024041624e-05,
+            "T2ramsey": 1.8867871486647754e-05,
             "thermalization_time_factor": 10,
             "phi0_current": 33.26182515010174,
             "phi0_voltage": 0.6652365030020349,
@@ -1041,7 +1041,7 @@
                     },
                     "cz": {
                         "length": 48,
-                        "amplitude": -0.10547,
+                        "amplitude": -0.10648319968881424,
                         "__class__": "quam.components.pulses.SquarePulse"
                     }
                 },
@@ -1067,7 +1067,7 @@
                     },
                     "cz": {
                         "length": 48,
-                        "amplitude": -0.07978,
+                        "amplitude": -0.10319543000000002,
                         "__class__": "quam.components.pulses.SquarePulse"
                     }
                 },
@@ -1093,7 +1093,7 @@
                     },
                     "cz": {
                         "length": 48,
-                        "amplitude": -0.07951,
+                        "amplitude": -0.11256876983617685,
                         "__class__": "quam.components.pulses.SquarePulse"
                     }
                 },

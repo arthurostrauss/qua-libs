@@ -51,13 +51,13 @@ from quam_libs.lib.plot_utils import QubitPairGrid, grid_iter, grid_pair_names
 # %% {Node_parameters}
 class Parameters(NodeParameters):
 
-    qubit_pairs: Optional[List[str]] = None
+    qubit_pairs: Optional[List[str]] = ["coupler_q1_q2"]
     num_averages: int = 1000
     flux_point_joint_or_independent: Literal["joint", "independent"] = "independent"
     reset_type: Literal['active', 'thermal'] = "thermal"
     simulate: bool = False
     timeout: int = 100
-    num_frames: int = 21
+    num_frames: int = 100
     load_data_id: Optional[int] = None
     plot_raw : bool = False
     measure_leak : bool = False

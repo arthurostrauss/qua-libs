@@ -74,7 +74,7 @@ qmm = machine.connect()
 # Get the relevant QuAM components
 num_qubits_full = len(machine.active_qubits)
 
-q1 = machine.qubits["q1"]
+q1 = machine.qubits["q3"]
 q2 = machine.qubits["q2"]
 
 try: coupler = (q1 @ q2).coupler
@@ -110,11 +110,11 @@ with_set_dc = False
 
 n_avg = 6000  # The number of averages
 phis = np.arange(0, 3, 1 / points_per_cycle)
-# amps = np.linspace(0.5, 1.5, 25)
+amps = np.linspace(0.5, 1.5, 25)
 amps = np.linspace(0.7, 1.3, 25)
 amps = np.linspace(0.9, 1.1, 25)
-amps = np.linspace(0.97, 1.03, 25)
-amps = np.linspace(0.995, 1.005, 25)
+# amps = np.linspace(0.97, 1.03, 25)
+# amps = np.linspace(0.995, 1.005, 25)
 # amps = np.linspace(-0.04085/-0.04128, -0.0425/-0.04128, 25)
 # amps = np.linspace(-0.040/-0.04128, -0.042/-0.04128, 25) 
 
@@ -123,16 +123,16 @@ cz_dur = 48 #92
 # Ref: 22z_CZ_coupler_flex.py 
 if coupler.name=="coupler_q4_q5": 
     cz_point, scale = -0.05758, -0.0119
-    cz_coupler = -0.07951, 
+    cz_coupler = -0.07951*1.4166667*.975*1.025
     phi_to_flux_tune, phi_to_meet_with = 0, 0
 if coupler.name=="coupler_q3_q4": 
     cz_point, scale = -0.0900, 0.0287 
-    cz_coupler = -0.07978, 
+    cz_coupler = -0.07978*1.3*.995
     phi_to_flux_tune, phi_to_meet_with = 0, 0
 if coupler.name=="coupler_q2_q3": 
     cz_point, scale = 0.06154, -0.0087
-    cz_coupler = -0.10547, 
-    phi_to_flux_tune, phi_to_meet_with = 0, 0
+    cz_coupler = -0.10547*.9166667*1.0833333*1.0166667
+    phi_to_flux_tune, phi_to_meet_with = 0, 0.49
 if coupler.name=="coupler_q1_q2": 
     cz_point, scale = 0.05594, 0.0397
     cz_coupler = -0.0589468373*1.00125
@@ -143,10 +143,12 @@ print("pulse_dc_factor: %s" % pulse_dc_factor)
 print("%s's offset: %s" % (qubit_to_flux_tune.name, qubit_to_flux_tune.z.min_offset))
 
 sweep_flux = "qc" # qb or qc
-check_phase = "12" # 01: to_meet_with, 12: to_flux_tune
+check_phase = "01" # 12: to_flux_tune, 01: to_meet_with
+check_cz_pulse = False
 
 print("updated cz_coupler: %s" %cz_coupler)
 print("cz_coupler tuning from %s to %s" % (cz_coupler*amps[0], cz_coupler*amps[-1]))
+print("machine.thermalization_time: %s" % (machine.thermalization_time*u.ns)) 
 
 ###################
 # The QUA program #
@@ -158,6 +160,11 @@ with program() as cz_pi_cal:
     ampp = declare(fixed)  # QUA variable for the flux pulse amplitude pre-factor.
     flag = declare(bool)
     # global_phase_correction = declare(fixed, value=cz_corr)
+    phi_to_flux_tune_full = declare(fixed)
+    phi_to_meet_with_full = declare(fixed)
+    assign(phi_to_flux_tune_full, phi_to_flux_tune)
+    assign(phi_to_meet_with_full, phi_to_meet_with)
+    
 
     z_amp = declare(fixed)
     coupler_amp = declare(fixed)
@@ -170,6 +177,8 @@ with program() as cz_pi_cal:
         save(n, n_st)
 
         with for_(*from_array(phi, phis)):
+            if check_phase=="12": assign(phi_to_flux_tune_full, phi_to_flux_tune + phi)
+            if check_phase=="01": assign(phi_to_meet_with_full, phi_to_meet_with + phi)
             with for_(*from_array(ampp, amps)):
                 with for_each_(flag, [True, False]):
 
@@ -184,7 +193,7 @@ with program() as cz_pi_cal:
 
                     align()
                     # Wait some time to ensure that the flux pulse will arrive after the x90 pulse
-                    wait(100 * u.ns)
+                    # wait(100 * u.ns)
 
                     # cz
                     if play_cz:
@@ -199,26 +208,33 @@ with program() as cz_pi_cal:
                             c_pulse_height = pulse_dc_factor*(ampp*cz_coupler - coupler.decouple_offset)
                             assign(coupler_amp, Cast.mul_fixed_by_int(c_pulse_height, 5))
                         ########### Pulsed Version
-                        wait(24 * u.ns)  
+                        # wait(24 * u.ns)  
                         # wait( (24) * u.ns, qubit_to_flux_tune.z.name, coupler.name) # another bug
-                        qubit_to_flux_tune.z.play("flux_pulse", duration=cz_dur//4, amplitude_scale=z_amp)
-                        coupler.play("flux_pulse", duration=cz_dur//4, amplitude_scale=coupler_amp)
+                        if check_cz_pulse:
+                            # qubit_to_flux_tune.z.play("flux_pulse", duration=cz_dur//4, amplitude_scale=-0.06828336307877787*5)
+                            # coupler.play("flux_pulse", duration=cz_dur//4, amplitude_scale=-0.059020520846625*5)
+                            # from state.json: 
+                            qubit_to_flux_tune.z.play(("cz%s_%s"%(qubit_to_flux_tune.name,qubit_to_meet_with.name)).replace("q",""))
+                            coupler.play("cz")
+                        else:
+                            qubit_to_flux_tune.z.play("flux_pulse", duration=cz_dur//4, amplitude_scale=z_amp)
+                            coupler.play("flux_pulse", duration=cz_dur//4, amplitude_scale=coupler_amp)
                         #############################
 
                         # Wait some time to ensure that the flux pulse will end before the readout pulse
-                        wait(20 * u.ns)
+                        # wait(20 * u.ns)
 
                     # ramsey second pi/2
                     align()
                     if check_phase=="12": 
-                        frame_rotation_2pi(phi_to_flux_tune + phi, qubit_to_flux_tune.xy.name)
+                        frame_rotation_2pi(phi_to_flux_tune_full, qubit_to_flux_tune.xy.name)
                         play("x90", qubit_to_flux_tune.xy.name)
                     if check_phase=="01": 
-                        frame_rotation_2pi(phi_to_meet_with + phi, qubit_to_meet_with.xy.name)
+                        frame_rotation_2pi(phi_to_meet_with_full, qubit_to_meet_with.xy.name)
                         play("x90", qubit_to_meet_with.xy.name)
                     align()
 
-                    # wait(20 * u.ns)
+                    wait(20 * u.ns)
                     # Play the readout on the other resonators to measure in the same condition as when optimizing readout
                     # for other_qubit in readout_qubits:
                     #     other_qubit.resonator.play("readout")
@@ -226,7 +242,7 @@ with program() as cz_pi_cal:
                     multiplexed_readout(qubits, I, I_st, Q, Q_st)
 
                     # Wait for the qubit to decay to the ground state
-                    if not simulate: wait(machine.thermalization_time * u.ns)
+                    if not simulate: wait(1 * machine.thermalization_time * u.ns)
 
     with stream_processing():
         # for the progress counter
