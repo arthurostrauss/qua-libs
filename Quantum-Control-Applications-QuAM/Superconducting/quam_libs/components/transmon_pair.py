@@ -4,6 +4,7 @@ from dataclasses import field
 from quam.core import QuamComponent, quam_dataclass
 from .transmon import Transmon
 from .tunable_coupler import TunableCoupler
+from qm.qua import align
 
 
 __all__ = ["TransmonPair"]
@@ -22,3 +23,17 @@ class TransmonPair(QuamComponent):
     def name(self):
         """The name of the transmon"""
         return self.id if isinstance(self.id, str) else f"q{self.id}"
+
+    def align(self):
+        if self.coupler:
+            align(self.qubit_control.xy.name, self.qubit_control.z.name, self.qubit_control.resonator.name, self.qubit_target.xy.name,
+                  self.qubit_target.z.name, self.qubit_target.resonator.name, self.coupler.name)
+        else:
+            align(self.qubit_control.xy.name, self.qubit_control.z.name, self.qubit_control.resonator.name, self.qubit_target.xy.name,
+                  self.qubit_target.z.name, self.qubit_target.resonator.name)
+
+    def to_mutual_idle(self):
+        """Set the flux bias to the mutual idle offset"""
+        self.qubit_control.z.set_dc_offset(self.mutual_flux_bias[0])
+        self.qubit_target.z.set_dc_offset(self.mutual_flux_bias[1])
+
