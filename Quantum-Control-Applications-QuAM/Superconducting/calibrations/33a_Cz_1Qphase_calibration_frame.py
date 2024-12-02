@@ -147,7 +147,7 @@ with program() as CPhase_Oscillations:
 
                     #play the CZ gate
                     wait(24 * u.ns)
-                    qp.qubit_control.z.play("cz%s_%s" % (qp.qubit_control.name, qp.qubit_target.name).replace("q", ""))
+                    qp.qubit_control.z.play("cz%s_%s" % (qp.qubit_control.name.replace("q", ""), qp.qubit_target.name.replace("q", "")))
                     qp.z.play("cz")
 
                     #rotate the frame
