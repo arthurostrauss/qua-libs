@@ -74,7 +74,7 @@ qmm = machine.connect()
 # Get the relevant QuAM components
 num_qubits_full = len(machine.active_qubits)
 
-q1 = machine.qubits["q3"]
+q1 = machine.qubits["q1"]
 q2 = machine.qubits["q2"]
 
 try: coupler = (q1 @ q2).coupler
@@ -108,17 +108,19 @@ cz_corr = 0 # float(eval(f"cz{q2_number}_{q1_number}_2pi_dev"))
 simulate = False
 with_set_dc = False
 
-n_avg = 6000  # The number of averages
+n_avg = 10000  # The number of averages
 phis = np.arange(0, 3, 1 / points_per_cycle)
 amps = np.linspace(0.5, 1.5, 25)
 amps = np.linspace(0.7, 1.3, 25)
-amps = np.linspace(0.9, 1.1, 25)
+# amps = np.linspace(0.9, 1.1, 25)
 # amps = np.linspace(0.97, 1.03, 25)
 # amps = np.linspace(0.995, 1.005, 25)
 # amps = np.linspace(-0.04085/-0.04128, -0.0425/-0.04128, 25)
 # amps = np.linspace(-0.040/-0.04128, -0.042/-0.04128, 25) 
 
-cz_dur = 48 #92
+# cz_dur = 48 
+# cz_dur = 60
+cz_dur = 88
 
 # Ref: 22z_CZ_coupler_flex.py 
 if coupler.name=="coupler_q4_q5": 
@@ -135,7 +137,9 @@ if coupler.name=="coupler_q2_q3":
     phi_to_flux_tune, phi_to_meet_with = 0, 0.49
 if coupler.name=="coupler_q1_q2": 
     cz_point, scale = 0.05594, 0.0397
-    cz_coupler = -0.0589468373*1.00125
+    # cz_coupler = -0.0589468373*1.00125
+    # cz_coupler = -0.05882*.975*.9975  
+    cz_coupler = -0.04781*1.1 
     phi_to_flux_tune, phi_to_meet_with = 0.83, 0.52
 
 pulse_dc_factor = 1.0 #(0.00859 - qubit_to_flux_tune.z.min_offset)/(0.00908 - qubit_to_flux_tune.z.min_offset) * 1.08
@@ -222,7 +226,7 @@ with program() as cz_pi_cal:
                         #############################
 
                         # Wait some time to ensure that the flux pulse will end before the readout pulse
-                        # wait(20 * u.ns)
+                        wait(150 * u.ns)
 
                     # ramsey second pi/2
                     align()
@@ -234,7 +238,7 @@ with program() as cz_pi_cal:
                         play("x90", qubit_to_meet_with.xy.name)
                     align()
 
-                    wait(20 * u.ns)
+                    wait(30 * u.ns) # to prevent the readout being overlapped by the flux tail  
                     # Play the readout on the other resonators to measure in the same condition as when optimizing readout
                     # for other_qubit in readout_qubits:
                     #     other_qubit.resonator.play("readout")
