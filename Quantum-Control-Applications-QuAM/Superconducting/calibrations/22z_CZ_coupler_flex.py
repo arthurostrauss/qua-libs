@@ -67,7 +67,7 @@ except: coupler = (q2 @ q1).coupler
 qb = q1  # The qubit whose flux will be swept
 
 mode = "pulse" # dc or pulse
-sweep_flux = "qb" # qb or qc or others
+sweep_flux = "qc" # qb or qc or others
 coupler_point = 0 # coupler.decouple_offset # -0.020 
 # NOTE: always start from 0, turn ~20-40mV left to the FAST LANE. 
 
@@ -85,30 +85,30 @@ simulate = False
 n_avg = 1373 #137000
 # The flux pulse durations in clock cycles (4ns) - Must be larger than 4 clock cycles.
 ts = np.arange(4, 30, 1)
-ts = np.arange(4, 200, 2)
+# ts = np.arange(4, 600, 4)
 
 # The flux bias sweep in V
 if sweep_flux == "qb": 
     if coupler.name=="coupler_q4_q5": dcs = np.linspace(-0.070, -0.044, 301) # (q5<q4, Top-Left) 
     if coupler.name=="coupler_q3_q4": dcs = np.linspace(-0.100, -0.072, 301) # (q3<q4, Top-Left) 
     if coupler.name=="coupler_q2_q3": dcs = np.linspace(0.050, 0.072, 301) # (q3>q2, Top-Left)
-    if coupler.name=="coupler_q1_q2": dcs = np.linspace(0.045, 0.070, 301) # (q1>q2, Top-Left) 
+    if coupler.name=="coupler_q1_q2": dcs = np.linspace(0.0519, 0.0591, 301) # (q1>q2, Top-Left) 
     # dcs = np.linspace(-0.3, 0.3, 501) # default wide-sweep 
 elif sweep_flux == "qc": 
-    if coupler.name=="coupler_q4_q5": dcs = np.linspace(-0.087, -0.065, 301) 
-    if coupler.name=="coupler_q3_q4": dcs = np.linspace(-0.083, -0.060, 301) 
-    if coupler.name=="coupler_q2_q3": dcs = np.linspace(-0.120, -0.053, 301) 
-    if coupler.name=="coupler_q1_q2": dcs = np.linspace(-0.062, -0.017, 301) 
+    if coupler.name=="coupler_q4_q5": dcs = np.linspace(-0.084, -0.051, 301) 
+    if coupler.name=="coupler_q3_q4": dcs = np.linspace(-0.082, -0.048, 301) 
+    if coupler.name=="coupler_q2_q3": dcs = np.linspace(-0.108, -0.060, 301) 
+    if coupler.name=="coupler_q1_q2": dcs = np.linspace(-0.062, -0.015, 301) 
     # dcs = np.linspace(-0.4, 0.4, 501) # default wide-sweep 
     # dcs = np.linspace(-0.15, 0.4, 501) # Catching Sweet-Spot 
 else: 
     ts = [30]
     dcs = [-0.045]
 
-if coupler.name=="coupler_q4_q5": cz_point, scale = -0.05758, -0.0119
-if coupler.name=="coupler_q3_q4": cz_point, scale = -0.0900, 0.0287 
-if coupler.name=="coupler_q2_q3": cz_point, scale = 0.06154, -0.0087
-if coupler.name=="coupler_q1_q2": cz_point, scale = 0.05553, 0.0397 
+if coupler.name=="coupler_q4_q5": cz_point, scale = -0.05884, -0.0039
+if coupler.name=="coupler_q3_q4": cz_point, scale = -0.09082, 0.0338 
+if coupler.name=="coupler_q2_q3": cz_point, scale = 0.06053, -0.0087
+if coupler.name=="coupler_q1_q2": cz_point, scale = 0.055533, 0.0828 
 
 print("%s: %s" % (q1.name, q1.xy.RF_frequency))
 print("%s: %s" % (q2.name, q2.xy.RF_frequency))

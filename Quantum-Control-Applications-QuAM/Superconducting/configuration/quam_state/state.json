@@ -127,7 +127,7 @@
                         "__class__": "quam.components.pulses.DragCosinePulse"
                     }
                 },
-                "intermediate_frequency": 207442170.06963,
+                "intermediate_frequency": 207450503.09143192,
                 "thread": "a",
                 "opx_output": "#/wiring/qubits/q1/xy/opx_output",
                 "__class__": "quam.components.channels.MWChannel"
@@ -145,8 +145,8 @@
                         "__class__": "quam.components.pulses.SquarePulse"
                     },
                     "cz1_2": {
-                        "length": 60,
-                        "amplitude": -0.06821133161329186,
+                        "length": 88,
+                        "amplitude": -0.06990159871957662,
                         "__class__": "quam.components.pulses.SquarePulse"
                     }
                 },
@@ -227,7 +227,7 @@
             "anharmonicity": 205400000,
             "freq_vs_flux_01_quad_term": -15446068839.758348,
             "T1": 2.7360837253629486e-05,
-            "T2ramsey": 1.8531825432685225e-05,
+            "T2ramsey": 1.8445872038119294e-05,
             "thermalization_time_factor": 10,
             "phi0_current": 31.47214721502215,
             "phi0_voltage": 0.629442944300443,
@@ -361,7 +361,7 @@
                         "__class__": "quam.components.pulses.DragCosinePulse"
                     }
                 },
-                "intermediate_frequency": -64328043.31055873,
+                "intermediate_frequency": -64310176.26438078,
                 "thread": "b",
                 "opx_output": "#/wiring/qubits/q2/xy/opx_output",
                 "__class__": "quam.components.channels.MWChannel"
@@ -461,7 +461,7 @@
             "anharmonicity": 210800000,
             "freq_vs_flux_01_quad_term": -15587915994.527456,
             "T1": 4.459006154521562e-05,
-            "T2ramsey": 2.142725175547637e-05,
+            "T2ramsey": 2.3543090055296626e-05,
             "thermalization_time_factor": 10,
             "phi0_current": 28.369115539085062,
             "phi0_voltage": 0.5673823107817012,
@@ -595,7 +595,7 @@
                         "__class__": "quam.components.pulses.DragCosinePulse"
                     }
                 },
-                "intermediate_frequency": 146980648.59679094,
+                "intermediate_frequency": 146952980.0518553,
                 "thread": "c",
                 "opx_output": "#/wiring/qubits/q3/xy/opx_output",
                 "__class__": "quam.components.channels.MWChannel"
@@ -613,52 +613,52 @@
                         "__class__": "quam.components.pulses.SquarePulse"
                     },
                     "cz3_2": {
-                        "length": 48,
-                        "amplitude": -0.07730841035676894,
+                        "length": 88,
+                        "amplitude": -0.07709397834356477,
                         "__class__": "quam.components.pulses.SquarePulse"
                     },
                     "cz3_4": {
-                        "length": 48,
-                        "amplitude": -0.23273652303506162,
+                        "length": 60,
+                        "amplitude": -0.23305216356732317,
                         "__class__": "quam.components.pulses.SquarePulse"
                     }
                 },
                 "opx_output": "#/wiring/qubits/q3/z/opx_output",
                 "filter_fir_taps": [
-                    0.3859689869580279,
-                    -0.5310871954624599,
-                    0.16413128612594752,
-                    -0.09555486166263931,
-                    0.09336195828655544,
-                    -0.0504424317444508,
-                    0.09412334947942616,
-                    -0.055374245974527725,
-                    -0.023876076301184233,
-                    0.01683480109432623,
-                    0.01814937204022349,
-                    -0.004378072861976697,
-                    -0.021581869686276824,
-                    0.021174669190326192,
-                    -0.007279558095545541,
-                    -0.0034645194597611867,
-                    -0.000567940626775845,
-                    0.003068860153778345,
-                    0.01821748676079008,
-                    -0.03956139660811936,
-                    0.050036195155050096,
-                    -0.049145922296881465,
-                    0.03761051493888404,
-                    -0.03771527084573567,
-                    0.011440107275845515,
-                    0.04228389020251818,
-                    -0.038575806444805655,
-                    -0.003273006320581263,
-                    0.013006762107142524,
-                    -0.0034090715240525154
+                    0.5141125725860165,
+                    -0.9828316008361754,
+                    0.46460816409285055,
+                    0.01736328209462704,
+                    -0.01243751724493016,
+                    -0.014597215464625448,
+                    0.01512383648911498,
+                    0.018854680089813405,
+                    -0.0284756332256096,
+                    -0.008644505853310468,
+                    0.03354525318577788,
+                    -0.008719521403254177,
+                    -0.019673940698294763,
+                    0.012071538586414056,
+                    0.002876092662947738,
+                    -0.0004360418763059107,
+                    -0.005991232741567969,
+                    0.006963506601084024,
+                    0.0008477108197926563,
+                    -0.01243676698561078,
+                    0.00850464626866071,
+                    0.005595279821488998,
+                    -0.004855595559155579,
+                    -0.004128359587452948,
+                    -0.002914588949575363,
+                    0.014684681713770692,
+                    -0.004643253721503211,
+                    -0.012819978097237544,
+                    0.012306452758457887,
+                    -0.003288717035862967
                 ],
                 "filter_iir_taps": [
-                    0.9765553045257785,
-                    0.6485553083641099
+                    0.9858464920514334,
+                    0.9204125020832065
                 ],
                 "independent_offset": 0.13849774788448116,
                 "min_offset": "#./independent_offset"
@@ -700,7 +700,7 @@
             "anharmonicity": 196200000,
             "freq_vs_flux_01_quad_term": -17933744627.865574,
             "T1": 2.9085903836946977e-05,
-            "T2ramsey": 7.582556653416963e-06,
+            "T2ramsey": 1.5136323820814764e-05,
             "thermalization_time_factor": 10,
             "phi0_current": 29.0777337982909,
             "phi0_voltage": 0.581554675965818,
@@ -834,7 +834,7 @@
                         "__class__": "quam.components.pulses.DragCosinePulse"
                     }
                 },
-                "intermediate_frequency": -325884308.29389787,
+                "intermediate_frequency": -325889249.98391086,
                 "thread": "d",
                 "opx_output": "#/wiring/qubits/q4/xy/opx_output",
                 "__class__": "quam.components.channels.MWChannel"
@@ -858,6 +858,42 @@
                     }
                 },
                 "opx_output": "#/wiring/qubits/q4/z/opx_output",
+                "filter_fir_taps": [
+                    0.7506351626654479,
+                    -1.7677541321543757,
+                    1.4731721753953897,
+                    -0.6432597654280652,
+                    0.2657020960575535,
+                    -0.10995212855333496,
+                    0.045083102721941305,
+                    -0.018986044960801182,
+                    0.007440458380582743,
+                    -0.0030345685380786117,
+                    0.0028285536399232443,
+                    3.2508981927273427e-05,
+                    -0.0005394430538488925,
+                    -0.0030937663999632894,
+                    0.00198177429476211,
+                    0.0043926769436126575,
+                    -0.0071265738832810704,
+                    0.004418867303126206,
+                    -0.0006606737196154474,
+                    -3.3651124393572693e-06,
+                    -0.004360573329914311,
+                    0.0008374324927153979,
+                    0.023416607851911766,
+                    -0.05045924642795153,
+                    0.053172912816506934,
+                    -0.035949108536422136,
+                    0.0215285934305502,
+                    -0.015730474188957243,
+                    0.009616391792524092,
+                    -0.002639152691712667
+                ],
+                "filter_iir_taps": [
+                    0.9847186294190042,
+                    0.9070283143968579
+                ],
                 "independent_offset": 0.15221339445206397,
                 "min_offset": "#./independent_offset"
             },
@@ -898,7 +934,7 @@
             "anharmonicity": 193400000,
             "freq_vs_flux_01_quad_term": -16446098741.554892,
             "T1": 2.7050327431625877e-05,
-            "T2ramsey": 2.2917768130100675e-05,
+            "T2ramsey": 1.735783809864489e-05,
             "thermalization_time_factor": 10,
             "phi0_current": 26.77030728172833,
             "phi0_voltage": 0.5354061456345666,
@@ -1032,7 +1068,7 @@
                         "__class__": "quam.components.pulses.DragCosinePulse"
                     }
                 },
-                "intermediate_frequency": -20752150.64798811,
+                "intermediate_frequency": -20764552.405170616,
                 "thread": "e",
                 "opx_output": "#/wiring/qubits/q5/xy/opx_output",
                 "__class__": "quam.components.channels.MWChannel"
@@ -1050,12 +1086,48 @@
                         "__class__": "quam.components.pulses.SquarePulse"
                     },
                     "cz5_4": {
-                        "length": 48,
-                        "amplitude": -0.17233145930680818,
+                        "length": 88,
+                        "amplitude": -0.1732650364352627,
                         "__class__": "quam.components.pulses.SquarePulse"
                     }
                 },
                 "opx_output": "#/wiring/qubits/q5/z/opx_output",
+                "filter_fir_taps": [
+                    0.7458520179455291,
+                    -1.7210911898276922,
+                    1.4199639876429921,
+                    -0.6400485922520596,
+                    0.27340629430395497,
+                    -0.09144951429569785,
+                    -0.002319257206143073,
+                    0.042482617350558735,
+                    -0.041112075143994974,
+                    0.012895973312950209,
+                    0.018931346608938082,
+                    -0.03418085584091496,
+                    0.026625917521575195,
+                    -0.006691818845914011,
+                    -0.007271382755260419,
+                    0.005207933051694624,
+                    0.013080252380231137,
+                    -0.035639641048659604,
+                    0.03667248555395418,
+                    -0.007227394720671158,
+                    -0.031004902441592704,
+                    0.0487785050383912,
+                    -0.03171997086037365,
+                    -0.003437663306416777,
+                    0.025695920666273797,
+                    -0.02674506865032202,
+                    0.013785968537174786,
+                    0.0030742443498273913,
+                    -0.00829656583815955,
+                    0.0030198226349694808
+                ],
+                "filter_iir_taps": [
+                    0.9811500377684264,
+                    0.8686770880668307
+                ],
                 "independent_offset": 0.1148126395514032,
                 "min_offset": "#./independent_offset"
             },
@@ -1096,7 +1168,7 @@
             "anharmonicity": 140000000,
             "freq_vs_flux_01_quad_term": -16572430846.484106,
             "T1": 4.1291512589674674e-05,
-            "T2ramsey": 2.449284552845146e-05,
+            "T2ramsey": 8.17736835161895e-06,
             "thermalization_time_factor": 10,
             "phi0_current": 33.26182515010174,
             "phi0_voltage": 0.6652365030020349,
@@ -1122,8 +1194,8 @@
                         "__class__": "quam.components.pulses.SquarePulse"
                     },
                     "cz": {
-                        "length": 60,
-                        "amplitude": -0.05720612625,
+                        "length": 88,
+                        "amplitude": -0.049571291645519995,
                         "__class__": "quam.components.pulses.SquarePulse"
                     }
                 },
@@ -1148,8 +1220,8 @@
                         "__class__": "quam.components.pulses.SquarePulse"
                     },
                     "cz": {
-                        "length": 48,
-                        "amplitude": -0.10648319968881424,
+                        "length": 88,
+                        "amplitude": -0.10043328056510244,
                         "__class__": "quam.components.pulses.SquarePulse"
                     }
                 },
@@ -1174,8 +1246,8 @@
                         "__class__": "quam.components.pulses.SquarePulse"
                     },
                     "cz": {
-                        "length": 48,
-                        "amplitude": -0.10319543000000002,
+                        "length": 60,
+                        "amplitude": -0.11048567109,
                         "__class__": "quam.components.pulses.SquarePulse"
                     }
                 },
@@ -1200,8 +1272,8 @@
                         "__class__": "quam.components.pulses.SquarePulse"
                     },
                     "cz": {
-                        "length": 48,
-                        "amplitude": -0.11256876983617685,
+                        "length": 88,
+                        "amplitude": -0.09938541439500001,
                         "__class__": "quam.components.pulses.SquarePulse"
                     }
                 },

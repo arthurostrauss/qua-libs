@@ -32,6 +32,8 @@ import seaborn as sns
 from copy import deepcopy
 from warnings import warn
 
+from qualang_tools.units import unit
+u = unit(coerce_to_integer=True)
 
 
 class XEB:
@@ -251,6 +253,7 @@ class XEB:
                                     align_transmon_pair(qubit_pair)
 
                         # Measure the state
+                        wait(150 * u.ns)
                         align()
                         for q_idx, qubit in enumerate(self.qubits):
                             
