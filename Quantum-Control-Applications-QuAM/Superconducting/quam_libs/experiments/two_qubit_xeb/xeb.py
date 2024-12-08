@@ -521,12 +521,18 @@ class XEBJob:
             circuits = generate_circuits(self.xeb_config, self.gate_indices)
         return circuits
 
-    def result(self):
+    def result(self, disjoint_processing: Optional[bool] = None):
         """
         Returns the results of the XEB experiment
+        
+        Args:
+            disjoint_processing: Indicate if disjoint processing should be applied to the results
         Returns: XEBResult object containing the results of the experiment
 
         """
+        if disjoint_processing is not None:
+            assert isinstance(disjoint_processing, bool), "disjoint_processing should be a boolean"
+            self.xeb_config.disjoint_processing = disjoint_processing
         if self._simulate:
             result = self.job.result()
             counts = result.get_counts()
