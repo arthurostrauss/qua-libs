@@ -751,7 +751,10 @@ class XEBResult:
                 qc = self.circuits[s][d_].remove_final_measurements(inplace=False)
 
                 if not self.xeb_config.disjoint_processing:
-                    expected_probs[s, d_] = np.round(Statevector(qc).probabilities(), 5)
+                    if "expected_probs" in self.saved_data.keys():
+                        expected_probs[s, d_] = self.saved_data["expected_probs"][s][d_]
+                    else:
+                        expected_probs[s, d_] = np.round(Statevector(qc).probabilities(), 5)
                     measured_probs[s, d_] = (
                         np.array([counts[binary(i, n_qubits)][s][d_] for i in range(dim)]) / self.xeb_config.n_shots
                     )
@@ -783,7 +786,10 @@ class XEBResult:
 
                 else:
                     for q in range(n_qubits):
-                        expected_probs[q, s, d_] = np.round(Statevector(qc).probabilities([q]), 5)
+                        if "expected_probs" in self.saved_data.keys():
+                            expected_probs[q, s, d_] = self.saved_data["expected_probs"][q][s][d_]
+                        else:
+                            expected_probs[q, s, d_] = np.round(Statevector(qc).probabilities([q]), 5)
                         measured_probs[q, s, d_] = np.array(
                             [1 - states[f"state{q}"][s][d_], states[f"state{q}"][s][d_]]
                         )
