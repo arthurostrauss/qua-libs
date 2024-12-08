@@ -2,11 +2,13 @@
 This script contains useful QUA macros for the two-qubit cross-entropy benchmarking use case.
 
 Author: Arthur Strauss - Quantum Machines
-Last updated: 2024-08-11
+Last updated: 2024-12-08
 """
 
 from matplotlib import pyplot as plt
 from qiskit.transpiler import CouplingMap
+from qiskit.circuit import QuantumCircuit, QuantumRegister
+from typing import List
 from qm.qua import *
 from qualang_tools.addons.variables import assign_variables_to_element
 import numpy as np
@@ -187,6 +189,40 @@ def get_parallel_gate_combinations(coupling_map: CouplingMap, direction="forward
                     max_parallel_combinations.append(combo)
 
     return max_parallel_combinations
+
+
+def generate_circuits(xeb_config, gate_indices: np.ndarray) -> List[List[QuantumCircuit]]:
+    two_qubit_gate_pattern = 0
+    n_qubits = xeb_config.n_qubits
+    max_depth = xeb_config.depths[-1]
+    circuits = []
+    for s in range(xeb_config.seqs):
+        circuits.append([])
+        for d_, depth in enumerate(xeb_config.depths):
+            q_regs = [QuantumRegister(1, qubit.name) for qubit in xeb_config.qubits]
+            qc = QuantumCircuit(*q_regs)
+            for d in range(depth):
+                for q in range(n_qubits):
+                    sq_gate = xeb_config.gate_set[gate_indices[s, q, d]].gate
+                    qc.append(sq_gate, [q])
+                qc.barrier()
+                if xeb_config.two_qb_gate is not None:
+                    for i, combination in enumerate(xeb_config.available_combinations):
+                        if i == two_qubit_gate_pattern:
+                            for pair in combination:
+                                qc.append(xeb_config.two_qb_gate.gate, pair)
+                            qc.barrier()
+                            break
+                    if two_qubit_gate_pattern == len(xeb_config.available_combinations) - 1:
+                        two_qubit_gate_pattern = 0
+                    else:
+                        two_qubit_gate_pattern += 1
+
+                    # qc.append(self.xeb_config.two_qb_gate.gate, [0, 1])
+            qc.measure_all()
+            circuits[s].append(qc)
+            two_qubit_gate_pattern = 0
+    return circuits
 
 
 def binary(n, length):
