@@ -554,12 +554,12 @@ class XEBJob:
                 for key in [binary(i, self.xeb_config.n_qubits) for i in range(self.xeb_config.dim)]:
                     if key not in count.keys():
                         count[key] = 0
-            states = [{f"state{q}": 0.0 for q in range(self.xeb_config.n_qubits)} for _ in range(len(counts))]
+            states = [{f"state_{q}": 0.0 for q in range(self.xeb_config.n_qubits)} for _ in range(len(counts))]
             for c, count in enumerate(counts):
                 for key, value in count.items():
                     for i, bit in enumerate(reversed(key)):
                         if bit == "1":
-                            states[c][f"state{i}"] += value
+                            states[c][f"state_{i}"] += value
             states = {
                 key: np.reshape(
                     [state[key] / self.xeb_config.n_shots for state in states],
@@ -592,9 +592,15 @@ class XEBJob:
             for i in range(self.xeb_config.dim):
                 counts[binary(i, n_qubits)] = result.get(f"s{binary(i, n_qubits)}").fetch_all()["value"]
 
-            saved_data = {**quadratures, **states, **counts, **gate_indices, **amp_st}
-            saved_data["gate_indices"] = self.gate_indices
-            saved_data["gate_sequences"] = self.gate_sequences
+            saved_data = {
+                **quadratures,
+                **states,
+                **counts,
+                **gate_indices,
+                **amp_st,
+                "gate_indices": self.gate_indices,
+                "gate_sequences": self.gate_sequences,
+            }
 
         return XEBResult(
             self.xeb_config,
@@ -645,7 +651,7 @@ class XEBJob:
             for q in range(self.xeb_config.n_qubits):
                 for d in range(self.xeb_config.depths[-1]):
                     gate_sequences[s, q, d] = self.xeb_config.gate_set[self.gate_indices[s, q, d]].name
-      
+
         return gate_sequences
 
     def plot_simulated_samples(self):
@@ -816,7 +822,7 @@ class XEBResult:
                         else:
                             expected_probs[q, s, d_] = np.round(Statevector(qc).probabilities([q]), 5)
                         measured_probs[q, s, d_] = np.array(
-                            [1 - states[f"state{q}"][s][d_], states[f"state{q}"][s][d_]]
+                            [1 - states[f"state_{q}"][s][d_], states[f"state_{q}"][s][d_]]
                         )
 
                         # Calculate the cross-entropy fidelities (logarithmic)
