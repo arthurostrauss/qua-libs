@@ -706,25 +706,26 @@ class XEBResult:
             data_handler: DataHandler object to handle the data
         """
         data: Dict = json.load(open(directory + "/data.json", "r"))
+        arrays:Dict = np.load(directory + "/arrays.npz")
         metadata: Dict = json.load(open(directory + "/node.json", "r"))
         xeb_config = XEBConfig.from_dict(metadata["metadata"])
         if disjoint_processing is not None:
             assert isinstance(disjoint_processing, bool), "disjoint_processing should be a boolean"
             xeb_config.disjoint_processing = disjoint_processing
-        gate_indices = np.load(data["gate_indices"])
+        gate_indices = np.load(arrays["gate_indices"])
         circuits = generate_circuits(xeb_config, gate_indices, xeb_config.available_combinations)
 
         new_data = {"states": {}, "counts": {}, "quadratures": {}, "amp_st": {}}
 
         for key, value in data.items():
             if "state" in key:
-                new_data["states"][key] = np.load(value)
+                new_data["states"][key] = arrays[key]
             elif key.isnumeric():
-                new_data["counts"][key] = np.load(value)
+                new_data["counts"][key] = arrays[key]
             elif "amp_matrix" in key:
-                new_data["amp_st"][key] = np.load(value)
-            elif "I" in key or "Q" in key:
-                new_data["quadratures"][key] = np.load(value)
+                new_data["amp_st"][key] = arrays[key]
+            elif key.startswith("I") or key.startswith("Q"):
+                new_data["quadratures"][key] = arrays[key]
             else:
                 new_data[key] = value
 
