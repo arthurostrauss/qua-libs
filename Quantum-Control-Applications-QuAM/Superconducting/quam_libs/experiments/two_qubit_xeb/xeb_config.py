@@ -84,7 +84,7 @@ class XEBConfig:
         """
         config_dict = {
             "seqs": self.seqs,
-            "depths": self.depths,
+            "depths": self.depths.tolist(),
             "n_shots": self.n_shots,
             "qubits": [qubit.name for qubit in self.qubits],
             "baseline_gate_name": self.baseline_gate_name,
