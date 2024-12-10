@@ -686,13 +686,16 @@ class XEBResult:
                 "measured_probs": self._measured_probs,
                 "expected_probs": self._expected_probs,
                 "log_fidelities": self._log_fidelities,
-                "linear_fidelities": self.linear_fidelities,
+                "linear_fidelities": (
+                    np.array(self.linear_fidelities["fidelity"])
+                    if not self.xeb_config.disjoint_processing
+                    else np.array([fidelity["fidelity"] for fidelity in self.linear_fidelities])
+                ),
                 "singularities": np.array(self._singularities),
             }
         )
         if self.xeb_config.should_save_data and self.data_handler is not None:
-            self.data_handler.save_data(self.data, self.xeb_config.data_folder_name,
-                                        metadata=self.xeb_config.as_dict())
+            self.data_handler.save_data(self.data, self.xeb_config.data_folder_name, metadata=self.xeb_config.as_dict())
 
     @classmethod
     def from_data(
@@ -707,7 +710,7 @@ class XEBResult:
             data_handler: DataHandler object to handle the data
         """
         data: Dict = json.load(open(directory + "/data.json", "r"))
-        arrays:Dict = np.load(directory + "/arrays.npz")
+        arrays: Dict = np.load(directory + "/arrays.npz")
         metadata: Dict = json.load(open(directory + "/node.json", "r"))
         xeb_config = XEBConfig.from_dict(metadata["metadata"])
         if disjoint_processing is not None:
@@ -903,7 +906,7 @@ class XEBResult:
 
         if self.xeb_config.disjoint_processing:
             for q in range(len(self.xeb_config.qubits)):
-                linear_fidelities = self._linear_fidelities[q]
+                linear_fidelities = self.linear_fidelities[q]
                 xx = np.linspace(0, linear_fidelities["depth"].max())
                 try:  # Fit the data for the linear XEB
                     if fit_linear:
@@ -1167,10 +1170,10 @@ class XEBResult:
         Returns: Linear fidelities
         """
         if self.xeb_config.disjoint_processing:
-            fidelities = [self._linear_fidelities[q]["fidelity"] for q in range(self.xeb_config.n_qubits)]
+            fidelities = [self._linear_fidelities[q] for q in range(self.xeb_config.n_qubits)]
         else:
-            fidelities = self._linear_fidelities["fidelity"]
-        return  fidelities
+            fidelities = self._linear_fidelities
+        return fidelities
 
     @property
     def singularities(self):

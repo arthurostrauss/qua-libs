@@ -92,7 +92,7 @@ class XEBConfig:
         """
         Create an XEBConfig object from a dictionary that contains all relevant parameters.
         This method will usually be used to load a configuration from previously saved data from another run.
-        
+
         Args:
             config_dict (Dict): Dictionary containing the configuration parameters
             machine (Optional[QuAM]): QuAM object containing the qubits and qubit pairs used in the experiment
