@@ -712,7 +712,7 @@ class XEBResult:
         if disjoint_processing is not None:
             assert isinstance(disjoint_processing, bool), "disjoint_processing should be a boolean"
             xeb_config.disjoint_processing = disjoint_processing
-        gate_indices = np.load(arrays["gate_indices"])
+        gate_indices = arrays["gate_indices"]
         circuits = generate_circuits(xeb_config, gate_indices, xeb_config.available_combinations)
 
         new_data = {"states": {}, "counts": {}, "quadratures": {}, "amp_st": {}}
