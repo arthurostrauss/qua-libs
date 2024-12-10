@@ -89,7 +89,7 @@ class XEBConfig:
             "qubits": [qubit.name for qubit in self.qubits],
             "baseline_gate_name": self.baseline_gate_name,
             "gate_set_choice": self.gate_set_choice,
-            "two_qb_gate": self.two_qb_gate.name,
+            "two_qb_gate": self.two_qb_gate.name if self.two_qb_gate else None,
             "qubit_pairs": [pair.name for pair in self.qubit_pairs],
             "coupling_map": list(self.coupling_map.get_edges()),
             "available_combinations": self.available_combinations,
