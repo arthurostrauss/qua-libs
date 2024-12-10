@@ -66,17 +66,8 @@ class XEBConfig:
         self.gate_set = QUAGateSet(self.gate_set_choice, self.baseline_gate_name)
         self.n_qubits = len(self.qubits)
         self.dim = 2**self.n_qubits
-        # Create CouplingMap from QuAM qubit pairs
-        qubit_dict = {qubit: i for i, qubit in enumerate(self.qubits)}
-        coupling_map = CouplingMap()
-        for qubit in range(len(self.qubits)):
-            coupling_map.add_physical_qubit(qubit)
-        for qubit_pair in self.qubit_pairs:
-            if qubit_pair.qubit_control not in self.qubits or qubit_pair.qubit_target not in self.qubits:
-                raise ValueError("Qubit pairs must be formed by qubits present in the qubits list")
-            coupling_map.add_edge(qubit_dict[qubit_pair.qubit_control], qubit_dict[qubit_pair.qubit_target])
-        self.coupling_map = coupling_map
-        self.available_combinations = gate_combinations(self.coupling_map)
+        self.available_combinations = None
+        self.coupling_map = None
 
     def as_dict(self):
         """
@@ -91,7 +82,7 @@ class XEBConfig:
             "gate_set_choice": self.gate_set_choice,
             "two_qb_gate": self.two_qb_gate.name if self.two_qb_gate else None,
             "qubit_pairs": [pair.name for pair in self.qubit_pairs],
-            "coupling_map": list(self.coupling_map.get_edges()),
+            "coupling_map": self.coupling_map,
             "available_combinations": self.available_combinations,
         }
         return config_dict
@@ -99,7 +90,12 @@ class XEBConfig:
     @classmethod
     def from_dict(cls, config_dict: Dict, machine: Optional[QuAM] = None):
         """
-        Create an XEBConfig object from a dictionary
+        Create an XEBConfig object from a dictionary that contains all relevant parameters.
+        This method will usually be used to load a configuration from previously saved data from another run.
+        
+        Args:
+            config_dict (Dict): Dictionary containing the configuration parameters
+            machine (Optional[QuAM]): QuAM object containing the qubits and qubit pairs used in the experiment
         """
         qubits_names = config_dict["qubits"]
         qubits = [machine.qubits[qubit_name] if machine is not None else qubit_name for qubit_name in qubits_names]
@@ -109,7 +105,10 @@ class XEBConfig:
             for qubit_pair_name in qubit_pairs_names
         ]
         two_qb_gate = QUAGate(config_dict["two_qb_gate"]) if config_dict["two_qb_gate"] else None
-        return cls(
+        if config_dict["gate_set_choice"] not in ["sw", "t"]:
+            raise ValueError("Gate set choice must be either 'sw' or 't'")
+
+        new_class = cls(
             seqs=config_dict["seqs"],
             depths=config_dict["depths"],
             n_shots=config_dict["n_shots"],
@@ -119,3 +118,6 @@ class XEBConfig:
             two_qb_gate=two_qb_gate,
             qubit_pairs=qubit_pairs,
         )
+        new_class.coupling_map = config_dict["coupling_map"]
+        new_class.available_combinations = config_dict["available_combinations"]
+        return new_class

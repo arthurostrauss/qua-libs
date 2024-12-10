@@ -191,15 +191,18 @@ def get_parallel_gate_combinations(coupling_map: CouplingMap, direction="forward
     return max_parallel_combinations
 
 
-def generate_circuits(xeb_config, gate_indices: np.ndarray) -> List[List[QuantumCircuit]]:
+def generate_circuits(xeb_config, gate_indices: np.ndarray, available_combinations) -> List[List[QuantumCircuit]]:
     two_qubit_gate_pattern = 0
     n_qubits = xeb_config.n_qubits
-    max_depth = xeb_config.depths[-1]
     circuits = []
+    if all([isinstance(qubit, Transmon) for qubit in xeb_config.qubits]):
+        qubit_names = [qubit.name for qubit in xeb_config.qubits]
+    else:
+        qubit_names = xeb_config.qubits
     for s in range(xeb_config.seqs):
         circuits.append([])
         for d_, depth in enumerate(xeb_config.depths):
-            q_regs = [QuantumRegister(1, qubit.name) for qubit in xeb_config.qubits]
+            q_regs = [QuantumRegister(1, qubit_name) for qubit_name in qubit_names]
             qc = QuantumCircuit(*q_regs)
             for d in range(depth):
                 for q in range(n_qubits):
@@ -207,13 +210,13 @@ def generate_circuits(xeb_config, gate_indices: np.ndarray) -> List[List[Quantum
                     qc.append(sq_gate, [q])
                 qc.barrier()
                 if xeb_config.two_qb_gate is not None:
-                    for i, combination in enumerate(xeb_config.available_combinations):
+                    for i, combination in enumerate(available_combinations):
                         if i == two_qubit_gate_pattern:
                             for pair in combination:
                                 qc.append(xeb_config.two_qb_gate.gate, pair)
                             qc.barrier()
                             break
-                    if two_qubit_gate_pattern == len(xeb_config.available_combinations) - 1:
+                    if two_qubit_gate_pattern == len(available_combinations) - 1:
                         two_qubit_gate_pattern = 0
                     else:
                         two_qubit_gate_pattern += 1
