@@ -641,10 +641,13 @@ class XEBJob:
         gate_sequences = np.zeros(
             (self.xeb_config.seqs, self.xeb_config.n_qubits, self.xeb_config.depths[-1]), dtype=str
         )
-        for s in range(self.xeb_config.seqs):
-            for q in range(self.xeb_config.n_qubits):
-                for d in range(self.xeb_config.depths[-1]):
-                    gate_sequences[s, q, d] = self.xeb_config.gate_set[self._gate_indices[s, q, d]].name
+        if self.gate_indices:
+            for s in range(self.xeb_config.seqs):
+                for q in range(self.xeb_config.n_qubits):
+                    for d in range(self.xeb_config.depths[-1]):
+                        gate_sequences[s, q, d] = self.xeb_config.gate_set[self.gate_indices[s, q, d]].name
+        else:
+            raise ValueError("No gate indices found. Run the experiment to retrieve the gate sequences.")
         return gate_sequences
 
     def plot_simulated_samples(self):
