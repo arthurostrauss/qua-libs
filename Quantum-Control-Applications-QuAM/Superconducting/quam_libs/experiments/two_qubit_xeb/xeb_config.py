@@ -6,7 +6,7 @@ from qiskit.transpiler import CouplingMap
 
 from .gateset import QUAGateSet
 from .qua_gate import QUAGate
-from ...components import Transmon, TransmonPair
+from ...components import Transmon, TransmonPair, QuAM
 from .macros import get_parallel_gate_combinations as gate_combinations
 
 
@@ -38,8 +38,8 @@ class XEBConfig:
     seqs: int
     depths: Union[np.ndarray, List[int]]
     n_shots: int
-    readout_qubits: List[Transmon]
     qubits: List[Transmon]
+    readout_qubits: Optional[List[Transmon]] = None
     baseline_gate_name: str = "sx"
     gate_set_choice: Union[Literal["sw", "t"], Dict[int, QUAGate]] = "sw"
     two_qb_gate: Optional[QUAGate] = None
@@ -95,3 +95,27 @@ class XEBConfig:
             "available_combinations": self.available_combinations,
         }
         return config_dict
+
+    @classmethod
+    def from_dict(cls, config_dict: Dict, machine: Optional[QuAM] = None):
+        """
+        Create an XEBConfig object from a dictionary
+        """
+        qubits_names = config_dict["qubits"]
+        qubits = [machine.qubits[qubit_name] if machine is not None else qubit_name for qubit_name in qubits_names]
+        qubit_pairs_names = config_dict["qubit_pairs"]
+        qubit_pairs = [
+            machine.qubit_pairs[qubit_pair_name] if machine is not None else qubit_pair_name
+            for qubit_pair_name in qubit_pairs_names
+        ]
+        two_qb_gate = QUAGate(config_dict["two_qb_gate"]) if config_dict["two_qb_gate"] else None
+        return cls(
+            seqs=config_dict["seqs"],
+            depths=config_dict["depths"],
+            n_shots=config_dict["n_shots"],
+            qubits=qubits,
+            baseline_gate_name=config_dict["baseline_gate_name"],
+            gate_set_choice=config_dict["gate_set_choice"],
+            two_qb_gate=two_qb_gate,
+            qubit_pairs=qubit_pairs,
+        )

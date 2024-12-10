@@ -524,7 +524,7 @@ class XEBJob:
     def result(self, disjoint_processing: Optional[bool] = None):
         """
         Returns the results of the XEB experiment
-        
+
         Args:
             disjoint_processing: Indicate if disjoint processing should be applied to the results
         Returns: XEBResult object containing the results of the experiment
@@ -595,11 +595,10 @@ class XEBJob:
                     saved_data2.update(data)
                 else:
                     saved_data2[key] = data
-            saved_data2.update(xeb_config)
             saved_data2["gate_sequences"] = self.gate_sequences
             saved_data2["gate_indices"] = self.gate_indices
 
-            self.data_handler.save_data(data=saved_data2, name=self.xeb_config.data_folder_name)
+            self.data_handler.save_data(data=saved_data2, name=self.xeb_config.data_folder_name, metadata=xeb_config)
 
         return XEBResult(self.xeb_config, self.circuits, saved_data, self.data_handler)
 
@@ -682,16 +681,17 @@ class XEBResult:
         ) = self.retrieve_data()
 
     @classmethod
-    def from_data(cls, xeb_config: XEBConfig, saved_data_file: str, data_handler: DataHandler = None):
+    def from_data(cls, directory: str, data_handler: DataHandler = None):
         """
         Retrieve the XEBResult object from a saved data file (JSON format)
 
         Args:
-            xeb_config: XEBConfig object containing the parameters of the experiment
-            saved_data_file: Path to the saved data file
+            directory: Directory of the saved data files (should contain data.json and node.json)
             data_handler: DataHandler object to handle the data
         """
-        data: Dict = json.load(open(saved_data_file, "r"))
+        data: Dict = json.load(open(directory + "/data.json", "r"))
+        metadata: Dict = json.load(open(directory + "/node.json", "r"))
+        xeb_config = XEBConfig.from_dict(metadata["metadata"])
         gate_indices = np.load(data["gate_indices"])
         circuits = generate_circuits(xeb_config, gate_indices)
 
@@ -707,7 +707,7 @@ class XEBResult:
             elif "I" in key or "Q" in key:
                 new_data["quadratures"][key] = np.load(value)
             else:
-                new_data[key] = np.load(value)
+                new_data[key] = value
 
         return cls(xeb_config, circuits, new_data, data_handler)
 
