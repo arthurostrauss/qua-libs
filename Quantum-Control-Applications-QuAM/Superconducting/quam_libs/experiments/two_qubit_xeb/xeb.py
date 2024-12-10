@@ -692,22 +692,22 @@ class XEBResult:
             data_handler: DataHandler object to handle the data
         """
         data: Dict = json.load(open(saved_data_file, "r"))
-        gate_indices = data["gate_indices"]
+        gate_indices = np.load(data["gate_indices"])
         circuits = generate_circuits(xeb_config, gate_indices)
 
         new_data = {"states": {}, "counts": {}, "quadratures": {}, "amp_st": {}}
 
         for key, value in data.items():
             if "state" in key:
-                new_data["states"][key] = value
+                new_data["states"][key] = np.load(value)
             elif key.isnumeric():
-                new_data["counts"][key] = value
+                new_data["counts"][key] = np.load(value)
             elif "amp_matrix" in key:
-                new_data["amp_st"][key] = value
+                new_data["amp_st"][key] = np.load(value)
             elif "I" in key or "Q" in key:
-                new_data["quadratures"][key] = value
+                new_data["quadratures"][key] = np.load(value)
             else:
-                new_data[key] = value
+                new_data[key] = np.load(value)
 
         return cls(xeb_config, circuits, new_data, data_handler)
 
