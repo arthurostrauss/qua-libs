@@ -686,12 +686,13 @@ class XEBResult:
                 "measured_probs": self._measured_probs,
                 "expected_probs": self._expected_probs,
                 "log_fidelities": self._log_fidelities,
-                "linear_fidelities": self._linear_fidelities,
+                "linear_fidelities": self.linear_fidelities,
                 "singularities": np.array(self._singularities),
             }
         )
         if self.xeb_config.should_save_data and self.data_handler is not None:
-            self.data_handler.save_data(self.data, self.xeb_config.data_folder_name, metadata=self.xeb_config.as_dict())
+            self.data_handler.save_data(self.data, self.xeb_config.data_folder_name,
+                                        metadata=self.xeb_config.as_dict())
 
     @classmethod
     def from_data(
@@ -772,7 +773,7 @@ class XEBResult:
 
                 if not self.xeb_config.disjoint_processing:
                     if "expected_probs" in self.data.keys():
-                        expected_probs[s, d_] = self.data["expected_probs"][s][d_]
+                        expected_probs[s, d_] = self.data["expected_probs"][s, d_]
                     else:
                         expected_probs[s, d_] = np.round(Statevector(qc).probabilities(), 5)
                     measured_probs[s, d_] = (
@@ -1165,7 +1166,11 @@ class XEBResult:
         Linear fidelities
         Returns: Linear fidelities
         """
-        return self._linear_fidelities
+        if self.xeb_config.disjoint_processing:
+            fidelities = [self._linear_fidelities[q]["fidelity"] for q in range(self.xeb_config.n_qubits)]
+        else:
+            fidelities = self._linear_fidelities["fidelity"]
+        return  fidelities
 
     @property
     def singularities(self):

@@ -77,11 +77,11 @@ class XEBConfig:
             "seqs": self.seqs,
             "depths": self.depths.tolist(),
             "n_shots": self.n_shots,
-            "qubits": [qubit.name for qubit in self.qubits],
+            "qubits": [qubit.name if isinstance(qubit, Transmon) else qubit for qubit in self.qubits],
             "baseline_gate_name": self.baseline_gate_name,
             "gate_set_choice": self.gate_set_choice,
             "two_qb_gate": self.two_qb_gate.name if self.two_qb_gate else None,
-            "qubit_pairs": [pair.name for pair in self.qubit_pairs],
+            "qubit_pairs": [pair.name if isinstance(pair, TransmonPair) else pair for pair in self.qubit_pairs],
             "coupling_map": list(self.coupling_map.get_edges()) if self.coupling_map else None,
             "available_combinations": self.available_combinations,
         }
