@@ -15,6 +15,10 @@ from .macros import (
     get_parallel_gate_combinations as gate_combinations,
     align_transmon_pair,
     generate_circuits,
+    compute_log_fidelity,
+    evaluate_log_fidelity,
+    update_record,
+    update_data_frame,
 )
 import matplotlib.pyplot as plt
 from qiskit_aer import AerJob
@@ -765,11 +769,12 @@ class XEBResult:
         depths = self.xeb_config.depths
         counts = self.counts
         states = self.states
-        
-        existing_data = 'joint_expected_probs' in self.data.keys()
+
+        existing_data = "joint_expected_probs" in self.data.keys()
+
         if not existing_data:
             expected_probs = np.zeros((seqs, len(depths), dim))
-            disjoint_expected_probs = np.zeros((n_qubits, seqs, len(depths), dim))
+            disjoint_expected_probs = np.zeros((n_qubits, seqs, len(depths), 2))
         else:
             expected_probs = self.data["joint_expected_probs"]
             disjoint_expected_probs = self.data["disjoint_expected_probs"]
@@ -788,15 +793,13 @@ class XEBResult:
             log_fidelities = np.zeros((n_qubits, seqs, len(depths)))
 
         for s in range(seqs):
-            for d_, d in enumerate(depths):
+            for d_, depth in enumerate(depths):
                 qc = self.circuits[s][d_].remove_final_measurements(inplace=False)
                 if not existing_data:
                     statevector = Statevector(qc)
                     expected_probs[s, d_] = np.round(statevector.probabilities(), 5)
                     for q in range(n_qubits):
-                        disjoint_expected_probs[q, s, d_] = np.round(
-                            statevector.probabilities([q]), 5
-                        )
+                        disjoint_expected_probs[q, s, d_] = np.round(statevector.probabilities([q]), 5)
 
                 if not self.xeb_config.disjoint_processing:
                     measured_probs[s, d_] = (
@@ -804,29 +807,11 @@ class XEBResult:
                     )
 
                     # Calculate the cross-entropy fidelities (logarithmic)
-                    xe_incoherent = cross_entropy(incoherent_distribution, expected_probs[s, d_])
-                    xe_measured = cross_entropy(measured_probs[s, d_], expected_probs[s, d_])
-                    xe_expected = cross_entropy(expected_probs[s, d_], expected_probs[s, d_])
-
-                    f_xeb = (xe_incoherent - xe_measured) / (xe_incoherent - xe_expected)
-                    if np.isinf(f_xeb) or np.isnan(f_xeb):
-                        singularity.append((s, d_))
-                        log_fidelities[s, d_] = np.nan  # Set all singularities to NaN
-                    elif f_xeb < 0 or f_xeb > 1:
-                        outlier.append(((s, d_), f_xeb))
-                        log_fidelities[s, d_] = np.nan  # Set all outliers to NaN
-                    else:
-                        log_fidelities[s, d_] = f_xeb
+                    f_xeb = compute_log_fidelity(incoherent_distribution, expected_probs[s, d_], measured_probs[s, d_])
+                    log_fidelities[s, d_] = evaluate_log_fidelity(f_xeb, singularity, outlier, s, d_)
 
                     # Store records for linear XEB post-processing
-                    records += [
-                        {
-                            "sequence": s,
-                            "depth": depths[d_],
-                            "pure_probs": expected_probs[s, d_],
-                            "sampled_probs": measured_probs[s, d_],
-                        }
-                    ]
+                    records = update_record(records, s, depth, expected_probs[s, d_], measured_probs[s, d_], dim)
 
                 else:
                     for q, qubit_name in enumerate(qubit_names):
@@ -835,66 +820,26 @@ class XEBResult:
                         )
 
                         # Calculate the cross-entropy fidelities (logarithmic)
-                        xe_incoherent = cross_entropy(incoherent_distribution, disjoint_expected_probs[q, s, d_])
-                        xe_measured = cross_entropy(measured_probs[q, s, d_], disjoint_expected_probs[q, s, d_])
-                        xe_expected = cross_entropy(
-                            disjoint_expected_probs[q, s, d_], disjoint_expected_probs[q, s, d_]
+                        f_xeb = compute_log_fidelity(
+                            incoherent_distribution, disjoint_expected_probs[q, s, d_], measured_probs[q, s, d_]
                         )
-
-                        f_xeb = (xe_incoherent - xe_measured) / (xe_incoherent - xe_expected)
-                        if np.isinf(f_xeb) or np.isnan(f_xeb):
-                            singularity[q].append((s, d_))
-                            log_fidelities[q, s, d_] = np.nan
-                        elif f_xeb < 0 or f_xeb > 1:
-                            outlier[q].append(((s, d_), f_xeb))
-                            log_fidelities[q, s, d_] = np.nan
-                        else:
-                            log_fidelities[q, s, d_] = f_xeb
-                            # Store records for linear XEB post-processing
-                        records[q] += [
-                            {
-                                "sequence": s,
-                                "depth": depths[d_],
-                                "pure_probs": disjoint_expected_probs[q, s, d_],
-                                "sampled_probs": measured_probs[q, s, d_],
-                            }
-                        ]
+                        log_fidelities[q, s, d_] = evaluate_log_fidelity(f_xeb, singularity[q], outlier[q], s, d_)
+                        # Store records for linear XEB post-processing
+                        records[q] = update_record(
+                            records[q], s, depths[d_], disjoint_expected_probs[q, s, d_], measured_probs[q, s, d_], dim
+                        )
 
         def per_cycle_depth(df):
             fid_lsq = df["numerator"].sum() / df["denominator"].sum()
             return pd.Series({"fidelity": fid_lsq})
 
         if not self.xeb_config.disjoint_processing:
-            for record in records:
-                e_u = np.sum(record["pure_probs"] ** 2)
-                u_u = np.sum(record["pure_probs"]) / dim
-                m_u = np.sum(record["pure_probs"] * record["sampled_probs"])
-                record.update(e_u=e_u, u_u=u_u, m_u=m_u)
-            df = pd.DataFrame(records)
-            try:
-                df["y"] = df["m_u"] - df["u_u"]
-                df["x"] = df["e_u"] - df["u_u"]
-            except KeyError:
-                raise ValueError("The records for linear XEB are empty. Please rerun the experiment.")
-
-            df["numerator"] = df["x"] * df["y"]
-            df["denominator"] = df["x"] ** 2
+            df = update_data_frame(pd.DataFrame(records))
             linear_fidelities = df.groupby("depth").apply(per_cycle_depth).reset_index()
         else:
-            linear_fidelities = []
-            df = []
+            df, linear_fidelities = [], []
             for q in range(n_qubits):
-                for record in records[q]:
-                    e_u = np.sum(record["pure_probs"] ** 2)
-                    u_u = np.sum(record["pure_probs"]) / 2
-                    m_u = np.sum(record["pure_probs"] * record["sampled_probs"])
-                    record.update(e_u=e_u, u_u=u_u, m_u=m_u)
-                df_q = pd.DataFrame(records[q])
-                df_q["y"] = df_q["m_u"] - df_q["u_u"]
-                df_q["x"] = df_q["e_u"] - df_q["u_u"]
-
-                df_q["numerator"] = df_q["x"] * df_q["y"]
-                df_q["denominator"] = df_q["x"] ** 2
+                df_q = update_data_frame(pd.DataFrame(records[q]))
                 linear_fidelities.append(df_q.groupby("depth").apply(per_cycle_depth).reset_index())
                 df.append(df_q)
 

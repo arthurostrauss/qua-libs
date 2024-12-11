@@ -255,6 +255,73 @@ def cross_entropy(p, q, epsilon=1e-15):
     return x_entropy
 
 
+def compute_log_fidelity(incoherent_dist, expected_probs, measured_probs):
+    """
+    Compute the log fidelity between the expected and measured distributions.
+
+    Parameters:
+    - incoherent_dist: numpy array, the incoherent distribution
+    - expected_probs: numpy array, the expected probabilities
+    - measured_probs: numpy array, the measured probabilities
+
+    Returns:
+    - The log fidelity between the expected and measured distributions
+    """
+    # Compute the cross entropy between the incoherent distribution and the expected probabilities
+    xe_incoherent = cross_entropy(incoherent_dist, expected_probs)
+    xe_measured = cross_entropy(measured_probs, expected_probs)
+    xe_expected = cross_entropy(expected_probs, expected_probs)
+
+    f_xeb = (xe_incoherent - xe_measured) / (xe_incoherent - xe_expected)
+    return f_xeb
+
+
+def evaluate_log_fidelity(f_xeb, singularity, outlier, seq, depth):
+    """
+    Evaluate the log fidelity and return the corresponding value.
+    """
+    if np.isnan(f_xeb) or np.isinf(f_xeb):
+        singularity.append((seq, depth))
+        return np.nan
+    elif f_xeb < 0 or f_xeb > 1:
+        outlier.append((seq, depth))
+        return np.nan
+    return f_xeb
+
+
+def update_record(records, seq, depth, expected_probs, measured_probs, dim):
+    """
+    Update the record to compute linear fidelities (Cirq like processing).
+    """
+    records += [
+        {
+            "sequence": seq,
+            "depth": depth,
+            "pure_probs": expected_probs,
+            "measured_probs": measured_probs,
+            "e_u": np.sum(expected_probs**2),
+            "u_u": np.sum(expected_probs) / dim,
+            "m_u": np.sum(measured_probs * expected_probs),
+        }
+    ]
+    return records
+
+
+def update_data_frame(df):
+    """
+    Update the data frame to compute linear fidelities (Cirq like processing).
+    """
+    try:
+        df["y"] = df["m_u"] - df["u_u"]
+        df["x"] = df["e_u"] - df["u_u"]
+        df["numerator"] = df["x"] * df["y"]
+        df["denominator"] = df["x"] ** 2
+        return df
+
+    except KeyError:
+        raise ValueError("The records for linear XEB are empty. Please rerun the experiment.")
+
+
 def create_subplot(data, subplot_number, title, depths, seqs):
     print(title)
     print("data: %s" % data)
