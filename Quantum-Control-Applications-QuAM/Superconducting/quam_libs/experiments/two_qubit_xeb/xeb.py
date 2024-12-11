@@ -740,7 +740,7 @@ class XEBResult:
             else:
                 new_data[key] = value
 
-        return cls(xeb_config, circuits, new_data, new_data["counts"], new_data["states"], data_handler)
+        return cls(xeb_config, circuits, new_data["counts"], new_data["states"], new_data , data_handler)
 
     def retrieve_data(self):
         """
