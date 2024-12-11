@@ -739,7 +739,7 @@ class XEBResult:
             elif key.startswith("I") or key.startswith("Q"):
                 new_data["quadratures"][key] = arrays[key]
             else:
-                new_data[key] = value
+                new_data[key] = arrays[key]
 
         return cls(xeb_config, circuits, new_data["counts"], new_data["states"], new_data, data_handler)
 
