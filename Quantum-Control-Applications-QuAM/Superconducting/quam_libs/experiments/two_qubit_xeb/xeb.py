@@ -1008,7 +1008,6 @@ class XEBResult:
 
         """
         depths = self.xeb_config.depths
-        n_qubits = self.xeb_config.n_qubits
         colors = sns.cubehelix_palette(n_colors=len(depths))
         colors = {k: colors[i] for i, k in enumerate(depths)}
         _lines = []
@@ -1075,7 +1074,7 @@ class XEBResult:
                 for j in range(2):
                     titles.append(f"{q}<{j}> Measured")
                     titles.append(f"{q}<{j}> Expected")
-                    data.append(self.measured_probs[i, :, :, j])
+                    data.append(self.disjoint_measured_probs[i, :, :, j])
                     data.append(self.disjoint_expected_probs[i, :, :, j])
 
         num_plots = len(titles)
@@ -1124,6 +1123,14 @@ class XEBResult:
         Returns: Measured probabilities of the states
         """
         return self._joint_measured_probs
+    
+    @property
+    def disjoint_measured_probs(self):
+        """
+        Measured probabilities of the states for disjoint processing
+        Returns: Measured probabilities of the states for disjoint processing
+        """
+        return self._disjoint_measured_probs
 
     @property
     def expected_probs(self):
