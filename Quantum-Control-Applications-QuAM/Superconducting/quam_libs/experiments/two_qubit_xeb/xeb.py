@@ -892,6 +892,7 @@ class XEBResult:
 
         if self.xeb_config.disjoint_processing:
             for q, qubit in enumerate(self.qubit_names):
+                plt.figure()
                 linear_fidelities = self.linear_fidelities[q]
                 xx = np.linspace(0, linear_fidelities["depth"].max())
                 try:  # Fit the data for the linear XEB
