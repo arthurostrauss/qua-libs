@@ -208,9 +208,9 @@ class XEB:
             r.set_seed(12321)
 
             # If simulating, update the frequency to 0 to visualize sequence
-            # if simulate:
-                # for qubit in self.qubit_drive_channels:
-                #     update_frequency(qubit.name, 0)
+            if simulate:
+                for qubit in self.qubit_drive_channels:
+                    update_frequency(qubit.name, 0)
 
             # Generate the random sequences
             with for_(s, 0, s < self.xeb_config.seqs, s + 1):
@@ -374,7 +374,7 @@ class XEB:
         config = self.machine.generate_config()
         if simulation_config is None:
             simulation_config = SimulationConfig(duration=10_000)
-        xeb_prog = self._xeb_prog(simulate=True)  # set simulate=True to get the amplitude matrix
+        xeb_prog = self._xeb_prog(simulate=simulate)  # set simulate=True to get the amplitude matrix
         if simulate and qmm_cloud_simulator is not None:
             qmm = qmm_cloud_simulator
         else:
