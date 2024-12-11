@@ -543,7 +543,7 @@ class XEBJob:
         Returns: XEBResult object containing the results of the experiment
 
         """
-        
+
         if disjoint_processing is not None:
             assert isinstance(disjoint_processing, bool), "disjoint_processing should be a boolean"
             self.xeb_config.disjoint_processing = disjoint_processing
@@ -741,7 +741,7 @@ class XEBResult:
             else:
                 new_data[key] = value
 
-        return cls(xeb_config, circuits, new_data["counts"], new_data["states"], new_data , data_handler)
+        return cls(xeb_config, circuits, new_data["counts"], new_data["states"], new_data, data_handler)
 
     def retrieve_data(self):
         """
