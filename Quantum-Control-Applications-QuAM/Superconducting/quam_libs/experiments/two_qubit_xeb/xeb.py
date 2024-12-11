@@ -757,6 +757,7 @@ class XEBResult:
         """
         dim = 2 ** len(self.xeb_config.qubits)
         n_qubits = len(self.xeb_config.qubits)
+        qubit_names = [qubit.name if isinstance(qubit, Transmon) else qubit for qubit in self.xeb_config.qubits]
         seqs = self.xeb_config.seqs
         depths = self.xeb_config.depths
         counts = self.counts
@@ -780,12 +781,15 @@ class XEBResult:
         for s in range(seqs):
             for d_, d in enumerate(depths):
                 qc = self.circuits[s][d_].remove_final_measurements(inplace=False)
-
+                if "expected_probs" not in self.data.keys():
+                    statevector = Statevector(qc)
+                else:
+                    statevector = None
                 if not self.xeb_config.disjoint_processing:
-                    if "expected_probs" in self.data.keys():
-                        expected_probs[s, d_] = self.data["expected_probs"][s, d_]
+                    if statevector is not None:
+                        expected_probs[s, d_] = np.round(statevector.probabilities(), 5)
                     else:
-                        expected_probs[s, d_] = np.round(Statevector(qc).probabilities(), 5)
+                        expected_probs[s, d_] = self.data["expected_probs"][s, d_]
                     measured_probs[s, d_] = (
                         np.array([counts[binary(i, n_qubits)][s][d_] for i in range(dim)]) / self.xeb_config.n_shots
                     )
@@ -816,13 +820,13 @@ class XEBResult:
                     ]
 
                 else:
-                    for q in range(n_qubits):
-                        if "expected_probs" in self.data.keys():
-                            expected_probs[q, s, d_] = self.data["expected_probs"][q][s][d_]
+                    for q, qubit_name in enumerate(qubit_names):
+                        if statevector is not None:
+                            expected_probs[q, s, d_] = np.round(statevector.probabilities([q]), 5)
                         else:
-                            expected_probs[q, s, d_] = np.round(Statevector(qc).probabilities([q]), 5)
+                            expected_probs[q, s, d_] = self.data["expected_probs"][q][s][d_]
                         measured_probs[q, s, d_] = np.array(
-                            [1 - states[f"state_{q}"][s][d_], states[f"state_{q}"][s][d_]]
+                            [1 - states[f"state_{qubit_name}"][s][d_], states[f"state_{qubit_name}"][s][d_]]
                         )
 
                         # Calculate the cross-entropy fidelities (logarithmic)
