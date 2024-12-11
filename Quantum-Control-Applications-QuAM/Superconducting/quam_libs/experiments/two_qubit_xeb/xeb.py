@@ -605,8 +605,8 @@ class XEBJob:
         return XEBResult(
             self.xeb_config,
             self.circuits,
-            states,
             counts,
+            states,
             saved_data,
             self.data_handler if self.xeb_config.should_save_data else None,
         )
@@ -670,7 +670,7 @@ class XEBJob:
 
 class XEBResult:
     def __init__(
-        self, xeb_config: XEBConfig, circuits, states: Dict, counts: Dict, saved_data, data_handler: DataHandler = None
+        self, xeb_config: XEBConfig, circuits, counts: Dict, states: Dict, saved_data, data_handler: DataHandler = None
     ):
         self.xeb_config = xeb_config
         self.circuits: List[List[QuantumCircuit]] = circuits
