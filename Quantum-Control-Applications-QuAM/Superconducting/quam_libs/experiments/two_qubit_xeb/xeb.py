@@ -584,7 +584,7 @@ class XEBJob:
             saved_data = {"counts": counts, "states": states, "density_matrices": dms}
         else:
 
-            gate_indices = states = counts = quadratures = amp_st = {}
+            gate_indices, states, counts, quadratures, amp_st = {}, {}, {}, {}, {}
             result = self._result_handles
             for q, qubit in enumerate(self.xeb_config.qubits):
                 gate_indices[f"g_{qubit.name}"] = result.get(f"g{q}").fetch_all()["value"]
