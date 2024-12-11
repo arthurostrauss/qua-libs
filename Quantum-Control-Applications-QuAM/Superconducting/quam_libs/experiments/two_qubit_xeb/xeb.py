@@ -879,12 +879,14 @@ class XEBResult:
             outlier,
         )
 
-    def plot_fidelities(self, fit_linear: bool = True, fit_log_entropy: bool = True):
+    def plot_fidelities(self, fit_linear: bool = True, fit_log_entropy: bool = True, separate_plots: bool = False):
         """
         Plot the cross-entropy fidelities for the XEB experiment
         Args:
             fit_linear: Indicate if the linear XEB data should be fitted
             fit_log_entropy: Indicate if the log-entropy XEB data should be fitted
+            separate_plots: Indicate if the fidelities should be plotted on separate plots (one per qubit, relevant 
+                only when disjoint_processing is True)
         Returns:
         """
 
@@ -892,7 +894,8 @@ class XEBResult:
 
         if self.xeb_config.disjoint_processing:
             for q, qubit in enumerate(self.qubit_names):
-                plt.figure()
+                if separate_plots:
+                    plt.figure()
                 linear_fidelities = self.linear_fidelities[q]
                 xx = np.linspace(0, linear_fidelities["depth"].max())
                 try:  # Fit the data for the linear XEB
