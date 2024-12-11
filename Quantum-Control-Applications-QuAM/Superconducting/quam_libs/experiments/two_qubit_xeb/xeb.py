@@ -705,7 +705,8 @@ class XEBResult:
                     if not self.xeb_config.disjoint_processing
                     else np.array([fidelity["fidelity"] for fidelity in self.linear_fidelities])
                 ),
-                "singularities": np.array(self._singularities),
+                "singularities": self._singularities,
+                "outliers": self._outliers,
             }
         )
         if self.xeb_config.should_save_data and self.data_handler is not None:
@@ -745,7 +746,10 @@ class XEBResult:
             elif key.startswith("I") or key.startswith("Q"):
                 new_data["quadratures"][key] = arrays[key]
             else:
-                new_data[key] = arrays[key]
+                if key in arrays:
+                    new_data[key] = arrays[key]
+                else:
+                    new_data[key] = value
 
         return cls(xeb_config, circuits, new_data["counts"], new_data["states"], new_data, data_handler)
 
@@ -764,7 +768,6 @@ class XEBResult:
         """
         dim = 2 ** len(self.xeb_config.qubits)
         n_qubits = len(self.xeb_config.qubits)
-        qubit_names = [qubit.name if isinstance(qubit, Transmon) else qubit for qubit in self.xeb_config.qubits]
         seqs = self.xeb_config.seqs
         depths = self.xeb_config.depths
         counts = self.counts
@@ -814,7 +817,7 @@ class XEBResult:
                     records = update_record(records, s, depth, expected_probs[s, d_], measured_probs[s, d_], dim)
 
                 else:
-                    for q, qubit_name in enumerate(qubit_names):
+                    for q, qubit_name in enumerate(self.qubit_names):
                         measured_probs[q, s, d_] = np.array(
                             [1 - states[f"state_{qubit_name}"][s][d_], states[f"state_{qubit_name}"][s][d_]]
                         )
@@ -869,7 +872,7 @@ class XEBResult:
         plt.rcParams["text.usetex"] = False
 
         if self.xeb_config.disjoint_processing:
-            for q in range(len(self.xeb_config.qubits)):
+            for q, qubit in enumerate(self.qubit_names):
                 linear_fidelities = self.linear_fidelities[q]
                 xx = np.linspace(0, linear_fidelities["depth"].max())
                 try:  # Fit the data for the linear XEB
@@ -883,7 +886,7 @@ class XEBResult:
                         plt.plot(
                             xx,
                             exponential_decay(xx, a_lin, layer_fid_lin),
-                            label=f"Fit (Linear XEB Qubit {q}), layer_fidelity={layer_fid_lin * 100:.1f}%",
+                            label=f"Fit (Linear XEB Qubit {qubit}), layer_fidelity={layer_fid_lin * 100:.1f}%",
                         )
                 except Exception as e:
                     warnings.warn("Fit for Linear XEB data failed")
@@ -900,7 +903,7 @@ class XEBResult:
                         plt.plot(
                             xx,
                             exponential_decay(xx, a_log, layer_fid_log),
-                            label=f"Fit (Log XEB Qubit {q}), layer_fidelity={layer_fid_log * 100:.1f}%",
+                            label=f"Fit (Log XEB Qubit {qubit}), layer_fidelity={layer_fid_log * 100:.1f}%",
                         )
                 except Exception as e:
                     warnings.warn("Fit for Log XEB data failed")
@@ -909,7 +912,7 @@ class XEBResult:
                 masked_linear_depths = linear_fidelities["depth"][mask_lin]
                 masked_linear_fids = linear_fidelities["fidelity"][mask_lin]
                 if fit_linear:
-                    label = f"Linear XEB Data Qubit {q}"
+                    label = f"Linear XEB Data Qubit {qubit}"
                     plt.scatter(masked_linear_depths, masked_linear_fids, label=label)
 
                 mask_log = (Fxeb > 0) & (Fxeb < 1)
@@ -918,10 +921,10 @@ class XEBResult:
                     plt.scatter(
                         self.xeb_config.depths[mask_log],
                         Fxeb[mask_log],
-                        label=f"Log XEB Data Qubit {q}",
+                        label=f"Log XEB Data Qubit {qubit}",
                     )
                 else:
-                    warnings.warn(f"Log XEB data for qubit {q} is a singularity.")
+                    warnings.warn(f"Log XEB data for qubit {qubit} is a singularity.")
 
         else:
             xx = np.linspace(0, self.linear_fidelities["depth"].max())
@@ -1012,10 +1015,10 @@ class XEBResult:
             plt.tight_layout()
         else:
             fids = []
-            for i in range(n_qubits):
+            for i, q in enumerate(self.qubit_names):
                 _lines = []
                 plt.figure()
-                fids.append(self.records[i].groupby("depth").apply(per_cycle_depth).reset_index())
+                fids.append(self.records[i].groupby("depth").apply(per_cycle_depth, _lines).reset_index())
                 plt.xlabel(r"$e_U - u_U$", fontsize=18)
                 plt.ylabel(r"$m_U - u_U$", fontsize=18)
                 _lines = np.asarray(_lines)
@@ -1023,7 +1026,7 @@ class XEBResult:
                 plt.title(
                     "q-%s: Fxeb_linear = %s"
                     % (
-                        self.xeb_config.qubits[i].name,
+                        q,
                         [fids[i]["fidelity"][x] for x in [0, 1]],
                     )
                 )
@@ -1049,12 +1052,12 @@ class XEBResult:
                 data.append(self.measured_probs[:, :, i])
                 data.append(self.expected_probs[:, :, i])
         else:
-            for i, q in enumerate(self.xeb_config.qubits):
+            for i, q in enumerate(self.qubit_names):
                 for j in range(2):
-                    titles.append(f"q{q}<{j}> Measured")
-                    titles.append(f"q{q}<{j}> Expected")
+                    titles.append(f"{q}<{j}> Measured")
+                    titles.append(f"{q}<{j}> Expected")
                     data.append(self.measured_probs[i, :, :, j])
-                    data.append(self.expected_probs[i, :, :, j])
+                    data.append(self.disjoint_expected_probs[i, :, :, j])
 
         num_plots = len(titles)
         plots_per_fig = 4  # Adjust this value based on the desired grid size (e.g., 2x2 grid)
@@ -1174,3 +1177,10 @@ class XEBResult:
         )
         purities = np.var(self.measured_probs, axis=-1) / var_pt
         return purities
+
+    @property
+    def qubit_names(self):
+        """
+        Qubit names
+        """
+        return [qubit.name if isinstance(qubit, Transmon) else qubit for qubit in self.xeb_config.qubits]
