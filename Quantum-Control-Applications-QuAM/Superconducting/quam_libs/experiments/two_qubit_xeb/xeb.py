@@ -684,7 +684,8 @@ class XEBResult:
         self.data = saved_data
         self.data_handler = data_handler
         (
-            self._measured_probs,
+            self._joint_measured_probs,
+            self._disjoint_measured_probs,
             self._joint_expected_probs,
             self._disjoint_expected_probs,
             self._records,
@@ -696,7 +697,8 @@ class XEBResult:
 
         self.data.update(
             {
-                "measured_probs": self._measured_probs,
+                "joint_measured_probs": self._joint_measured_probs,
+                "disjoint_measured_probs": self._disjoint_measured_probs,
                 "joint_expected_probs": self._joint_expected_probs,
                 "disjoint_expected_probs": self._disjoint_expected_probs,
                 "log_fidelities": self._log_fidelities,
@@ -776,19 +778,24 @@ class XEBResult:
         existing_data = "joint_expected_probs" in self.data.keys()
 
         if not existing_data:
-            expected_probs = np.zeros((seqs, len(depths), dim))
+            joint_expected_probs = np.zeros((seqs, len(depths), dim))
+            joint_measured_probs = np.zeros((seqs, len(depths), dim))
+
             disjoint_expected_probs = np.zeros((n_qubits, seqs, len(depths), 2))
+            disjoint_measured_probs = np.zeros((n_qubits, seqs, len(depths), 2))
         else:
-            expected_probs = self.data["joint_expected_probs"]
+            joint_expected_probs = self.data["joint_expected_probs"]
+            joint_measured_probs = self.data["joint_measured_probs"]
+
             disjoint_expected_probs = self.data["disjoint_expected_probs"]
+            disjoint_measured_probs = self.data["disjoint_measured_probs"]
+
         if not self.xeb_config.disjoint_processing:
             records, singularity, outlier = [], [], []
             incoherent_distribution = np.ones(dim) / dim
-            measured_probs = np.zeros((seqs, len(depths), dim))
             log_fidelities = np.zeros((seqs, len(depths)))
 
         else:
-            measured_probs = np.zeros((n_qubits, seqs, len(depths), 2))
             records = [[] for _ in range(n_qubits)]
             singularity = [[] for _ in range(n_qubits)]
             outlier = [[] for _ in range(n_qubits)]
@@ -800,36 +807,53 @@ class XEBResult:
                 qc = self.circuits[s][d_].remove_final_measurements(inplace=False)
                 if not existing_data:
                     statevector = Statevector(qc)
-                    expected_probs[s, d_] = np.round(statevector.probabilities(), 5)
-                    for q in range(n_qubits):
-                        disjoint_expected_probs[q, s, d_] = np.round(statevector.probabilities([q]), 5)
-
-                if not self.xeb_config.disjoint_processing:
-                    measured_probs[s, d_] = (
+                    joint_expected_probs[s, d_] = statevector.probabilities(decimals=5)
+                    joint_measured_probs[s, d_] = (
                         np.array([counts[binary(i, n_qubits)][s][d_] for i in range(dim)]) / self.xeb_config.n_shots
                     )
 
+                    for q in range(n_qubits):
+                        disjoint_expected_probs[q, s, d_] = statevector.probabilities([q], 5)
+                        disjoint_measured_probs[q, s, d_] = np.array(
+                            [
+                                1 - states[f"state_{self.xeb_config.qubits[q].name}"][s][d_],
+                                states[f"state_{self.xeb_config.qubits[q].name}"][s][d_],
+                            ]
+                        )
+
+                if not self.xeb_config.disjoint_processing:
+
                     # Calculate the cross-entropy fidelities (logarithmic)
-                    f_xeb = compute_log_fidelity(incoherent_distribution, expected_probs[s, d_], measured_probs[s, d_])
+                    f_xeb = compute_log_fidelity(
+                        incoherent_distribution, joint_expected_probs[s, d_], joint_measured_probs[s, d_]
+                    )
                     log_fidelities[s, d_] = evaluate_log_fidelity(f_xeb, singularity, outlier, s, d_)
 
                     # Store records for linear XEB post-processing
-                    records = update_record(records, s, depth, expected_probs[s, d_], measured_probs[s, d_], dim)
+                    records = update_record(
+                        records, s, depth, joint_expected_probs[s, d_], joint_measured_probs[s, d_], dim
+                    )
 
                 else:
                     for q, qubit_name in enumerate(self.qubit_names):
-                        measured_probs[q, s, d_] = np.array(
+                        disjoint_measured_probs[q, s, d_] = np.array(
                             [1 - states[f"state_{qubit_name}"][s][d_], states[f"state_{qubit_name}"][s][d_]]
                         )
-
                         # Calculate the cross-entropy fidelities (logarithmic)
                         f_xeb = compute_log_fidelity(
-                            incoherent_distribution, disjoint_expected_probs[q, s, d_], measured_probs[q, s, d_]
+                            incoherent_distribution,
+                            disjoint_expected_probs[q, s, d_],
+                            disjoint_measured_probs[q, s, d_],
                         )
                         log_fidelities[q, s, d_] = evaluate_log_fidelity(f_xeb, singularity[q], outlier[q], s, d_)
                         # Store records for linear XEB post-processing
                         records[q] = update_record(
-                            records[q], s, depths[d_], disjoint_expected_probs[q, s, d_], measured_probs[q, s, d_], dim
+                            records[q],
+                            s,
+                            depths[d_],
+                            disjoint_expected_probs[q, s, d_],
+                            disjoint_measured_probs[q, s, d_],
+                            dim,
                         )
 
         def per_cycle_depth(df):
@@ -850,8 +874,9 @@ class XEBResult:
             warnings.warn("All fidelities computed from log-entropies are singularities.")
 
         return (
-            measured_probs,
-            expected_probs,
+            joint_measured_probs,
+            disjoint_measured_probs,
+            joint_expected_probs,
             disjoint_expected_probs,
             df,
             log_fidelities,
@@ -1104,7 +1129,7 @@ class XEBResult:
         Measured probabilities of the states
         Returns: Measured probabilities of the states
         """
-        return self._measured_probs
+        return self._joint_measured_probs
 
     @property
     def expected_probs(self):
