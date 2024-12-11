@@ -681,7 +681,8 @@ class XEBResult:
         self.data_handler = data_handler
         (
             self._measured_probs,
-            self._expected_probs,
+            self._joint_expected_probs,
+            self._disjoint_expected_probs,
             self._records,
             self._log_fidelities,
             self._linear_fidelities,
@@ -692,7 +693,8 @@ class XEBResult:
         self.data.update(
             {
                 "measured_probs": self._measured_probs,
-                "expected_probs": self._expected_probs,
+                "joint_expected_probs": self._joint_expected_probs,
+                "disjoint_expected_probs": self._disjoint_expected_probs,
                 "log_fidelities": self._log_fidelities,
                 "linear_fidelities": (
                     np.array(self.linear_fidelities["fidelity"])
@@ -763,10 +765,11 @@ class XEBResult:
         depths = self.xeb_config.depths
         counts = self.counts
         states = self.states
+        expected_probs = np.zeros((seqs, len(depths), dim))
+        disjoint_expected_probs = np.zeros((n_qubits, seqs, len(depths), dim))
         if not self.xeb_config.disjoint_processing:
             records, singularity, outlier = [], [], []
             incoherent_distribution = np.ones(dim) / dim
-            expected_probs = np.zeros((seqs, len(depths), dim))
             measured_probs = np.zeros((seqs, len(depths), dim))
             log_fidelities = np.zeros((seqs, len(depths)))
 
@@ -782,15 +785,15 @@ class XEBResult:
         for s in range(seqs):
             for d_, d in enumerate(depths):
                 qc = self.circuits[s][d_].remove_final_measurements(inplace=False)
-                if "expected_probs" not in self.data.keys():
+                if "joint_expected_probs" not in self.data.keys():
                     statevector = Statevector(qc)
+                    expected_probs[s, d_] = np.round(statevector.probabilities(), 5)
+                    disjoint_expected_probs[:, s, d_] = np.round(statevector.probabilities(), 5)
                 else:
-                    statevector = None
+                    expected_probs[s, d_] = self.data["joint_expected_probs"][s, d_]
+                    disjoint_expected_probs[:, s, d_] = self.data["disjoint_expected_probs"][s, d_]
+
                 if not self.xeb_config.disjoint_processing:
-                    if statevector is not None:
-                        expected_probs[s, d_] = np.round(statevector.probabilities(), 5)
-                    else:
-                        expected_probs[s, d_] = self.data["expected_probs"][s, d_]
                     measured_probs[s, d_] = (
                         np.array([counts[binary(i, n_qubits)][s][d_] for i in range(dim)]) / self.xeb_config.n_shots
                     )
@@ -822,18 +825,16 @@ class XEBResult:
 
                 else:
                     for q, qubit_name in enumerate(qubit_names):
-                        if statevector is not None:
-                            expected_probs[q, s, d_] = np.round(statevector.probabilities([q]), 5)
-                        else:
-                            expected_probs[q, s, d_] = self.data["expected_probs"][q][s][d_]
                         measured_probs[q, s, d_] = np.array(
                             [1 - states[f"state_{qubit_name}"][s][d_], states[f"state_{qubit_name}"][s][d_]]
                         )
 
                         # Calculate the cross-entropy fidelities (logarithmic)
-                        xe_incoherent = cross_entropy(incoherent_distribution, expected_probs[q, s, d_])
-                        xe_measured = cross_entropy(measured_probs[q, s, d_], expected_probs[q, s, d_])
-                        xe_expected = cross_entropy(expected_probs[q, s, d_], expected_probs[q, s, d_])
+                        xe_incoherent = cross_entropy(incoherent_distribution, disjoint_expected_probs[q, s, d_])
+                        xe_measured = cross_entropy(measured_probs[q, s, d_], disjoint_expected_probs[q, s, d_])
+                        xe_expected = cross_entropy(
+                            disjoint_expected_probs[q, s, d_], disjoint_expected_probs[q, s, d_]
+                        )
 
                         f_xeb = (xe_incoherent - xe_measured) / (xe_incoherent - xe_expected)
                         if np.isinf(f_xeb) or np.isnan(f_xeb):
@@ -849,7 +850,7 @@ class XEBResult:
                             {
                                 "sequence": s,
                                 "depth": depths[d_],
-                                "pure_probs": expected_probs[q, s, d_],
+                                "pure_probs": disjoint_expected_probs[q, s, d_],
                                 "sampled_probs": measured_probs[q, s, d_],
                             }
                         ]
@@ -898,6 +899,7 @@ class XEBResult:
         return (
             measured_probs,
             expected_probs,
+            disjoint_expected_probs,
             df,
             log_fidelities,
             linear_fidelities,
@@ -1157,7 +1159,15 @@ class XEBResult:
         Expected probabilities of the states
         Returns: Expected probabilities of the states
         """
-        return self._expected_probs
+        return self._joint_expected_probs
+
+    @property
+    def disjoint_expected_probs(self):
+        """
+        Expected probabilities of the states for disjoint processing
+        Returns: Expected probabilities of the states for disjoint processing
+        """
+        return self._disjoint_expected_probs
 
     @property
     def records(self):
