@@ -543,6 +543,7 @@ class XEBJob:
         Returns: XEBResult object containing the results of the experiment
 
         """
+        
         if disjoint_processing is not None:
             assert isinstance(disjoint_processing, bool), "disjoint_processing should be a boolean"
             self.xeb_config.disjoint_processing = disjoint_processing
@@ -554,12 +555,12 @@ class XEBJob:
                 for key in [binary(i, self.xeb_config.n_qubits) for i in range(self.xeb_config.dim)]:
                     if key not in count.keys():
                         count[key] = 0
-            states = [{f"state_{q}": 0.0 for q in range(self.xeb_config.n_qubits)} for _ in range(len(counts))]
+            states = [{f"state_{qubit.name}": 0.0 for qubit in self.xeb_config.qubits} for _ in range(len(counts))]
             for c, count in enumerate(counts):
                 for key, value in count.items():
                     for i, bit in enumerate(reversed(key)):
                         if bit == "1":
-                            states[c][f"state_{i}"] += value
+                            states[c][f"state_{self.xeb_config.qubits[i].name}"] += value
             states = {
                 key: np.reshape(
                     [state[key] / self.xeb_config.n_shots for state in states],
