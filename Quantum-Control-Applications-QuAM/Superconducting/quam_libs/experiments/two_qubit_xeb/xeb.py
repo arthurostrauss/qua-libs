@@ -788,10 +788,14 @@ class XEBResult:
                 if "joint_expected_probs" not in self.data.keys():
                     statevector = Statevector(qc)
                     expected_probs[s, d_] = np.round(statevector.probabilities(), 5)
-                    disjoint_expected_probs[:, s, d_] = np.round(statevector.probabilities(), 5)
+                    for q in range(n_qubits):
+                        disjoint_expected_probs[q, s, d_] = np.round(
+                            statevector.probabilities([q]), 5
+                        )
                 else:
                     expected_probs[s, d_] = self.data["joint_expected_probs"][s, d_]
-                    disjoint_expected_probs[:, s, d_] = self.data["disjoint_expected_probs"][s, d_]
+                    for q in range(n_qubits):
+                        disjoint_expected_probs[q, s, d_] = self.data["disjoint_expected_probs"][q, s, d_]
 
                 if not self.xeb_config.disjoint_processing:
                     measured_probs[s, d_] = (
