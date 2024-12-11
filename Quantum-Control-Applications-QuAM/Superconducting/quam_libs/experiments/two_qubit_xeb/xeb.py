@@ -1,14 +1,11 @@
 import json
 import warnings
-from dataclasses import asdict
 from typing import Union, List, Optional, Dict, Tuple
 import numpy as np
-from qiskit import QuantumRegister
 from qm.qua import *
 from .macros import (
     qua_declaration,
     reset_qubit,
-    cross_entropy,
     binary,
     exponential_decay,
     fit_exponential_decay,
@@ -30,13 +27,11 @@ from qiskit.transpiler import CouplingMap
 from qiskit.quantum_info import Statevector
 from qualang_tools.results import DataHandler
 
-from quam_libs.components import QuAM, Transmon, TransmonPair
-from quam_libs.macros import multiplexed_readout, node_save
+from quam_libs.components import QuAM, Transmon
 from qm import SimulationConfig, QuantumMachinesManager
 from qm.jobs.running_qm_job import RunningQmJob
 from qm.jobs.simulated_job import SimulatedJob
 import seaborn as sns
-from copy import deepcopy
 from warnings import warn
 
 from qualang_tools.units import unit
@@ -213,9 +208,9 @@ class XEB:
             r.set_seed(12321)
 
             # If simulating, update the frequency to 0 to visualize sequence
-            if simulate:
-                for qubit in self.qubit_drive_channels:
-                    update_frequency(qubit.name, 0)
+            # if simulate:
+                # for qubit in self.qubit_drive_channels:
+                #     update_frequency(qubit.name, 0)
 
             # Generate the random sequences
             with for_(s, 0, s < self.xeb_config.seqs, s + 1):
@@ -601,7 +596,6 @@ class XEBJob:
                 **quadratures,
                 **states,
                 **counts,
-                **gate_indices,
                 **amp_st,
                 "gate_indices": self.gate_indices,
                 "gate_sequences": self.gate_sequences,
