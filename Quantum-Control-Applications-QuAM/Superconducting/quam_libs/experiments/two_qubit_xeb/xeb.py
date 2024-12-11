@@ -765,7 +765,9 @@ class XEBResult:
         depths = self.xeb_config.depths
         counts = self.counts
         states = self.states
-        if "joint_expected_probs" not in self.data.keys():
+        
+        existing_data = 'joint_expected_probs' in self.data.keys()
+        if existing_data:
             expected_probs = np.zeros((seqs, len(depths), dim))
             disjoint_expected_probs = np.zeros((n_qubits, seqs, len(depths), dim))
         else:
@@ -788,7 +790,7 @@ class XEBResult:
         for s in range(seqs):
             for d_, d in enumerate(depths):
                 qc = self.circuits[s][d_].remove_final_measurements(inplace=False)
-                if "joint_expected_probs" not in self.data.keys():
+                if existing_data:
                     statevector = Statevector(qc)
                     expected_probs[s, d_] = np.round(statevector.probabilities(), 5)
                     for q in range(n_qubits):
