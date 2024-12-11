@@ -896,6 +896,12 @@ class XEBResult:
             for q, qubit in enumerate(self.qubit_names):
                 if separate_plots:
                     plt.figure()
+                    plt.ylabel("Circuit fidelity", fontsize=20)
+                    plt.xlabel("Cycle Depth $d$", fontsize=20)
+                    plt.title("XEB Fidelity")
+                    plt.legend(loc="best")
+                    plt.tight_layout()
+                    plt.show()
                 linear_fidelities = self.linear_fidelities[q]
                 xx = np.linspace(0, linear_fidelities["depth"].max())
                 try:  # Fit the data for the linear XEB
@@ -998,12 +1004,12 @@ class XEBResult:
             else:
                 warnings.warn("Log XEB data does not contain any physical values.")
 
-        plt.ylabel("Circuit fidelity", fontsize=20)
-        plt.xlabel("Cycle Depth $d$", fontsize=20)
-        plt.title("XEB Fidelity")
-        plt.legend(loc="best")
-        plt.tight_layout()
-        plt.show()
+            plt.ylabel("Circuit fidelity", fontsize=20)
+            plt.xlabel("Cycle Depth $d$", fontsize=20)
+            plt.title("XEB Fidelity")
+            plt.legend(loc="best")
+            plt.tight_layout()
+            plt.show()
 
     def plot_records(self):
         """
