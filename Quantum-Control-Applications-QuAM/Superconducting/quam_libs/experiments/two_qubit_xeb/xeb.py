@@ -765,8 +765,12 @@ class XEBResult:
         depths = self.xeb_config.depths
         counts = self.counts
         states = self.states
-        expected_probs = np.zeros((seqs, len(depths), dim))
-        disjoint_expected_probs = np.zeros((n_qubits, seqs, len(depths), dim))
+        if "joint_expected_probs" not in self.data.keys():
+            expected_probs = np.zeros((seqs, len(depths), dim))
+            disjoint_expected_probs = np.zeros((n_qubits, seqs, len(depths), dim))
+        else:
+            expected_probs = self.data["joint_expected_probs"]
+            disjoint_expected_probs = self.data["disjoint_expected_probs"]
         if not self.xeb_config.disjoint_processing:
             records, singularity, outlier = [], [], []
             incoherent_distribution = np.ones(dim) / dim
@@ -774,12 +778,11 @@ class XEBResult:
             log_fidelities = np.zeros((seqs, len(depths)))
 
         else:
+            measured_probs = np.zeros((n_qubits, seqs, len(depths), 2))
             records = [[] for _ in range(n_qubits)]
             singularity = [[] for _ in range(n_qubits)]
             outlier = [[] for _ in range(n_qubits)]
             incoherent_distribution = np.ones(2) / 2
-            expected_probs = np.zeros((n_qubits, seqs, len(depths), 2))
-            measured_probs = np.zeros((n_qubits, seqs, len(depths), 2))
             log_fidelities = np.zeros((n_qubits, seqs, len(depths)))
 
         for s in range(seqs):
@@ -792,10 +795,6 @@ class XEBResult:
                         disjoint_expected_probs[q, s, d_] = np.round(
                             statevector.probabilities([q]), 5
                         )
-                else:
-                    expected_probs[s, d_] = self.data["joint_expected_probs"][s, d_]
-                    for q in range(n_qubits):
-                        disjoint_expected_probs[q, s, d_] = self.data["disjoint_expected_probs"][q, s, d_]
 
                 if not self.xeb_config.disjoint_processing:
                     measured_probs[s, d_] = (
