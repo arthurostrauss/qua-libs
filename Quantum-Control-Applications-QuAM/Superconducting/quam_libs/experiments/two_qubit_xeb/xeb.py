@@ -809,20 +809,15 @@ class XEBResult:
 
                     for q in range(n_qubits):
                         disjoint_expected_probs[q, s, d_] = statevector.probabilities([q], 5)
-                        disjoint_measured_probs[q, s, d_] = np.array(
-                            [
-                                1 - states[f"state_{self.xeb_config.qubits[q].name}"][s][d_],
-                                states[f"state_{self.xeb_config.qubits[q].name}"][s][d_],
-                            ]
-                        )
+                        qubit_state = states[f"state_{self.qubit_names[q]}"][s, d_]
+                        disjoint_measured_probs[q, s, d_] = np.array([1 - qubit_state, qubit_state])
 
                 if not self.xeb_config.disjoint_processing:
-
                     # Calculate the cross-entropy fidelities (logarithmic)
                     f_xeb = compute_log_fidelity(
                         incoherent_distribution, joint_expected_probs[s, d_], joint_measured_probs[s, d_]
                     )
-                    log_fidelities[s, d_] = evaluate_log_fidelity(f_xeb, singularity, outlier, s, d_)
+                    log_fidelities[s, d_] = evaluate_log_fidelity(f_xeb, singularity, outlier, s, depth)
 
                     # Store records for linear XEB post-processing
                     records = update_record(
@@ -831,24 +826,21 @@ class XEBResult:
 
                 else:
                     for q, qubit_name in enumerate(self.qubit_names):
-                        disjoint_measured_probs[q, s, d_] = np.array(
-                            [1 - states[f"state_{qubit_name}"][s][d_], states[f"state_{qubit_name}"][s][d_]]
-                        )
                         # Calculate the cross-entropy fidelities (logarithmic)
                         f_xeb = compute_log_fidelity(
                             incoherent_distribution,
                             disjoint_expected_probs[q, s, d_],
                             disjoint_measured_probs[q, s, d_],
                         )
-                        log_fidelities[q, s, d_] = evaluate_log_fidelity(f_xeb, singularity[q], outlier[q], s, d_)
+                        log_fidelities[q, s, d_] = evaluate_log_fidelity(f_xeb, singularity[q], outlier[q], s, depth)
                         # Store records for linear XEB post-processing
                         records[q] = update_record(
                             records[q],
                             s,
-                            depths[d_],
+                            depth,
                             disjoint_expected_probs[q, s, d_],
                             disjoint_measured_probs[q, s, d_],
-                            dim,
+                            2,
                         )
 
         def per_cycle_depth(df):

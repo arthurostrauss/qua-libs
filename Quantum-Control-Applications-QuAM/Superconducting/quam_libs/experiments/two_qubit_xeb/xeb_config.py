@@ -20,6 +20,7 @@ class XEBConfig:
         depths (np.ndarray): Array of depths to iterate through
         n_shots (int): Number of averages per sequence
         qubits (List[Transmon]): List of active qubits to be used in the experiment
+        readout_qubits (Optional[List[Transmon]]): List of active qubits to be used for readout (relevant for multiplexed readout)
         baseline_gate_name (str): Name of the baseline gate implementing a pi/2 rotation around the x-axis (default "sx")
         gate_set_choice (Union[str, Dict[int, QUAGate]]): Choice of gate set for XEB (choose "sw" or "t") or a custom gate set as a dictionary of QUAGate objects
         two_qb_gate (Optional[QUAGate]): Two-qubit gate to be used in the experiment
@@ -75,7 +76,7 @@ class XEBConfig:
         """
         config_dict = {
             "seqs": self.seqs,
-            "depths": self.depths.tolist(),
+            "depths": self.depths.tolist() if isinstance(self.depths, np.ndarray) else self.depths,
             "n_shots": self.n_shots,
             "qubits": [qubit.name if isinstance(qubit, Transmon) else qubit for qubit in self.qubits],
             "baseline_gate_name": self.baseline_gate_name,
