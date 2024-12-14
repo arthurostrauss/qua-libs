@@ -710,10 +710,11 @@ class XEBResult:
         )
 
         if self.xeb_config.should_save_data and self.data_handler is not None:
-            save_data = self.data.copy()
+            save_data = {}
             for key in save_data.keys(): # Remove the amplitude matrices from the saved data
                 if 'amp_matrix' in key:
-                    del save_data[key]
+                    continue
+                save_data[key] = self.data[key]
             self.data_handler.save_data(saved_data,
                                         self.xeb_config.data_folder_name,
                                         metadata=self.xeb_config.as_dict())
@@ -826,7 +827,7 @@ class XEBResult:
                     f_xeb = compute_log_fidelity(
                         incoherent_distribution, joint_expected_probs[s, d_], joint_measured_probs[s, d_]
                     )
-                    log_fidelities[s, d_] = evaluate_log_fidelity(f_xeb, singularity, outlier, s, depth)
+                    log_fidelities[s, d_] = evaluate_log_fidelity(f_xeb, singularity, outlier, s, int(depth))
 
                     # Store records for linear XEB post-processing
                     records = update_record(
@@ -841,7 +842,8 @@ class XEBResult:
                             disjoint_expected_probs[q, s, d_],
                             disjoint_measured_probs[q, s, d_],
                         )
-                        log_fidelities[q, s, d_] = evaluate_log_fidelity(f_xeb, singularity[q], outlier[q], s, depth)
+                        log_fidelities[q, s, d_] = evaluate_log_fidelity(f_xeb, singularity[q], outlier[q], 
+                                                                         s, int(depth))
                         # Store records for linear XEB post-processing
                         records[q] = update_record(
                             records[q],
