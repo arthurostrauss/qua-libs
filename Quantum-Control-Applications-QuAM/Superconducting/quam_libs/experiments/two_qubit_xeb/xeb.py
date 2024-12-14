@@ -385,7 +385,9 @@ class XEB:
         elif self.xeb_config.generate_new_data:
             job = qm.execute(xeb_prog)
         else:
-            raise NotImplementedError("Data fetching from previous runs is not yet implemented")
+            warnings.warn("Running deactivated. Set generate_new_data to True to run the experiment."
+                          "Use XEBResult.from_data() method to load data from a previous run.")
+            return 
 
         return XEBJob(job, self.xeb_config, self.data_handler, self.available_combinations, False, simulate)
 
@@ -586,7 +588,8 @@ class XEBJob:
                 quadratures[f"I_{qubit.name}"] = result.get(f"I{q}").fetch_all()["value"]
                 quadratures[f"Q_{qubit.name}"] = result.get(f"Q{q}").fetch_all()["value"]
                 states[f"state_{qubit.name}"] = result.get(f"state{q}").fetch_all()["value"]
-                amp_st[f"amp_matrix_{qubit.name}"] = result.get(f"amp_matrix_q{q}").fetch_all()["value"]
+                if self.xeb_config.gate_set.run_through_amp_matrix_modulation:
+                    amp_st[f"amp_matrix_{qubit.name}"] = result.get(f"amp_matrix_q{q}").fetch_all()["value"]
 
             n_qubits = self.xeb_config.n_qubits
             for i in range(self.xeb_config.dim):
@@ -707,7 +710,13 @@ class XEBResult:
         )
 
         if self.xeb_config.should_save_data and self.data_handler is not None:
-            self.data_handler.save_data(self.data, self.xeb_config.data_folder_name, metadata=self.xeb_config.as_dict())
+            save_data = self.data.copy()
+            for key in save_data.keys(): # Remove the amplitude matrices from the saved data
+                if 'amp_matrix' in key:
+                    del save_data[key]
+            self.data_handler.save_data(saved_data,
+                                        self.xeb_config.data_folder_name,
+                                        metadata=self.xeb_config.as_dict())
 
     @classmethod
     def from_data(
@@ -872,24 +881,36 @@ class XEBResult:
             outlier,
         )
 
-    def get_layer_fidelity(self, fidelity_metric: Literal["log", "linear"] = "linear"):
+    def get_layer_fidelity(self, fidelity_metric: Literal["log", "linear"] = "linear", disjoint_processing: bool = None):
         """
         Returns the layer fidelities for the XEB experiment
+        Args:
+            fidelity_metric: Indicate which fidelity metric should be computed: "log" or "linear"
+            disjoint_processing: Indicate if disjoint processing should be applied to the results
         """
-        if fidelity_metric == "log":
-            if self.xeb_config.disjoint_processing:
+        if disjoint_processing is not None:
+            assert isinstance(disjoint_processing, bool), "disjoint_processing should be a boolean"
+        else:
+            disjoint_processing = self.xeb_config.disjoint_processing
+        
+        if disjoint_processing:
+            if fidelity_metric == "log":
                 Fxeb = np.nanmean(self.log_fidelities, axis=1)
             else:
-                Fxeb = np.nanmean(self.log_fidelities, axis=0)
-        elif fidelity_metric == "linear":
-            if self.xeb_config.disjoint_processing:
                 Fxeb = np.array([fidelity["fidelity"] for fidelity in self.linear_fidelities])
+            
+            a = [None] * len(self.qubit_names)
+            layer_fid = [None] * len(self.qubit_names)
+            for q, qubit in enumerate(self.qubit_names):
+                a[q], layer_fid[q], *_ = fit_exponential_decay(self.xeb_config.depths, Fxeb[q])
+        else:
+            if fidelity_metric == "log":
+                Fxeb = np.nanmean(self.log_fidelities, axis=0)
             else:
                 Fxeb = np.array(self.linear_fidelities["fidelity"])
-        else:
-            raise ValueError("fidelity_metric should be either 'log' or 'linear'")
-        a, layer_fid, *_ = fit_exponential_decay(self.xeb_config.depths, Fxeb)
+            a, layer_fid, *_ = fit_exponential_decay(self.xeb_config.depths, Fxeb)
         return layer_fid
+
 
     def plot_fidelities(self, fit_linear: bool = True, fit_log_entropy: bool = True, separate_plots: bool = False):
         """
